@@ -1,0 +1,56 @@
+{
+  "warning": {
+    "name": "Alert Admonition",
+    "keywords": "alert warning notification",
+    "preview_html": "<div class='bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-500 p-4 rounded-r-2xl flex gap-3'><div class='text-amber-500 text-sm'>⚠️</div><div><h4 class='font-bold text-amber-900 dark:text-amber-400 text-sm leading-none'>System Alert</h4><p class='text-amber-800 dark:text-amber-500/80 text-[10px] mt-1'>Scheduled maintenance at 2AM...</p></div></div>",
+    "html": "\n<div class=\"bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-500 p-5 my-8 rounded-r-2xl flex gap-4\">\n  <div class=\"text-amber-500\">⚠️</div>\n  <div><h4 class=\"font-bold text-amber-900 dark:text-amber-400 text-lg leading-none\">System Alert</h4><p class=\"text-amber-800 dark:text-amber-500/80 text-sm mt-1\">Maintenance scheduled for 2:00 AM UTC. Some services may be briefly unavailable during this window.</p></div>\n</div>\n"
+  },
+  "card": {
+    "name": "Project Card",
+    "keywords": "card project portfolio grid",
+    "preview_html": "<div class='bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] overflow-hidden shadow-lg'><div class='aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-[10px] uppercase font-black'>E-Commerce Case Study</div><div class='p-6'><h3 class='text-xl font-black mb-1 dark:text-white'>Retail Platform</h3><div class='inline-block bg-blue-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase'>View Work</div></div></div>",
+    "html": "\n<div class=\"group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 my-8\">\n  <div class=\"aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold tracking-widest uppercase\">Project Preview Image</div>\n  <div class=\"p-10\">\n    <h3 class=\"text-3xl font-black mb-2\">E-Commerce Redesign</h3>\n    <p class=\"text-slate-500 dark:text-slate-400 text-lg mb-8\">A complete overhaul of a global retail platform focusing on page speed, accessibility, and high-conversion checkout flows.</p>\n    <a href=\"#\" class=\"inline-block bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-sm tracking-widest uppercase shadow-lg shadow-blue-500/30\">View Case Study</a>\n  </div>\n</div>\n"
+  },
+  "hero": {
+    "name": "Minimal Hero",
+    "keywords": "hero header intro title",
+    "preview_html": "<div class='text-center py-4'><div class='h-2 w-12 bg-blue-600 mx-auto mb-2'></div><h2 class='text-lg font-black dark:text-white'>Creative Developer.</h2><p class='text-[8px] text-slate-400'>Building high-performance experiences.</p></div>",
+    "html": "\n<section class=\"py-20 text-center\">\n  <span class=\"text-blue-600 font-black uppercase tracking-[0.3em] text-xs\">Available for work</span>\n  <h1 class=\"text-6xl md:text-8xl font-black tracking-tighter mt-4 mb-8 dark:text-white\">Creative <br/> <span class=\"text-slate-400\">Developer.</span></h1>\n  <p class=\"max-w-xl mx-auto text-slate-500 text-lg font-medium\">Building high-performance digital experiences with a focus on clean code and interactive motion graphics.</p>\n</section>\n"
+  },
+  "features": {
+    "name": "Bento Skills Grid",
+    "keywords": "grid features skills services bento",
+    "preview_html": "<div class='grid grid-cols-2 gap-2'><div class='p-2 bg-slate-800 rounded-lg text-[8px] text-white font-bold'>⚡ Frontend</div><div class='p-2 bg-slate-800 rounded-lg text-[8px] text-white font-bold'>💾 Backend</div></div>",
+    "html": "\n<div class=\"grid grid-cols-1 md:grid-cols-3 gap-6 my-12\">\n  <div class=\"p-8 bg-slate-100 dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800\">\n    <div class=\"text-2xl mb-4\">⚡</div>\n    <h4 class=\"font-black text-xl mb-2\">Frontend</h4>\n    <p class=\"text-sm text-slate-500\">React, Vue, Tailwind CSS, Framer Motion</p>\n  </div>\n  <div class=\"p-8 bg-slate-100 dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800\">\n    <div class=\"text-2xl mb-4\">💾</div>\n    <h4 class=\"font-black text-xl mb-2\">Backend</h4>\n    <p class=\"text-sm text-slate-500\">Python, Flask, PostgreSQL, Redis</p>\n  </div>\n  <div class=\"p-8 bg-slate-100 dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800\">\n    <div class=\"text-2xl mb-4\">🎨</div>\n    <h4 class=\"font-black text-xl mb-2\">Design</h4>\n    <p class=\"text-sm text-slate-500\">Figma, UI/UX Systems, Prototyping</p>\n  </div>\n</div>\n"
+  },
+  "footer": {
+    "name": "Simple Social Footer",
+    "keywords": "footer social contact links",
+    "preview_html": "<div class='border-t border-slate-800 pt-2 flex justify-between items-center'><p class='text-[8px] dark:text-white'>© 2026</p><div class='flex gap-2 text-[8px] text-blue-500'><span>LI</span><span>GH</span></div></div>",
+    "html": "\n<footer class=\"py-12 border-t border-slate-200 dark:border-slate-800 mt-20 flex flex-col md:flex-row justify-between items-center gap-6\">\n  <p class=\"text-xs font-bold text-slate-500 uppercase tracking-widest\">© 2026 Kurtis-Lee Hopewell</p>\n  <div class=\"flex gap-8\">\n    <a href=\"#\" class=\"text-xs font-black uppercase tracking-widest hover:text-blue-600 transition-colors\">LinkedIn</a>\n    <a href=\"#\" class=\"text-xs font-black uppercase tracking-widest hover:text-blue-600 transition-colors\">GitHub</a>\n    <a href=\"#\" class=\"text-xs font-black uppercase tracking-widest hover:text-blue-600 transition-colors\">Twitter</a>\n  </div>\n</footer>\n"
+  },
+  "skills_pills": {
+    "name": "Skill Pills",
+    "keywords": "skills pills tags badges tech stack",
+    "preview_html": "<div class='flex flex-wrap gap-1'><span class='text-[8px] bg-blue-600/20 px-2 py-0.5 rounded-full'>Python</span><span class='text-[8px] bg-blue-600/20 px-2 py-0.5 rounded-full'>React</span></div>",
+    "html": "\n<div class=\"flex flex-wrap gap-3 my-8\">\n  <span class=\"px-5 py-2 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-black uppercase tracking-widest border border-blue-600/10\">Python</span>\n  <span class=\"px-5 py-2 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-black uppercase tracking-widest border border-blue-600/10\">Flask</span>\n  <span class=\"px-5 py-2 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-black uppercase tracking-widest border border-blue-600/10\">MongoDB</span>\n  <span class=\"px-5 py-2 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-black uppercase tracking-widest border border-blue-600/10\">Tailwind CSS</span>\n  <span class=\"px-5 py-2 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-black uppercase tracking-widest border border-blue-600/10\">JavaScript</span>\n</div>\n"
+  },
+  "timeline": {
+    "name": "Experience Timeline",
+    "keywords": "experience career timeline history jobs",
+    "preview_html": "<div class='border-l-2 border-blue-600 pl-4'><h4 class='text-[10px] font-black dark:text-white'>Senior Developer</h4><p class='text-[8px] text-slate-500'>2024 - Now</p></div>",
+    "html": "\n<div class=\"space-y-12 my-20\">\n  <div class=\"relative pl-8 border-l-2 border-slate-200 dark:border-slate-800 ml-4\">\n    <div class=\"absolute -left-[9px] top-0 w-4 h-4 bg-blue-600 rounded-full border-4 border-white dark:border-[#020617]\"></div>\n    <span class=\"text-[10px] font-black uppercase tracking-[0.2em] text-blue-600\">2024 — Present</span>\n    <h3 class=\"text-2xl font-black mt-2 dark:text-white\">Senior Full Stack Developer</h3>\n    <p class=\"text-slate-500 font-bold uppercase text-[10px] tracking-widest mb-4\">Digital Nomads • Remote</p>\n    <p class=\"max-w-2xl text-slate-400\">Leading the development of high-scale web applications, focusing on microservices architecture and real-time data visualization.</p>\n  </div>\n\n  <div class=\"relative pl-8 border-l-2 border-slate-200 dark:border-slate-800 ml-4\">\n    <div class=\"absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-700 rounded-full border-4 border-white dark:border-[#020617]\"></div>\n    <span class=\"text-[10px] font-black uppercase tracking-[0.2em] text-slate-500\">2022 — 2024</span>\n    <h3 class=\"text-2xl font-black mt-2 dark:text-white\">Web Engineer</h3>\n    <p class=\"text-slate-500 font-bold uppercase text-[10px] tracking-widest mb-4\">Tech Solutions Inc.</p>\n    <p class=\"max-w-2xl text-slate-400\">Developed pixel-perfect user interfaces and integrated complex API infrastructures for enterprise clients.</p>\n  </div>\n</div>\n"
+  },
+  "cta_section": {
+    "name": "Big CTA Section",
+    "keywords": "cta call to action contact button",
+    "preview_html": "<div class='bg-blue-600 p-6 rounded-2xl text-center'><h3 class='text-white text-xs font-black'>Let's Talk</h3><div class='mt-2 bg-white text-blue-600 text-[8px] py-1 rounded-md'>Contact</div></div>",
+    "html": "\n<div class=\"bg-blue-600 rounded-[3rem] p-12 md:p-20 text-center my-20 shadow-2xl shadow-blue-600/20\">\n  <h2 class=\"text-4xl md:text-6xl font-black tracking-tighter text-white mb-8 italic\">Let's build something <br/> truly exceptional.</h2>\n  <a href=\"/contact\" class=\"inline-block bg-white text-blue-600 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-black/10\">Get In Touch</a>\n</div>\n"
+  },
+  "testimony": {
+    "name": "Testimonial Block",
+    "keywords": "testimonial quote client review",
+    "preview_html": "<div class='p-4 border border-slate-800 rounded-xl'><p class='text-[8px] italic text-slate-400'>\"Exceptional developer...\"</p><div class='mt-2 h-2 w-8 bg-blue-600 rounded'></div></div>",
+    "html": "\n<div class=\"p-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] my-10\">\n  <div class=\"text-4xl text-blue-600 mb-6 font-serif\">“</div>\n  <p class=\"text-xl font-medium text-slate-600 dark:text-slate-300 leading-relaxed mb-8 italic\">\n    Kurtis-Lee is an exceptional developer who understands the balance between technical performance and aesthetic precision. Truly a pleasure to work with.\n  </p>\n  <div class=\"flex items-center gap-4\">\n    <div class=\"w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center font-bold text-slate-400\">JD</div>\n    <div>\n      <h5 class=\"font-black text-sm dark:text-white\">Jane Doe</h5>\n      <p class=\"text-[10px] uppercase font-black text-slate-500 tracking-widest\">CEO @ TechCorp</p>\n    </div>\n  </div>\n</div>\n"
+  }
+}

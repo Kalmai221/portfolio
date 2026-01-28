@@ -12,84 +12,190 @@
         height: 100% !important; 
         width: 100% !important;
         font-family: 'Fira Code', monospace;
-        font-size: 15px;
+        font-size: 14px;
+        background: transparent !important;
     }
-    /* Forces the box to stretch to the bottom of the viewport */
-    .editor-box {
-        height: calc(100vh - 140px);
-        min-height: 600px;
+    
+    .editor-container-height {
+        height: 60vh; 
+        min-height: 400px;
+        position: relative;
     }
-    body { overflow: hidden; }
+
+    @media (min-width: 768px) {
+        .editor-container-height {
+            height: calc(100vh - 280px);
+            min-height: 500px;
+        }
+    }
+
+    .tab-btn-active { 
+        background: #1e293b !important; 
+        color: white !important; 
+        border-bottom: 2px solid #2563eb !important;
+    }
+
+    .nav-tab-item { flex: 1 0 auto; min-width: 80px; text-align: center; }
+
+    #snippet-sidebar { 
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateX(100%); 
+        will-change: transform;
+        z-index: 1000;
+    }
+
+    #snippet-sidebar.is-open {
+        transform: translateX(0);
+    }
+
+    .snippet-item {
+        opacity: 0;
+        transform: translateX(20px);
+        transition: all 0.4s ease;
+    }
+
+    #snippet-sidebar.is-open .snippet-item {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    [id^="snip-"] {
+        transition: all 0.3s ease-in-out;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+    }
+
+    [id^="snip-"]:not(.hidden) {
+        max-height: 600px; 
+        opacity: 1;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    
+    .no-scrollbar::-webkit-scrollbar { display: none; }
 </style>
 
-<div class="flex flex-col h-full">
-    <div class="flex flex-wrap gap-4 mb-4 items-end shrink-0 text-white">
-        <div class="flex-1 min-w-[200px]">
-            <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Page Title</label>
+<div class="flex flex-col min-h-full p-4 md:p-8 space-y-6">
+    <div class="flex flex-col lg:flex-row gap-6 items-stretch lg:items-end shrink-0">
+        <div class="flex-1 space-y-2">
+            <h1 class="text-3xl font-black tracking-tighter">
+                <span class="text-blue-600">Edit</span> 
+                <span class="text-slate-900 dark:text-slate-50 transition-colors">Workspace</span>
+            </h1>
             <input type="text" name="title" form="cms-form" value="{{ page.title if page else '' }}" 
-                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                   class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-5 py-3 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 font-semibold shadow-sm" placeholder="Page Title">
         </div>
-        <div class="w-full md:w-1/4">
-            <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Slug</label>
-            <input type="text" name="slug" form="cms-form" value="{{ slug }}" 
-                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+        
+        <div class="w-full lg:w-72 space-y-2">
+            <label class="text-[10px] uppercase font-black text-slate-500 tracking-[0.2em] ml-1">Route Slug</label>
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-sm">/</span>
+                <input type="text" name="slug" form="cms-form" value="{{ slug }}" 
+                       class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-8 py-3 text-slate-900 dark:text-white font-mono text-sm outline-none shadow-sm">
+            </div>
         </div>
-        <div class="flex gap-2">
-            <button type="button" onclick="showModal()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg font-bold text-sm h-[42px] transition-all">🎨 Snippets</button>
-            <button form="cms-form" class="bg-blue-600 hover:bg-blue-500 px-8 py-2 rounded-lg font-bold text-sm h-[42px] shadow-lg transition-all">Save Page</button>
+        
+        <div class="grid grid-cols-2 md:flex gap-3">
+            {% if slug != 'home' %}
+            <a href="{{ url_for('delete_page', slug=slug) }}" class="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase text-center">Delete</a>
+            {% endif %}
+            <button type="button" onclick="toggleSidebar()" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-6 py-3 rounded-xl text-[10px] font-black uppercase shadow-sm">🎨 Snippets</button>
+            <button form="cms-form" class="col-span-2 md:col-span-1 bg-blue-600 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-600/20">Push to Live</button>
         </div>
     </div>
 
-    <form method="POST" id="cms-form" class="flex flex-col flex-1 editor-box bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
-        
-        <div class="flex bg-slate-950 border-b border-slate-800 shrink-0">
-            <button type="button" onclick="switchTab('html')" id="btn-html" class="px-8 py-3 text-xs font-bold border-b-2 border-blue-500 bg-slate-900 text-white transition">HTML</button>
-            <button type="button" onclick="switchTab('css')" id="btn-css" class="px-8 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white transition">CSS</button>
-            <button type="button" onclick="switchTab('js')" id="btn-js" class="px-8 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white transition">JS</button>
-            <button type="button" onclick="switchTab('preview')" id="btn-preview" class="px-8 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white transition">PREVIEW</button>
+    <form method="POST" id="cms-form" class="flex flex-col flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl backdrop-blur-xl">
+        <div class="flex flex-wrap bg-slate-50 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800 shrink-0 items-center justify-between px-2">
+            <div class="flex w-full sm:w-auto overflow-x-auto py-2 gap-1 no-scrollbar">
+                <button type="button" onclick="switchTab('html')" id="btn-html" class="nav-tab-item px-4 py-2 text-[10px] font-black uppercase rounded-lg transition-all tab-btn-active">HTML</button>
+                <button type="button" onclick="switchTab('css')" id="btn-css" class="nav-tab-item px-4 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 transition-all">CSS</button>
+                <button type="button" onclick="switchTab('js')" id="btn-js" class="nav-tab-item px-4 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 transition-all">JS</button>
+                <button type="button" onclick="switchTab('preview')" id="btn-preview" class="nav-tab-item px-4 py-2 text-[10px] font-black uppercase rounded-lg text-emerald-500/60 transition-all">Preview</button>
+            </div>
+            <div id="preview-controls" class="hidden py-2 pr-2">
+                <select id="preview-mode" onchange="updatePreview()" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-[9px] font-bold border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none">
+                    <option value="light">☀️ LIGHT</option>
+                    <option value="dark">🌙 DARK</option>
+                </select>
+            </div>
         </div>
         
-        <div class="flex-1 relative bg-slate-900">
+        <div class="editor-container-height">
             <textarea id="html_data" name="content" class="hidden">{{ page.content if page else '' }}</textarea>
             <textarea id="css_data" name="css_content" class="hidden">{{ page.css if page else '' }}</textarea>
             <textarea id="js_data" name="js_content" class="hidden">{{ page.js if page else '' }}</textarea>
             
             <div id="editor-wrapper" class="absolute inset-0">
-                <div id="editor-holder" class="h-full"></div>
+                <div id="editor-holder" class="h-full bg-slate-50 dark:bg-slate-900/40"></div>
             </div>
 
-            <div id="preview-wrapper" class="absolute inset-0 hidden bg-white">
-                <iframe id="live_preview" class="w-full h-full"></iframe>
+            <div id="preview-wrapper" class="absolute inset-0 hidden">
+                <iframe id="live_preview" class="w-full h-full border-none bg-white"></iframe>
             </div>
         </div>
     </form>
 </div>
 
-<div id="snippet-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 z-[9999]">
-    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl max-w-4xl w-full text-white">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">Component Gallery</h2>
-            <button onclick="hideModal()" class="text-slate-500 hover:text-white">✕ Close</button>
+<div id="snippet-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden opacity-0 transition-opacity duration-300"></div>
+
+<aside id="snippet-sidebar" class="fixed right-0 top-0 h-full w-full sm:w-80 bg-white dark:bg-slate-950 z-[999] flex flex-col shadow-2xl border-l border-slate-800">
+    <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+        <div>
+            <h2 class="text-xl font-black tracking-tighter text-white uppercase">Snippets</h2>
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Library</p>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div onclick="addSnippet('warning')" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-blue-500 cursor-pointer transition">
-                <h3 class="font-bold text-amber-500 mb-2">Warning Box</h3>
-                <div class="bg-amber-100/10 border-l-4 border-amber-500 p-2 text-[10px] text-amber-200 pointer-events-none">
-                    Preview of a warning box admonition...
-                </div>
-            </div>
-            <div onclick="addSnippet('hero')" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-blue-500 cursor-pointer transition">
-                <h3 class="font-bold text-blue-500 mb-2">Hero Header</h3>
-                <div class="bg-slate-700 p-2 text-[10px] text-center pointer-events-none rounded">
-                    Main Headline
-                </div>
-            </div>
-        </div>
+        <button onclick="toggleSidebar()" class="p-2 text-slate-400 hover:text-white transition-colors">✕</button>
     </div>
-</div>
+    
+    <div class="p-4 bg-slate-950 border-b border-slate-800">
+        <input type="text" id="snippetSearch" onkeyup="filterSnippets()" placeholder="Search components..." 
+               class="w-full bg-slate-900 border-none rounded-lg px-4 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none text-white">
+    </div>
+
+    <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4" id="snippetList">
+        {% for key, info in snippets.items() %}
+        <div class="snippet-item border border-slate-800 rounded-xl overflow-hidden" data-name="{{ info.keywords }}">
+            <button onclick="toggleAccordion('snip-{{ key }}')" class="w-full p-4 flex justify-between items-center hover:bg-slate-900 transition-colors">
+                <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">{{ info.name }}</span>
+                <svg id="icon-snip-{{ key }}" class="w-3 h-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div id="snip-{{ key }}" class="hidden bg-black/40 p-4 border-t border-slate-800">
+                
+                <div class="w-full origin-top scale-[0.8] mb-4 pointer-events-none select-none">
+                    {{ info.preview_html | safe }}
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="copySnippet('{{ key }}')" class="flex-1 bg-slate-800 text-white text-[10px] font-black py-2 rounded-lg hover:bg-slate-700">COPY</button>
+                    <button onclick="addSnippet('{{ key }}')" class="flex-1 bg-blue-600 text-white text-[10px] font-black py-2 rounded-lg hover:bg-blue-500">ADD</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</aside>
 
 <script>
+    document.getElementById('cms-form').onsubmit = function() {
+        // 1. Save the CURRENT active tab's value to storage
+        storage[currentTab] = editor.getValue();
+
+        // 2. Push ALL storage values back to the hidden textareas
+        document.getElementById('html_data').value = storage.html;
+        document.getElementById('css_data').value = storage.css;
+        document.getElementById('js_data').value = storage.js;
+
+        return true; // Allow form to submit
+    };
     let currentTab = 'html';
+    
+    const snippets = {
+        {% for key, info in snippets.items() %}
+        "{{ key }}": `{{ info.html | safe }}`,
+        {% endfor %}
+    };
+
     const storage = {
         html: document.getElementById('html_data').value,
         css: document.getElementById('css_data').value,
@@ -97,68 +203,110 @@
     };
 
     const editor = CodeMirror(document.getElementById('editor-holder'), {
-        lineNumbers: true, theme: 'dracula', mode: 'xml', value: storage.html, lineWrapping: true
+        lineNumbers: true, 
+        theme: 'dracula', 
+        mode: 'xml', 
+        value: storage.html, 
+        lineWrapping: true,
+        tabSize: 4,
+        indentUnit: 4
     });
 
     function switchTab(tab) {
         if (currentTab !== 'preview') storage[currentTab] = editor.getValue();
         currentTab = tab;
-
         const isPreview = tab === 'preview';
+        
         document.getElementById('editor-wrapper').classList.toggle('hidden', isPreview);
         document.getElementById('preview-wrapper').classList.toggle('hidden', !isPreview);
-
+        document.getElementById('preview-controls').classList.toggle('hidden', !isPreview);
+        
         if (isPreview) {
             updatePreview();
         } else {
             const modes = { html: 'xml', css: 'css', js: 'javascript' };
             editor.setOption('mode', modes[tab]);
             editor.setValue(storage[tab]);
-            setTimeout(() => editor.refresh(), 5);
+            setTimeout(() => editor.refresh(), 20);
         }
-
-        // --- FIXED TAB BORDER LOGIC ---
+        
         ['html', 'css', 'js', 'preview'].forEach(t => {
             const btn = document.getElementById('btn-' + t);
-            const active = (t === tab);
-
-            if (active) {
-                btn.classList.add('bg-slate-900', 'text-white');
-                btn.classList.remove('border-transparent', 'text-slate-400');
-                btn.classList.add(t === 'preview' ? 'border-emerald-500' : 'border-blue-500');
-            } else {
-                btn.classList.remove('bg-slate-900', 'text-white', 'border-blue-500', 'border-emerald-500');
-                btn.classList.add('border-transparent', 'text-slate-400');
-            }
+            btn.classList.toggle('tab-btn-active', t === tab);
+            if (t !== tab && t !== 'preview') btn.classList.add('text-slate-500');
         });
     }
 
     function updatePreview() {
         const doc = document.getElementById('live_preview').contentDocument;
-        document.getElementById('html_data').value = storage.html;
-        document.getElementById('css_data').value = storage.css;
-        document.getElementById('js_data').value = storage.js;
-
+        const mode = document.getElementById('preview-mode').value;
         doc.open();
-        doc.write('<script src="https://cdn.tailwindcss.com"><\/script>');
-        doc.write(`<style>${storage.css} body { padding: 2rem; min-height: 100vh; }<\/style>`);
-        doc.write(storage.html);
-        doc.write(`<script>${storage.js}<\/script>`);
+        doc.write(`<html class="${mode}"><head><script src="https://cdn.tailwindcss.com"><\/script>`);
+        doc.write(`<script>tailwind.config = { darkMode: 'class' }<\/script>`);
+        doc.write(`<style>${storage.css} body { margin: 0; } .preview-fix { min-height: 100vh; padding: 1rem; transition: 0.3s; } .light .preview-fix { background: #fff; color: #000; } .dark .preview-fix { background: #020617; color: #fff; }<\/style></head>`);
+        doc.write(`<body><div class="preview-fix">${storage.html}</div><script>${storage.js}<\/script></body></html>`);
         doc.close();
     }
 
-    function showModal() { document.getElementById('snippet-modal').classList.remove('hidden'); }
-    function hideModal() { document.getElementById('snippet-modal').classList.add('hidden'); }
+    function toggleSidebar() {
+        const sidebar = document.getElementById('snippet-sidebar');
+        const overlay = document.getElementById('snippet-overlay');
+        const isOpen = sidebar.classList.contains('is-open');
 
-    function addSnippet(type) {
-        let snip = (type === 'warning') ? 
-            `<div class="bg-amber-100 border-l-4 border-amber-500 p-4 my-4"><strong>Warning!</strong> Your message.</div>` : 
-            `<section class="py-20 text-center"><h1>Headline</h1></section>`;
-        switchTab('html');
-        editor.replaceSelection(snip);
-        hideModal();
+        if (!isOpen) {
+            overlay.classList.remove('hidden');
+            void sidebar.offsetWidth; 
+            sidebar.classList.add('is-open');
+            overlay.classList.remove('opacity-0');
+            overlay.classList.add('opacity-100');
+            document.body.style.overflow = 'hidden';
+        } else {
+            sidebar.classList.remove('is-open');
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                if (!sidebar.classList.contains('is-open')) overlay.classList.add('hidden');
+            }, 500);
+        }
     }
 
-    window.onload = () => editor.refresh();
+    function toggleAccordion(id) {
+        const content = document.getElementById(id);
+        const icon = document.getElementById('icon-' + id);
+        document.querySelectorAll('[id^="snip-"]').forEach(el => { if(el.id !== id) el.classList.add('hidden'); });
+        content.classList.toggle('hidden');
+        if (icon) icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+
+    function addSnippet(type) {
+        const snip = snippets[type];
+        switchTab('html');
+        const cursor = editor.getCursor();
+        editor.replaceRange(snip, cursor);
+        const lineCount = snip.split('\n').length;
+        for (let i = 0; i < lineCount; i++) {
+            editor.indentLine(cursor.line + i);
+        }
+        editor.focus();
+    }
+
+    function copySnippet(type) {
+        navigator.clipboard.writeText(snippets[type]).then(() => {
+            const btn = event.target;
+            const old = btn.innerText;
+            btn.innerText = "COPIED!";
+            setTimeout(() => btn.innerText = old, 1500);
+        });
+    }
+
+    function filterSnippets() {
+        const q = document.getElementById('snippetSearch').value.toLowerCase();
+        document.querySelectorAll('.snippet-item').forEach(i => {
+            i.style.display = i.getAttribute('data-name').includes(q) ? 'block' : 'none';
+        });
+    }
+
+    window.onload = () => { setTimeout(() => editor.refresh(), 100); };
 </script>
 {% endblock %}

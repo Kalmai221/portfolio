@@ -1,11 +1,20 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
+    /* Force the wrapper to take up the full available height and width */
+    .full-page-fix {
+        min-height: calc(100vh - 64px); /* Fills screen minus nav height */
+        width: 100%;
+    }
     {{ page.css | safe }}
 </style>
 
-<div class="cms-container">
-    {{ page.content | safe }}
+<div class="full-page-fix">
+    <div class="max-w-7xl mx-auto p-8 md:p-16">
+        <div class="text-slate-900 dark:text-slate-100">
+            {{ page.content | safe }}
+        </div>
+    </div>
 </div>
 
 <script>

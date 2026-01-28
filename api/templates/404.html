@@ -1,32 +1,69 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="flex flex-col items-center justify-center py-20 text-center animate-fade-in transition-colors duration-300">
-    <div class="relative mb-8">
-        <h1 class="text-[12rem] font-black text-slate-500/20 leading-none">404</h1>
+<style>
+    .bg-grid {
+        background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
+        background-size: 32px 32px;
+    }
+    .glitch-text {
+        text-shadow: 2px 0 #2563eb, -2px 0 #ef4444;
+    }
+    /* Prevent the massive text from causing horizontal scroll */
+    .hero-container { overflow: visible; width: 100%; position: relative; }
+</style>
+
+<div class="flex flex-col items-center justify-center min-h-full text-center p-4 md:p-10 bg-grid text-slate-200/5 dark:text-slate-800/20 transition-colors duration-500 overflow-hidden">
+    
+    <div class="relative mb-8 md:mb-12 select-none hero-container">
+        <h1 class="text-[8rem] sm:text-[10rem] md:text-[14rem] font-black leading-none opacity-20 dark:opacity-40 glitch-text tracking-tighter transition-all">
+            404
+        </h1>
         
-        <div class="absolute inset-0 flex items-center justify-center">
-            <span class="bg-blue-600 text-white px-4 py-1 rounded-md font-bold text-sm transform -rotate-12 shadow-xl">
-                PATH_NOT_DEFINED
-            </span>
+        <div class="absolute inset-0 flex items-center justify-center translate-y-4 md:translate-y-8">
+            <div class="bg-blue-600 text-white px-4 md:px-6 py-2 rounded-xl md:rounded-2xl font-black text-[10px] md:text-sm uppercase tracking-[0.2em] md:tracking-[0.3em] shadow-2xl shadow-blue-600/40 border-2 border-white/20 -rotate-2 whitespace-nowrap">
+                Null Pointer Exception
+            </div>
         </div>
     </div>
 
-    <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2 transition-colors">
-        You've hit a dead end.
-    </h2>
-    
-    <p class="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-10 transition-colors">
-        This URL doesn't exist in the database yet. You can create it instantly in the admin panel.
-    </p>
-    
-    <div class="flex gap-4">
-        <a href="/" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-8 py-3 rounded-xl transition font-semibold border border-slate-300 dark:border-slate-700">
-            Go Home
-        </a>
+    <div class="max-w-xl w-full z-10 px-2">
+        <h2 class="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 dark:text-white mb-4">
+            Route <span class="text-blue-600">Untraceable</span>
+        </h2>
         
-        <a href="/admin" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl transition font-bold shadow-lg shadow-blue-900/40">
-            Open Admin
-        </a>
+        <p class="text-slate-500 dark:text-slate-400 font-medium mb-8 md:mb-10 max-w-sm mx-auto leading-relaxed text-sm md:text-base">
+            The requested document hash does not exist in the <span class="text-blue-500 font-bold italic">MongoDB</span> collection.
+        </p>
+
+        <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-[2rem] md:rounded-[2.5rem] mb-8 md:mb-12 shadow-2xl overflow-hidden relative">
+            <div class="bg-slate-50 dark:bg-black/40 p-5 md:p-6 text-left font-mono text-[10px] md:text-[11px] leading-relaxed space-y-1 text-slate-600 dark:text-slate-400">
+                <p class="text-red-500 break-all">> [GET] Failed for: {{ request.path }}</p>
+                <p>> [QUERY] Searching index...</p>
+                <p>> [RESULT] 404 NOT_FOUND</p>
+                <div class="flex items-center gap-1">
+                    <span class="text-blue-500">> Awaiting user redirect</span>
+                    <span class="w-1.5 h-3 bg-blue-500 animate-pulse"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/" class="group flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 md:px-10 py-4 rounded-2xl transition-all font-black text-xs md:text-sm shadow-xl active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                BACK TO HUB
+            </a>
+            
+            {% if session.get('user') %}
+            <a href="/admin" class="group flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 md:px-10 py-4 rounded-2xl transition-all font-black text-xs md:text-sm shadow-xl shadow-blue-600/20 active:scale-95">
+                ADMIN PANEL
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:translate-y-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                </svg>
+            </a>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
