@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Add New Project</h1>
+    <form method="POST">
+        <label>Project Title:</label>
+        <input type="text" name="title" required>
+
+        <label>Description:</label>
+        <textarea name="description" rows="5" required></textarea>
+
+        <label>Tech Stack (comma separated):</label>
+        <input type="text" name="tech" placeholder="Python, Flask, MongoDB">
+
+        <label>Project URL:</label>
+        <input type="url" name="link">
+
+        <button type="submit">Save to Database</button>
+    </form>
+{% endblock %}

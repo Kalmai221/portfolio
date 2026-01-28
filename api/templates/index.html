@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Project Portfolio</h1>
+    <div class="portfolio-grid">
+        {% for project in projects %}
+            <article>
+                <h2>{{ project.title }}</h2>
+                <p>{{ project.description }}</p>
+                <p><strong>Tech:</strong> {{ ", ".join(project.tech_stack) }}</p>
+                {% if project.link %}
+                    <a href="{{ project.link }}" target="_blank">View Live</a>
+                {% endif %}
+            </article>
+        {% else %}
+            <p>No projects added yet. Use the "Add Project" link above!</p>
+        {% endfor %}
+    </div>
+{% endblock %}
