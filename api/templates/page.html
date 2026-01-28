@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    {{ page.css | safe }}
+</style>
+
+<div class="cms-container">
+    {{ page.content | safe }}
+</div>
+
+<script>
+    {{ page.js | safe }}
+</script>
+{% endblock %}

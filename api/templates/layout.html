@@ -1,19 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="main-html" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Portfolio CMS</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <title>Gemini CMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+        /* Global theme colors */
+        .dark body { background-color: #0f172a; color: #f8fafc; }
+        .light body { background-color: #f1f5f9; color: #0f172a; }
+        .transition-theme { transition: background-color 0.3s, color 0.3s; }
+    </style>
 </head>
-<body>
-    <nav>
-        <a href="{{ url_for('index') }}">View Portfolio</a> | 
-        <a href="{{ url_for('add_project') }}">Add Project</a>
+<body class="transition-theme flex flex-col">
+    <nav class="shrink-0 border-b border-slate-200 dark:border-slate-800 p-4 flex justify-between items-center bg-white dark:bg-[#0f172a] z-10">
+        <a href="/admin" class="font-bold text-xl tracking-tight text-slate-900 dark:text-white">Gemini <span class="text-blue-500">CMS</span></a>
+        <div class="flex gap-4 items-center">
+            <button onclick="toggleGlobalTheme()" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs transition">Toggle Theme 🌓</button>
+            <a href="/" class="text-sm text-slate-600 dark:text-slate-400 hover:text-blue-500 transition">Live Site</a>
+        </div>
     </nav>
-    <hr>
-    <main>
+    <main class="flex-1 relative overflow-hidden">
         {% block content %}{% endblock %}
     </main>
+    <script>
+        function toggleGlobalTheme() {
+            const html = document.getElementById('main-html');
+            html.classList.toggle('dark');
+            html.classList.toggle('light');
+        }
+    </script>
 </body>
 </html>

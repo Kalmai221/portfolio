@@ -1,60 +1,60 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, abort
+from pymongo import MongoClient
+import certifi
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
 
-MONGODB_URI = os.environ.get("MONGODB_URI", "")
+# --- DATABASE CONNECTION ---
+MONGO_URI = os.environ.get("MONGODB_URI")
+client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+db = client.my_portfolio
+pages_collection = db.pages
 
-_client = None
-_db = None
-_projects_collection = None
+@app.route('/', defaults={'path': 'home'})
+@app.route('/<path:path>')
+def cms_router(path):
+    if path == "admin":
+        return redirect(url_for('admin_dashboard'))
 
-def get_projects_collection():
-    global _client, _db, _projects_collection
-    if _projects_collection is None and MONGODB_URI:
-        try:
-            from pymongo import MongoClient
-            _client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
-            _db = _client.my_portfolio
-            _projects_collection = _db.projects
-        except Exception as e:
-            print(f"MongoDB connection error: {e}")
-            return None
-    return _projects_collection
+    page = pages_collection.find_one({"slug": path})
+    if not page:
+        abort(404)
 
-@app.after_request
-def add_header(response):
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    return response
+    return render_template('page.html', page=page)
 
-@app.route('/')
-def index():
-    collection = get_projects_collection()
-    if collection is not None:
-        all_projects = list(collection.find())
-    else:
-        all_projects = []
-    return render_template('index.html', projects=all_projects)
+@app.route('/admin')
+def admin_dashboard():
+    all_pages = list(pages_collection.find())
+    return render_template('admin.html', pages=all_pages)
 
-@app.route('/admin/add', methods=['GET', 'POST'])
-def add_project():
+@app.route('/admin/edit/<path:slug>', methods=['GET', 'POST'])
+def edit_page(slug):
     if request.method == 'POST':
-        collection = get_projects_collection()
-        if collection is not None:
-            project_data = {
-                "title": request.form.get("title"),
-                "description": request.form.get("description"),
-                "tech_stack": request.form.get("tech").split(','),
-                "link": request.form.get("link")
-            }
-            collection.insert_one(project_data)
-        return redirect(url_for('index'))
-    return render_template('add_project.html')
+        data = {
+            "slug": request.form.get("slug").strip("/"),
+            "title": request.form.get("title"),
+            "content": request.form.get("content"),    # HTML Tab
+            "css": request.form.get("css_content"),    # CSS Tab
+            "js": request.form.get("js_content")       # JS Tab
+        }
+        pages_collection.update_one({"slug": slug}, {"$set": data}, upsert=True)
+        return redirect(url_for('admin_dashboard'))
+
+    page = pages_collection.find_one({"slug": slug})
+    return render_template('edit_page.html', page=page, slug=slug)
+
+@app.route('/admin/delete/<path:slug>')
+def delete_page(slug):
+    pages_collection.delete_one({"slug": slug})
+    return redirect(url_for('admin_dashboard'))
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True)

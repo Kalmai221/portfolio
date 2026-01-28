@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/javascript/javascript.min.js"></script>
+
+<style>
+    .CodeMirror { 
+        height: 100% !important; 
+        width: 100% !important;
+        font-family: 'Fira Code', monospace;
+        font-size: 15px;
+    }
+    /* Forces the box to stretch to the bottom of the viewport */
+    .editor-box {
+        height: calc(100vh - 140px);
+        min-height: 600px;
+    }
+    body { overflow: hidden; }
+</style>
+
+<div class="flex flex-col h-full">
+    <div class="flex flex-wrap gap-4 mb-4 items-end shrink-0 text-white">
+        <div class="flex-1 min-w-[200px]">
+            <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Page Title</label>
+            <input type="text" name="title" form="cms-form" value="{{ page.title if page else '' }}" 
+                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+        </div>
+        <div class="w-full md:w-1/4">
+            <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Slug</label>
+            <input type="text" name="slug" form="cms-form" value="{{ slug }}" 
+                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+        </div>
+        <div class="flex gap-2">
+            <button type="button" onclick="showModal()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-lg font-bold text-sm h-[42px] transition-all">🎨 Snippets</button>
+            <button form="cms-form" class="bg-blue-600 hover:bg-blue-500 px-8 py-2 rounded-lg font-bold text-sm h-[42px] shadow-lg transition-all">Save Page</button>
+        </div>
+    </div>
+
+    <form method="POST" id="cms-form" class="flex flex-col flex-1 editor-box bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
+        
+        <div class="flex bg-slate-950 border-b border-slate-800 shrink-0">
+            <button type="button" onclick="switchTab('html')" id="btn-html" class="px-8 py-3 text-xs font-bold border-b-2 border-blue-500 bg-slate-900 text-white transition">HTML</button>
+            <button type="button" onclick="switchTab('css')" id="btn-css" class="px-8 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white transition">CSS</button>
+            <button type="button" onclick="switchTab('js')" id="btn-js" class="px-8 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white transition">JS</button>
+            <button type="button" onclick="switchTab('preview')" id="btn-preview" class="px-8 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white transition">PREVIEW</button>
+        </div>
+        
+        <div class="flex-1 relative bg-slate-900">
+            <textarea id="html_data" name="content" class="hidden">{{ page.content if page else '' }}</textarea>
+            <textarea id="css_data" name="css_content" class="hidden">{{ page.css if page else '' }}</textarea>
+            <textarea id="js_data" name="js_content" class="hidden">{{ page.js if page else '' }}</textarea>
+            
+            <div id="editor-wrapper" class="absolute inset-0">
+                <div id="editor-holder" class="h-full"></div>
+            </div>
+
+            <div id="preview-wrapper" class="absolute inset-0 hidden bg-white">
+                <iframe id="live_preview" class="w-full h-full"></iframe>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="snippet-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 z-[9999]">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl max-w-4xl w-full text-white">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Component Gallery</h2>
+            <button onclick="hideModal()" class="text-slate-500 hover:text-white">✕ Close</button>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div onclick="addSnippet('warning')" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-blue-500 cursor-pointer transition">
+                <h3 class="font-bold text-amber-500 mb-2">Warning Box</h3>
+                <div class="bg-amber-100/10 border-l-4 border-amber-500 p-2 text-[10px] text-amber-200 pointer-events-none">
+                    Preview of a warning box admonition...
+                </div>
+            </div>
+            <div onclick="addSnippet('hero')" class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-blue-500 cursor-pointer transition">
+                <h3 class="font-bold text-blue-500 mb-2">Hero Header</h3>
+                <div class="bg-slate-700 p-2 text-[10px] text-center pointer-events-none rounded">
+                    Main Headline
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentTab = 'html';
+    const storage = {
+        html: document.getElementById('html_data').value,
+        css: document.getElementById('css_data').value,
+        js: document.getElementById('js_data').value
+    };
+
+    const editor = CodeMirror(document.getElementById('editor-holder'), {
+        lineNumbers: true, theme: 'dracula', mode: 'xml', value: storage.html, lineWrapping: true
+    });
+
+    function switchTab(tab) {
+        if (currentTab !== 'preview') storage[currentTab] = editor.getValue();
+        currentTab = tab;
+
+        const isPreview = tab === 'preview';
+        document.getElementById('editor-wrapper').classList.toggle('hidden', isPreview);
+        document.getElementById('preview-wrapper').classList.toggle('hidden', !isPreview);
+
+        if (isPreview) {
+            updatePreview();
+        } else {
+            const modes = { html: 'xml', css: 'css', js: 'javascript' };
+            editor.setOption('mode', modes[tab]);
+            editor.setValue(storage[tab]);
+            setTimeout(() => editor.refresh(), 5);
+        }
+
+        // --- FIXED TAB BORDER LOGIC ---
+        ['html', 'css', 'js', 'preview'].forEach(t => {
+            const btn = document.getElementById('btn-' + t);
+            const active = (t === tab);
+
+            if (active) {
+                btn.classList.add('bg-slate-900', 'text-white');
+                btn.classList.remove('border-transparent', 'text-slate-400');
+                btn.classList.add(t === 'preview' ? 'border-emerald-500' : 'border-blue-500');
+            } else {
+                btn.classList.remove('bg-slate-900', 'text-white', 'border-blue-500', 'border-emerald-500');
+                btn.classList.add('border-transparent', 'text-slate-400');
+            }
+        });
+    }
+
+    function updatePreview() {
+        const doc = document.getElementById('live_preview').contentDocument;
+        document.getElementById('html_data').value = storage.html;
+        document.getElementById('css_data').value = storage.css;
+        document.getElementById('js_data').value = storage.js;
+
+        doc.open();
+        doc.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+        doc.write(`<style>${storage.css} body { padding: 2rem; min-height: 100vh; }<\/style>`);
+        doc.write(storage.html);
+        doc.write(`<script>${storage.js}<\/script>`);
+        doc.close();
+    }
+
+    function showModal() { document.getElementById('snippet-modal').classList.remove('hidden'); }
+    function hideModal() { document.getElementById('snippet-modal').classList.add('hidden'); }
+
+    function addSnippet(type) {
+        let snip = (type === 'warning') ? 
+            `<div class="bg-amber-100 border-l-4 border-amber-500 p-4 my-4"><strong>Warning!</strong> Your message.</div>` : 
+            `<section class="py-20 text-center"><h1>Headline</h1></section>`;
+        switchTab('html');
+        editor.replaceSelection(snip);
+        hideModal();
+    }
+
+    window.onload = () => editor.refresh();
+</script>
+{% endblock %}

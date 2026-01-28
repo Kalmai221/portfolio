@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="p-6 h-full overflow-y-auto">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+        <div>
+            <h1 class="text-4xl font-black tracking-tight mb-2 transition-colors">
+                <span class="text-blue-600">Control</span> 
+                <span class="text-blue-600">Center</span>
+            </h1>
+            <p class="!text-slate-600 dark:!text-slate-400 font-medium transition-colors">
+                Manage your dynamic MongoDB pages and site structure.
+            </p>
+        </div>
+
+        <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex gap-2 w-full md:w-auto shadow-2xl">
+            <input type="text" id="new_slug" placeholder="e.g. about, contact..." 
+                   class="bg-transparent px-4 py-2 text-sm !text-white focus:outline-none w-full md:w-64 placeholder-slate-600"
+                   onkeypress="if(event.key === 'Enter') handleSlugRedirect()">
+            <button onclick="handleSlugRedirect()" 
+                    class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-bold transition-all active:scale-95 whitespace-nowrap">
+                + Create Page
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-slate-950 border border-slate-800 p-6 rounded-2xl shadow-xl">
+            <span class="text-slate-500 text-xs uppercase font-bold tracking-widest">Total Pages</span>
+            <div class="text-3xl font-mono mt-1 !text-white">{{ pages|length }}</div>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 p-6 rounded-2xl shadow-xl">
+            <span class="text-slate-500 text-xs uppercase font-bold tracking-widest">System Status</span>
+            <div class="flex items-center gap-2 mt-1">
+                <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span class="text-emerald-400 font-bold">MongoDB Connected</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-black/50 text-slate-400 text-xs uppercase tracking-[0.2em] border-b border-slate-800">
+                    <th class="px-8 py-5">Display Title</th>
+                    <th class="px-8 py-5">Path</th>
+                    <th class="px-8 py-5 text-right">Operations</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+                {% for p in pages %}
+                <tr class="group hover:bg-white/[0.03] transition-colors">
+                    <td class="px-8 py-5">
+                        <div class="flex flex-col">
+                            <span class="!text-white font-semibold group-hover:text-blue-400 transition-colors">{{ p.title }}</span>
+                            <span class="text-slate-500 text-xs italic">Live Document</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5">
+                        <span class="font-mono text-xs px-2 py-1 bg-black rounded border border-slate-700 !text-slate-300">
+                            /{{ p.slug if p.slug != 'home' else '' }}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <div class="flex justify-end items-center gap-3">
+                            <a href="/{{ p.slug if p.slug != 'home' else '' }}" target="_blank"
+                               class="p-2 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </a>
+                            <a href="{{ url_for('edit_page', slug=p.slug) }}" 
+                               class="bg-slate-800 hover:bg-blue-600 !text-white px-4 py-1.5 rounded-lg text-sm font-bold transition-all border border-slate-700">
+                                Edit
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function handleSlugRedirect() {
+    let slug = document.getElementById('new_slug').value.trim();
+    if (slug === "/" || slug === "") slug = "home";
+    slug = slug.replace(/^\/+/, '');
+    window.location.href = '/admin/edit/' + slug;
+}
+</script>
+{% endblock %}
