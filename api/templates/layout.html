@@ -103,13 +103,22 @@
                 <span class="hidden sm:block text-[9px] uppercase tracking-[0.3em] font-black text-slate-500 mt-1">Portfolio Engine v1.0</span>
             </a>
         </div>
+
+        <div class="hidden md:flex gap-4 items-center mx-auto">
+            {% if settings and settings.nav_links %}
+                {% for link in settings.nav_links %}
+                <a href="{{ link.url }}" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-500 transition-all border border-transparent hover:border-blue-500/20 rounded-lg">
+                    {{ link.label }}
+                </a>
+                {% endfor %}
+            {% endif %}
+        </div>
         
         <div class="flex gap-3 md:gap-6 items-center">
             {% if session.get('user') %}
                 <div class="hidden md:flex gap-2 items-center mr-2">
-                    <a href="/" class="px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-blue-500 transition-all">Preview</a>
                     <a href="/admin" class="px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-blue-500 transition-all">Dashboard</a>
-                    <a href="/logout" class="ml-2 px-4 py-2 text-xs font-black uppercase tracking-widest bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all">Exit</a>
+                    <a href="/logout" class="ml-2 px-4 py-2 text-xs font-black uppercase bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all">Exit</a>
                 </div>
             {% else %}
                 <a href="/login" class="px-4 md:px-6 py-2 md:py-2.5 text-[10px] md:text-xs font-black uppercase tracking-widest bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-500 transition-all active:scale-95">Log In</a>
@@ -136,10 +145,19 @@
         </div>
         
         <div class="flex flex-col gap-4">
-            <a href="/" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 font-black uppercase tracking-widest text-xs">Preview Site</a>
-            <a href="/admin" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 font-black uppercase tracking-widest text-xs">Dashboard</a>
-            <hr class="border-slate-100 dark:border-slate-800/50 my-2">
-            <a href="/logout" class="p-4 rounded-2xl bg-red-500/10 text-red-500 font-black uppercase tracking-widest text-xs">Logout</a>
+            {% if settings and settings.nav_links %}
+                {% for link in settings.nav_links %}
+                <a href="{{ link.url }}" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 font-black uppercase tracking-widest text-xs">
+                    {{ link.label }}
+                </a>
+                {% endfor %}
+            {% endif %}
+            
+            {% if session.get('user') %}
+                <a href="/admin" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 font-black uppercase tracking-widest text-xs">Dashboard</a>
+                <hr class="border-slate-100 dark:border-slate-800/50 my-2">
+                <a href="/logout" class="p-4 rounded-2xl bg-red-500/10 text-red-500 font-black uppercase tracking-widest text-xs">Logout</a>
+            {% endif %}
         </div>
 
         <div class="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800/50">

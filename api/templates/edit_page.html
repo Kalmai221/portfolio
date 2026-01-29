@@ -35,7 +35,7 @@
         border-bottom: 2px solid #2563eb !important;
     }
 
-    .nav-tab-item { flex: 1 0 auto; min-width: 80px; text-align: center; }
+    .nav-tab-item { flex: 1 0 auto; min-width: 80px; text-align: center; cursor: pointer; }
 
     #snippet-sidebar { 
         transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -44,46 +44,23 @@
         z-index: 1000;
     }
 
-    #snippet-sidebar.is-open {
-        transform: translateX(0);
-    }
-
-    .snippet-item {
-        opacity: 0;
-        transform: translateX(20px);
-        transition: all 0.4s ease;
-    }
-
-    #snippet-sidebar.is-open .snippet-item {
-        opacity: 1;
-        transform: translateX(0);
-    }
-
-    [id^="snip-"] {
-        transition: all 0.3s ease-in-out;
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-    }
-
-    [id^="snip-"]:not(.hidden) {
-        max-height: 600px; 
-        opacity: 1;
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
-    
+    #snippet-sidebar.is-open { transform: translateX(0); }
     .no-scrollbar::-webkit-scrollbar { display: none; }
+    .security-critical { border-color: #ef4444 !important; }
+    
+    #security-modal { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .modal-active { opacity: 1 !important; pointer-events: auto !important; }
+    .modal-active > div { transform: scale(1) !important; }
 </style>
 
 <div class="flex flex-col min-h-full p-4 md:p-8 space-y-6">
     <div class="flex flex-col lg:flex-row gap-6 items-stretch lg:items-end shrink-0">
         <div class="flex-1 space-y-2">
             <h1 class="text-3xl font-black tracking-tighter">
-                <span class="text-blue-600">Edit</span> 
+                <span class="text-blue-600">Secure</span> 
                 <span class="text-slate-900 dark:text-slate-50 transition-colors">Workspace</span>
             </h1>
-            <input type="text" name="title" form="cms-form" value="{{ page.title if page else '' }}" 
+            <input type="text" id="page-title-input" name="title" form="cms-form" value="{{ page.title if page else '' }}" 
                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-5 py-3 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 font-semibold shadow-sm" placeholder="Page Title">
         </div>
         
@@ -98,22 +75,22 @@
         
         <div class="grid grid-cols-2 md:flex gap-3">
             {% if slug != 'home' %}
-            <a href="{{ url_for('delete_page', slug=slug) }}" class="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase text-center">Delete</a>
+            <button type="button" onclick="confirmDeletion('{{ url_for('delete_page', slug=slug) }}')" class="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase text-center hover:bg-red-600 hover:text-white transition-colors">Delete</button>
             {% endif %}
             <button type="button" onclick="toggleSidebar()" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-6 py-3 rounded-xl text-[10px] font-black uppercase shadow-sm">🎨 Snippets</button>
-            <button form="cms-form" class="col-span-2 md:col-span-1 bg-blue-600 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-600/20">Push to Live</button>
+            <button type="button" id="push-btn" onclick="runSecurityAudit()" class="col-span-2 md:col-span-1 bg-blue-600 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-600/20 active:scale-95 transition-all">Audit & Deploy</button>
         </div>
     </div>
 
-    <form method="POST" id="cms-form" class="flex flex-col flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl backdrop-blur-xl">
-        <div class="flex flex-wrap bg-slate-50 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800 shrink-0 items-center justify-between px-2">
+    <form method="POST" id="cms-form" class="flex flex-col flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl backdrop-blur-xl transition-all duration-300">
+        <div class="flex flex-wrap bg-slate-50 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800 shrink-0 px-2 py-2">
             <div class="flex w-full sm:w-auto overflow-x-auto py-2 gap-1 no-scrollbar">
                 <button type="button" onclick="switchTab('html')" id="btn-html" class="nav-tab-item px-4 py-2 text-[10px] font-black uppercase rounded-lg transition-all tab-btn-active">HTML</button>
                 <button type="button" onclick="switchTab('css')" id="btn-css" class="nav-tab-item px-4 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 transition-all">CSS</button>
                 <button type="button" onclick="switchTab('js')" id="btn-js" class="nav-tab-item px-4 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 transition-all">JS</button>
                 <button type="button" onclick="switchTab('preview')" id="btn-preview" class="nav-tab-item px-4 py-2 text-[10px] font-black uppercase rounded-lg text-emerald-500/60 transition-all">Preview</button>
             </div>
-            <div id="preview-controls" class="hidden py-2 pr-2">
+            <div id="preview-controls" class="hidden py-2 pr-4">
                 <select id="preview-mode" onchange="updatePreview()" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-[9px] font-bold border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none">
                     <option value="light">☀️ LIGHT</option>
                     <option value="dark">🌙 DARK</option>
@@ -137,59 +114,83 @@
     </form>
 </div>
 
-<div id="snippet-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden opacity-0 transition-opacity duration-300"></div>
-
-<aside id="snippet-sidebar" class="fixed right-0 top-0 h-full w-full sm:w-80 bg-white dark:bg-slate-950 z-[999] flex flex-col shadow-2xl border-l border-slate-800">
-    <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-        <div>
-            <h2 class="text-xl font-black tracking-tighter text-white uppercase">Snippets</h2>
-            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Library</p>
+<div id="security-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[2000] flex items-center justify-center opacity-0 pointer-events-none p-4 transition-all">
+    <div class="hud-card max-w-md w-full p-8 rounded-[2.5rem] border-red-500/30 bg-slate-900 shadow-[0_0_50px_rgba(239,68,68,0.2)] transform scale-95 transition-transform">
+        <div class="flex flex-col items-center text-center space-y-6">
+            <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 animate-pulse">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-black text-white uppercase tracking-tighter">Infrastructure Block</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest leading-relaxed">Security Audit detected high-risk code signatures. Deployment aborted.</p>
+            </div>
+            <div class="w-full bg-red-500/5 rounded-2xl p-4 border border-red-500/10">
+                <span class="text-[9px] font-black text-red-500 uppercase tracking-[0.2em]">Signature:</span>
+                <p id="security-msg" class="text-white font-mono text-xs mt-1 truncate">UNKNOWN</p>
+            </div>
+            <button onclick="closeSecurityModal()" class="w-full bg-slate-800 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all">Return to Editor</button>
         </div>
-        <button onclick="toggleSidebar()" class="p-2 text-slate-400 hover:text-white transition-colors">✕</button>
     </div>
-    
-    <div class="p-4 bg-slate-950 border-b border-slate-800">
-        <input type="text" id="snippetSearch" onkeyup="filterSnippets()" placeholder="Search components..." 
-               class="w-full bg-slate-900 border-none rounded-lg px-4 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none text-white">
+</div>
+
+<aside id="snippet-sidebar" class="fixed right-0 top-0 h-full w-full sm:w-80 bg-white dark:bg-slate-950 z-[999] flex flex-col shadow-2xl border-l border-slate-200 dark:border-slate-800">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
+        <div>
+            <h2 class="text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Component Lab</h2>
+            <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest">Version 2.0</p>
+        </div>
+        <button onclick="toggleSidebar()" class="p-2 text-slate-400 hover:text-red-500 transition-colors">✕</button>
     </div>
 
-    <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4" id="snippetList">
+    <div class="p-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+        <div class="relative">
+            <input type="text" id="snippetSearch" onkeyup="filterSnippets()" placeholder="Search components..." 
+                   class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white pl-10">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar" id="snippetList">
         {% for key, info in snippets.items() %}
-        <div class="snippet-item border border-slate-800 rounded-xl overflow-hidden" data-name="{{ info.keywords }}">
-            <button onclick="toggleAccordion('snip-{{ key }}')" class="w-full p-4 flex justify-between items-center hover:bg-slate-900 transition-colors">
-                <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">{{ info.name }}</span>
-                <svg id="icon-snip-{{ key }}" class="w-3 h-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
-            </button>
-            <div id="snip-{{ key }}" class="hidden bg-black/40 p-4 border-t border-slate-800">
-                
-                <div class="w-full origin-top scale-[0.8] mb-4 pointer-events-none select-none">
-                    {{ info.preview_html | safe }}
+        <div class="snippet-item border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all" 
+             data-name="{{ info.name|lower }}" data-keywords="{{ info.keywords|lower }}" data-category="{{ info.category|lower }}">
+
+            <div class="px-4 pt-4 flex justify-between items-center">
+                <span class="text-[8px] font-black bg-blue-500/10 text-blue-600 px-2 py-0.5 rounded-full uppercase tracking-widest">{{ info.category or 'Global' }}</span>
+                <button onclick="copySnippet('{{ key }}')" class="text-slate-400 hover:text-blue-500 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-3">
+                <h3 class="text-[11px] font-black text-slate-900 dark:text-white uppercase">{{ info.name }}</h3>
+
+                <div class="w-full bg-slate-50 dark:bg-black/20 rounded-xl p-2 border border-slate-100 dark:border-slate-800 overflow-hidden pointer-events-none select-none">
+                    <div class="transform scale-[0.6] origin-top-left" style="width: 166.66%;">
+                         {{ info.preview_html|safe if info.preview_html else '<p class="text-[10px] italic text-slate-500">No Preview Available</p>'|safe }}
+                    </div>
                 </div>
 
-                <div class="flex gap-2">
-                    <button onclick="copySnippet('{{ key }}')" class="flex-1 bg-slate-800 text-white text-[10px] font-black py-2 rounded-lg hover:bg-slate-700">COPY</button>
-                    <button onclick="addSnippet('{{ key }}')" class="flex-1 bg-blue-600 text-white text-[10px] font-black py-2 rounded-lg hover:bg-blue-500">ADD</button>
-                </div>
+                <button onclick="addSnippet('{{ key }}')" 
+                        class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all active:scale-95 shadow-lg">
+                    Insert Component
+                </button>
+                <button onclick="copySnippet('{{ key }}')" 
+                        class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all active:scale-95 shadow-lg">
+                    Copy Component
+                </button>
             </div>
         </div>
         {% endfor %}
     </div>
 </aside>
 
+<div id="snippet-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden opacity-0 transition-opacity duration-300"></div>
+
 <script>
-    document.getElementById('cms-form').onsubmit = function() {
-        // 1. Save the CURRENT active tab's value to storage
-        storage[currentTab] = editor.getValue();
-
-        // 2. Push ALL storage values back to the hidden textareas
-        document.getElementById('html_data').value = storage.html;
-        document.getElementById('css_data').value = storage.css;
-        document.getElementById('js_data').value = storage.js;
-
-        return true; // Allow form to submit
-    };
     let currentTab = 'html';
-    
+    let isDirty = false;
+
     const snippets = {
         {% for key, info in snippets.items() %}
         "{{ key }}": `{{ info.html | safe }}`,
@@ -212,8 +213,51 @@
         indentUnit: 4
     });
 
+    editor.on('change', () => { isDirty = true; });
+    document.getElementById('page-title-input').oninput = () => { isDirty = true; };
+
+    window.onbeforeunload = () => { if (isDirty) return "Unsaved changes detected."; };
+
+    function runSecurityAudit() {
+        storage[currentTab] = editor.getValue();
+        const combinedCode = storage.html + storage.css + storage.js;
+        const threats = [
+            { regex: /document\.cookie/i, name: "COOKIE_DATA_INTERCEPT" },
+            { regex: /while\s*\(true\)/i, name: "LOGIC_FREEZE_DETECTION" },
+            { regex: /eval\s*\(/i, name: "DYNAMIC_CODE_EXECUTION" },
+            { regex: /<script/i, name: "RAW_HTML_XSS_ATTEMPT" }
+        ];
+
+        for (let threat of threats) {
+            if (threat.regex.test(combinedCode)) {
+                document.getElementById('security-msg').innerText = threat.name;
+                document.getElementById('security-modal').classList.add('modal-active');
+                return;
+            }
+        }
+        deployNode();
+    }
+
+    function closeSecurityModal() {
+        document.getElementById('security-modal').classList.remove('modal-active');
+    }
+
+    function deployNode() {
+        const btn = document.getElementById('push-btn');
+        btn.innerText = "DEPLOYING...";
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        document.getElementById('html_data').value = storage.html;
+        document.getElementById('css_data').value = storage.css;
+        document.getElementById('js_data').value = storage.js;
+        isDirty = false;
+        window.onbeforeunload = null;
+        document.getElementById('cms-form').submit();
+    }
+
     function switchTab(tab) {
+        // Fix: Ensure we save the code from the editor into storage BEFORE switching
         if (currentTab !== 'preview') storage[currentTab] = editor.getValue();
+        
         currentTab = tab;
         const isPreview = tab === 'preview';
         
@@ -231,80 +275,135 @@
         }
         
         ['html', 'css', 'js', 'preview'].forEach(t => {
-            const btn = document.getElementById('btn-' + t);
-            btn.classList.toggle('tab-btn-active', t === tab);
-            if (t !== tab && t !== 'preview') btn.classList.add('text-slate-500');
+            document.getElementById('btn-' + t).classList.toggle('tab-btn-active', t === tab);
         });
     }
 
     function updatePreview() {
         const doc = document.getElementById('live_preview').contentDocument;
         const mode = document.getElementById('preview-mode').value;
+
+        // We get the current CSS and wrap it to ensure it respects the mode
+        const customCss = storage.css;
+
         doc.open();
-        doc.write(`<html class="${mode}"><head><script src="https://cdn.tailwindcss.com"><\/script>`);
+        // 1. We apply the class to the HTML tag
+        doc.write(`<!DOCTYPE html><html class="${mode}">`);
+        doc.write(`<head>`);
+        doc.write(`<script src="https://cdn.tailwindcss.com"><\/script>`);
+        // 2. We tell Tailwind to look for the class on the HTML tag
         doc.write(`<script>tailwind.config = { darkMode: 'class' }<\/script>`);
-        doc.write(`<style>${storage.css} body { margin: 0; } .preview-fix { min-height: 100vh; padding: 1rem; transition: 0.3s; } .light .preview-fix { background: #fff; color: #000; } .dark .preview-fix { background: #020617; color: #fff; }<\/style></head>`);
-        doc.write(`<body><div class="preview-fix">${storage.html}</div><script>${storage.js}<\/script></body></html>`);
+        doc.write(`<style>
+            /* Force full height */
+            html, body { height: 100%; margin: 0; padding: 0; }
+
+            /* Define theme variables or forced colors */
+            .light body { background-color: #f8fafc; color: #0f172a; }
+            .dark body { background-color: #020617; color: #f8fafc; }
+
+            /* User CSS */
+            ${customCss}
+
+            /* Ensure preview padding */
+            body { padding: 1rem; transition: background-color 0.3s ease; }
+        </style>`);
+        doc.write(`</head>`);
+        // 3. We apply the class to the body as a fallback for some CSS structures
+        doc.write(`<body class="${mode}">`);
+        doc.write(storage.html);
+        doc.write(`<script>${storage.js}<\/script>`);
+        doc.write(`</body></html>`);
         doc.close();
     }
 
     function toggleSidebar() {
         const sidebar = document.getElementById('snippet-sidebar');
         const overlay = document.getElementById('snippet-overlay');
-        const isOpen = sidebar.classList.contains('is-open');
-
-        if (!isOpen) {
-            overlay.classList.remove('hidden');
-            void sidebar.offsetWidth; 
-            sidebar.classList.add('is-open');
-            overlay.classList.remove('opacity-0');
-            overlay.classList.add('opacity-100');
-            document.body.style.overflow = 'hidden';
-        } else {
-            sidebar.classList.remove('is-open');
-            overlay.classList.remove('opacity-100');
-            overlay.classList.add('opacity-0');
-            document.body.style.overflow = '';
-            setTimeout(() => {
-                if (!sidebar.classList.contains('is-open')) overlay.classList.add('hidden');
-            }, 500);
-        }
+        const isOpen = sidebar.classList.toggle('is-open');
+        overlay.classList.toggle('hidden', !isOpen);
+        setTimeout(() => overlay.classList.toggle('opacity-100', isOpen), 10);
     }
 
     function toggleAccordion(id) {
-        const content = document.getElementById(id);
-        const icon = document.getElementById('icon-' + id);
-        document.querySelectorAll('[id^="snip-"]').forEach(el => { if(el.id !== id) el.classList.add('hidden'); });
-        content.classList.toggle('hidden');
-        if (icon) icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        document.getElementById(id).classList.toggle('hidden');
+    }
+
+    /**
+     * IMPROVED SNIPPET SEARCH
+     * Filters by name, keywords, and category
+     */
+    function filterSnippets() {
+        const query = document.getElementById('snippetSearch').value.toLowerCase();
+        const items = document.querySelectorAll('.snippet-item');
+
+        items.forEach(item => {
+            const name = item.getAttribute('data-name');
+            const keys = item.getAttribute('data-keywords');
+            const cat = item.getAttribute('data-category');
+
+            if (name.includes(query) || keys.includes(query) || cat.includes(query)) {
+                item.style.display = 'block';
+                item.classList.add('animate-in', 'fade-in', 'slide-in-from-right-4');
+            } else {
+                item.style.display = 'none';
+            }
+        });
     }
 
     function addSnippet(type) {
-        const snip = snippets[type];
-        switchTab('html');
-        const cursor = editor.getCursor();
-        editor.replaceRange(snip, cursor);
-        const lineCount = snip.split('\n').length;
-        for (let i = 0; i < lineCount; i++) {
-            editor.indentLine(cursor.line + i);
+        const content = snippets[type];
+        if (!content) return;
+
+        // 1. Force the HTML tab for layout snippets
+        if (currentTab !== 'html') switchTab('html');
+
+        // 2. Calculate the end position of the document
+        const lineCount = editor.lineCount();
+        const lastLineLength = editor.getLine(lineCount - 1).length;
+        const endPos = { line: lineCount, ch: 0 };
+
+        // 3. Append code with a leading newline to ensure separation
+        editor.replaceRange("\n" + content + "\n", endPos);
+
+        // 4. Auto-indent only the newly added lines
+        const newLineCount = content.split('\n').length;
+        for (let i = 0; i <= newLineCount; i++) {
+            editor.indentLine(lineCount + i);
         }
-        editor.focus();
+
+        isDirty = true;
+
+        // 5. Visual feedback: Scroll to bottom to show the new component
+        editor.scrollIntoView({ line: editor.lineCount() - 1, ch: 0 }, 200);
     }
 
     function copySnippet(type) {
-        navigator.clipboard.writeText(snippets[type]).then(() => {
-            const btn = event.target;
-            const old = btn.innerText;
-            btn.innerText = "COPIED!";
-            setTimeout(() => btn.innerText = old, 1500);
+        const code = snippets[type];
+        if (!code) return;
+
+        navigator.clipboard.writeText(code).then(() => {
+            // Find the specific button that was clicked using the event
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+
+            // Show success state
+            btn.innerHTML = `
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                </svg>
+            `;
+
+            // Reset after 2 seconds
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
         });
     }
 
-    function filterSnippets() {
-        const q = document.getElementById('snippetSearch').value.toLowerCase();
-        document.querySelectorAll('.snippet-item').forEach(i => {
-            i.style.display = i.getAttribute('data-name').includes(q) ? 'block' : 'none';
-        });
+    function confirmDeletion(url) {
+        if (confirm("🚨 PURGE NODE?")) { isDirty = false; window.onbeforeunload = null; window.location.href = url; }
     }
 
     window.onload = () => { setTimeout(() => editor.refresh(), 100); };

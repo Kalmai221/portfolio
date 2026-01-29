@@ -2,82 +2,100 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="p-6 md:p-10 space-y-10 bg-[#020617] min-h-screen text-slate-300">
+<div class="p-6 md:p-10 space-y-8 bg-slate-50 dark:bg-[#020617] min-h-screen text-slate-600 dark:text-slate-300 transition-colors duration-500">
     
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-slate-200 dark:border-slate-800 pb-8 gap-6">
         <div>
-            <div class="flex items-center gap-2 mb-2">
-                <span class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></span>
-                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">Infrastructure Analytics</span>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Web Analytics</h1>
+            <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-slate-500">
+                <span class="flex items-center gap-2 bg-white dark:bg-slate-900/50 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 
+                    <span class="text-slate-900 dark:text-white font-bold">{{ online_count }}</span> online
+                </span>
+                <span class="uppercase tracking-widest text-[10px] font-black text-slate-400 dark:text-slate-600">Environment: Production</span>
+                <span class="uppercase tracking-widest text-[10px] font-black text-slate-400 dark:text-slate-600">Cycle: Last 7 Days</span>
             </div>
-            <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
-                Traffic <span class="text-slate-800">Overview</span>
-            </h1>
         </div>
-        <a href="/admin" class="group flex items-center gap-3 px-6 py-3 bg-slate-900 border border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white hover:bg-blue-600 hover:border-blue-500 transition-all shadow-xl active:scale-95">
-            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M7 16l-4-4m0 0l4-4m-4 4h18"/></svg>
-            Control Center
-        </a>
+        <div class="flex gap-3">
+            <a href="/admin" class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 dark:hover:bg-blue-600 dark:hover:border-blue-500 transition-all active:scale-95 shadow-sm">
+                Control Center
+            </a>
+        </div>
     </div>
 
-    <div class="hud-card p-8 md:p-10 bg-slate-900/40 backdrop-blur-xl border border-slate-800/60 rounded-[3rem] shadow-2xl transition-all hover:border-blue-500/30">
-        <div class="flex justify-between items-start mb-8">
-            <div>
-                <h4 class="text-xs font-black uppercase tracking-[0.3em] text-blue-500 mb-1">Traffic Velocity</h4>
-                <p class="text-sm text-slate-500">Visualizing request volume over the previous 7-day cycle.</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-950/50 shadow-sm dark:shadow-2xl">
+        <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">Unique_Visitors</p>
+            <h2 class="text-4xl font-black text-slate-900 dark:text-white mt-2 italic">{{ unique_visitors }}</h2>
+        </div>
+        <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">Total_Page_Views</p>
+            <h2 class="text-4xl font-black text-slate-900 dark:text-white mt-2 italic">{{ total_hits }}</h2>
+        </div>
+        <div class="p-8 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">System_Health</p>
+            <div class="flex items-center gap-3 mt-2">
+                <h2 class="text-4xl font-black text-emerald-600 dark:text-emerald-500 italic">100%</h2>
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="hud-card p-6 md:p-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/20 rounded-[2.5rem]">
+        <div class="flex justify-between items-center mb-8">
+            <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic">Request_Velocity_Telemetry</h4>
         </div>
         <div class="h-[350px] w-full">
-            <canvas id="trafficChart"></canvas>
+            <canvas id="vercelChart"></canvas>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="hud-card p-8 bg-slate-900/40 backdrop-blur-xl border border-slate-800/60 rounded-[2.5rem] shadow-xl">
-            <h4 class="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-6">Client_Browsers</h4>
-            <div class="space-y-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+            <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Client_Engines</h4>
+            <div class="space-y-5">
                 {% for browser, count in stats.browsers.items() %}
-                <div class="flex flex-col gap-1">
-                    <div class="flex justify-between items-end">
-                        <span class="text-sm font-black text-white">{{ browser }}</span>
-                        <span class="text-xs font-mono text-blue-500">{{ count }}</span>
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span class="text-slate-900 dark:text-white">{{ browser }}</span>
+                        <span class="text-blue-600 dark:text-blue-500 font-mono">{{ count }}</span>
                     </div>
-                    <div class="progress-bg">
-                        <div class="progress-fill" style="width: {{ (count / total_hits * 100)|round }}%"></div>
+                    <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="progress-fill h-full bg-blue-600 rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="hud-card p-8 bg-slate-900/40 backdrop-blur-xl border border-slate-800/60 rounded-[2.5rem] shadow-xl">
-            <h4 class="text-[9px] font-bold uppercase tracking-[0.4em] text-slate-500 mb-6">Platform_OS</h4>
-            <div class="space-y-4">
+        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+            <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Platform_Kernel</h4>
+            <div class="space-y-5">
                 {% for os, count in stats.os.items() %}
-                <div class="flex flex-col gap-1">
-                    <div class="flex justify-between items-end">
-                        <span class="text-sm font-black text-white">{{ os }}</span>
-                        <span class="text-xs font-mono text-blue-500">{{ count }}</span>
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span class="text-slate-900 dark:text-white">{{ os }}</span>
+                        <span class="text-blue-600 dark:text-blue-500 font-mono">{{ count }}</span>
                     </div>
-                    <div class="progress-bg">
-                        <div class="progress-fill" style="width: {{ (count / total_hits * 100)|round }}%"></div>
+                    <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="progress-fill h-full bg-blue-600 rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="hud-card p-8 bg-slate-900/40 backdrop-blur-xl border border-slate-800/60 rounded-[2.5rem] shadow-xl">
-            <h4 class="text-[9px] font-bold uppercase tracking-[0.4em] text-slate-500 mb-6">Device_Hardware</h4>
-            <div class="space-y-4">
+        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+            <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Input_Hardware</h4>
+            <div class="space-y-5">
                 {% for device, count in stats.devices.items() %}
-                <div class="flex flex-col gap-1">
-                    <div class="flex justify-between items-end">
-                        <span class="text-sm font-black text-white">{{ device }}</span>
-                        <span class="text-xs font-mono text-blue-500">{{ count }}</span>
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span class="text-slate-900 dark:text-white">{{ device }}</span>
+                        <span class="text-blue-600 dark:text-blue-500 font-mono">{{ count }}</span>
                     </div>
-                    <div class="progress-bg">
-                        <div class="progress-fill" style="width: {{ (count / total_hits * 100)|round }}%"></div>
+                    <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="progress-fill h-full bg-blue-600 rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </div>
                 {% endfor %}
@@ -85,20 +103,34 @@
         </div>
     </div>
 
-    <div class="hud-card bg-slate-900/40 backdrop-blur-xl border border-slate-800/60 rounded-[2.5rem] overflow-hidden shadow-2xl">
-        <div class="p-8 border-b border-slate-800/60 bg-slate-950/20 flex justify-between items-center">
-            <h4 class="text-[9px] font-bold uppercase tracking-[0.4em] text-blue-500">Popular_Node_Inventory</h4>
-            <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest">Historical Statistics</span>
-        </div>
-        <div class="overflow-x-auto">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div class="border border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-white dark:bg-slate-950/50 overflow-hidden shadow-sm dark:shadow-2xl">
+            <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
+                <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic">High_Traffic_Nodes</h3>
+            </div>
             <table class="w-full text-left">
-                <tbody class="divide-y divide-slate-800/60">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     {% for page in top_pages %}
-                    <tr class="group hover:bg-blue-600/[0.03] transition-colors">
-                        <td class="px-8 py-6 font-mono text-sm text-blue-400">/{{ page._id }}</td>
-                        <td class="px-8 py-6 text-right font-black text-white italic">
-                            {{ page.count }} <span class="text-[9px] uppercase not-italic text-slate-500 ml-1 tracking-widest">Total_Hits</span>
-                        </td>
+                    <tr class="hover:bg-blue-500/[0.04] transition-colors">
+                        <td class="px-8 py-5 text-blue-600 dark:text-blue-400 font-mono text-xs italic">/{{ page._id }}</td>
+                        <td class="px-8 py-5 text-right font-black text-slate-900 dark:text-white italic text-lg">{{ page.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="border border-red-200 dark:border-red-900/30 rounded-[2.5rem] bg-red-50/30 dark:bg-red-950/5 overflow-hidden shadow-sm dark:shadow-2xl">
+            <div class="px-8 py-6 border-b border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-950/10">
+                <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-red-600 dark:text-red-500 italic">System_Fault_Registry</h3>
+            </div>
+            <table class="w-full text-left text-xs">
+                <tbody class="divide-y divide-red-100 dark:divide-slate-800">
+                    {% for err in error_logs %}
+                    <tr class="hover:bg-red-500/[0.04]">
+                        <td class="px-8 py-4"><span class="bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500 px-2 py-1 rounded font-black">{{ err.status_code }}</span></td>
+                        <td class="px-2 py-4 font-mono text-slate-500 dark:text-slate-400 italic">/{{ err.path }}</td>
+                        <td class="px-8 py-4 text-right text-slate-400 dark:text-slate-600 font-bold uppercase tracking-tighter">{{ err.timestamp.strftime('%H:%M:%S') }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -108,58 +140,72 @@
 </div>
 
 <script>
-    const ctx = document.getElementById('trafficChart').getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
+    const ctx = document.getElementById('vercelChart').getContext('2d');
+    
+    // Function to check current theme
+    const isDark = () => document.documentElement.classList.contains('dark');
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
     gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
 
-    new Chart(ctx, {
+    const trafficChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: {{ chart_labels|tojson }},
             datasets: [{
-                label: 'Requests',
                 data: {{ chart_values|tojson }},
-                borderColor: '#2563eb',
+                borderColor: '#3b82f6',
                 borderWidth: 3,
-                tension: 0.45,
                 fill: true,
                 backgroundColor: gradient,
-                pointBackgroundColor: '#2563eb',
-                pointBorderColor: '#020617',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#3b82f6',
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2,
+                pointHitRadius: 30
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
             plugins: { 
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#0f172a',
+                    backgroundColor: isDark() ? '#0f172a' : '#ffffff',
+                    titleColor: isDark() ? '#94a3b8' : '#64748b',
+                    bodyColor: isDark() ? '#ffffff' : '#0f172a',
                     titleFont: { size: 10, weight: 'bold', family: 'monospace' },
-                    bodyFont: { size: 12, weight: 'black' },
+                    bodyFont: { size: 13, weight: '900' },
                     padding: 12,
                     displayColors: false,
                     borderRadius: 12,
                     borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.1)'
+                    borderColor: isDark() ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
                 }
             },
             scales: {
                 y: { 
-                    beginAtZero: true, 
-                    grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
-                    ticks: { color: '#64748b', font: { size: 10, family: 'monospace' } }
+                    grid: { color: isDark() ? '#1e293b' : '#f1f5f9', drawBorder: false }, 
+                    ticks: { color: '#64748b', font: { family: 'monospace', size: 10 }, maxTicksLimit: 5 } 
                 },
                 x: { 
-                    grid: { display: false },
-                    ticks: { color: '#64748b', font: { size: 10, family: 'monospace' } }
+                    grid: { display: false }, 
+                    ticks: { color: '#64748b', font: { family: 'monospace', size: 10 } } 
                 }
             }
         }
     });
+
+    // Re-draw chart on theme change to update colors
+    const observer = new MutationObserver(() => {
+        trafficChart.options.scales.y.grid.color = isDark() ? '#1e293b' : '#f1f5f9';
+        trafficChart.options.plugins.tooltip.backgroundColor = isDark() ? '#0f172a' : '#ffffff';
+        trafficChart.update();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 </script>
 {% endblock %}

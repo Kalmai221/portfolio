@@ -20,7 +20,7 @@ client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client.my_portfolio
 pages_collection = db.pages
 settings_collection = db.settings
-analytics_collection = db.analytics  # New collection for hits
+analytics_collection = db.analytics 
 
 # --- AUTH DECORATOR ---
 def login_required(f):
@@ -31,6 +31,22 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# --- SETTINGS HELPERS ---
+def get_site_settings():
+    """Fetches global configuration from MongoDB or returns defaults."""
+    try:
+        settings = settings_collection.find_one({"name": "global_config"})
+        if not settings:
+            return {
+                "site_name_first": "Kurtis-Lee",
+                "site_name_last": "Hopewell",
+                "show_navbar": True,
+                "nav_links": []
+            }
+        return settings
+    except:
+        return {"site_name_first": "Kurtis-Lee", "site_name_last": "Hopewell", "show_navbar": True, "nav_links": []}
+
 def is_maintenance_mode():
     try:
         config = settings_collection.find_one({"name": "maintenance_mode"})
@@ -38,21 +54,28 @@ def is_maintenance_mode():
     except:
         return False
 
-# --- ANALYTICS HELPER ---
-def log_visit(path):
-    # Ignore admin routes and static files
-    if path.startswith('admin') or path.startswith('static'):
+# --- IMPROVED ANALYTICS ENGINE ---
+def log_visit(path, status_code=200):
+    """Logs project traffic and system faults."""
+    if path.startswith('admin') or path.startswith('static') or path == 'favicon.ico':
         return
 
     analytics_collection.insert_one({
         "path": path,
+        "status_code": status_code,
         "timestamp": datetime.now(),
         "ip": request.remote_addr,
         "agent": request.headers.get('User-Agent'),
-        "referrer": request.referrer
+        "referrer": request.referrer or "Direct"
     })
 
-# --- ROUTES ---
+# --- CONTEXT PROCESSOR ---
+@app.context_processor
+def inject_global_data():
+    """Makes 'settings' available in all templates automatically."""
+    return dict(settings=get_site_settings())
+
+# --- AUTH ROUTES ---
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -70,6 +93,66 @@ def logout():
     session.pop('user', None)
     return redirect(url_for('cms_router'))
 
+# --- ADMIN DASHBOARD ---
+
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    all_pages = list(pages_collection.find())
+    maintenance_active = is_maintenance_mode()
+    total_hits = analytics_collection.count_documents({"status_code": 200})
+    return render_template('admin.html', 
+                           pages=all_pages, 
+                           maintenance_active=maintenance_active, 
+                           total_hits=total_hits)
+
+@app.route('/admin/update-settings', methods=['POST'])
+@login_required
+def update_settings():
+    """Handles Brand names and Navbar visibility."""
+    data = {
+        "site_name_first": request.form.get("site_name_first", "Kurtis-Lee"),
+        "site_name_last": request.form.get("site_name_last", "Hopewell"),
+        "show_navbar": request.form.get("show_navbar") == "true"
+    }
+    settings_collection.update_one(
+        {"name": "global_config"}, 
+        {"$set": data}, 
+        upsert=True
+    )
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/add-nav', methods=['POST'])
+@login_required
+def add_nav_link():
+    """Injects a dynamic link into the navbar manager."""
+    new_link = {
+        "label": request.form.get("label", "").upper(),
+        "url": request.form.get("url", "")
+    }
+    if new_link["label"] and new_link["url"]:
+        settings_collection.update_one(
+            {"name": "global_config"},
+            {"$push": {"nav_links": new_link}},
+            upsert=True
+        )
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/delete-nav/<int:index>')
+@login_required
+def delete_nav_link(index):
+    """Removes a nav link by its position in the array."""
+    settings = get_site_settings()
+    if "nav_links" in settings:
+        links = settings["nav_links"]
+        if 0 <= index < len(links):
+            del links[index]
+            settings_collection.update_one(
+                {"name": "global_config"},
+                {"$set": {"nav_links": links}}
+            )
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/admin/toggle-maintenance')
 @login_required
 def toggle_maintenance():
@@ -81,107 +164,67 @@ def toggle_maintenance():
     )
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/', defaults={'path': 'home'})
-@app.route('/<path:path>')
-def cms_router(path):
-    if path == "admin":
-        return redirect(url_for('admin_dashboard'))
-
-    if is_maintenance_mode():
-        return render_template('503.html'), 503
-
-    try:
-        page = pages_collection.find_one({"slug": path})
-        if page:
-            log_visit(path) # Log the hit
-    except (ConnectionFailure, ServerSelectionTimeoutError):
-        return render_template('503.html'), 503
-
-    if not page:
-        abort(404)
-    return render_template('page.html', page=page)
-
-@app.route('/admin')
-@login_required
-def admin_dashboard():
-    all_pages = list(pages_collection.find())
-    maintenance_active = is_maintenance_mode()
-
-    # Fetch total hit count for the dashboard card
-    total_hits = analytics_collection.count_documents({})
-
-    return render_template('admin.html', 
-                           pages=all_pages, 
-                           maintenance_active=maintenance_active, 
-                           total_hits=total_hits)
+# --- VERCEL-STYLE ANALYTICS ---
 
 @app.route('/admin/analytics')
 @login_required
 def admin_analytics():
-    # 1. Basic Counts
-    total_hits = analytics_collection.count_documents({})
-    yesterday = datetime.now() - timedelta(hours=24)
-    recent_hits = analytics_collection.count_documents({"timestamp": {"$gt": yesterday}})
+    now = datetime.now()
+    seven_days_ago = now - timedelta(days=7)
 
-    # 2. Advanced Parsing (OS, Browser, Device)
-    all_logs = analytics_collection.find()
-    stats = {
-        "browsers": {},
-        "os": {},
-        "devices": {}
-    }
+    # 1. High-Level Metrics
+    total_hits = analytics_collection.count_documents({"status_code": 200})
+    unique_visitors = len(analytics_collection.distinct("ip", {"status_code": 200}))
 
-    for log in all_logs:
-        ua_string = log.get('agent', '')
-        ua = parse(ua_string)
+    # Real-time: Active unique IPs in last 5 minutes
+    online_count = len(analytics_collection.distinct("ip", {"timestamp": {"$gt": now - timedelta(minutes=5)}}))
 
-        # Categorize Browser
-        b = ua.browser.family
-        stats["browsers"][b] = stats["browsers"].get(b, 0) + 1
-
-        # Categorize OS
-        o = ua.os.family
-        stats["os"][o] = stats["os"].get(o, 0) + 1
-
-        # Categorize Device
-        if ua.is_mobile: d = "Mobile"
-        elif ua.is_tablet: d = "Tablet"
-        elif ua.is_pc: d = "Desktop"
-        else: d = "Bot/Other"
-        stats["devices"][d] = stats["devices"].get(d, 0) + 1
-
-    # 3. Time Graph Aggregation (Last 7 Days)
-    seven_days_ago = datetime.now() - timedelta(days=7)
+    # 2. Fix the Graph: Continuous 7-day timeline
     graph_pipeline = [
-        {"$match": {"timestamp": {"$gt": seven_days_ago}}},
+        {"$match": {"timestamp": {"$gt": seven_days_ago}, "status_code": 200}},
         {"$group": {
             "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}},
             "count": {"$sum": 1}
-        }},
-        {"$sort": {"_id": 1}}
+        }}
     ]
-    graph_data = list(analytics_collection.aggregate(graph_pipeline))
+    raw_graph_data = {d['_id']: d['count'] for d in analytics_collection.aggregate(graph_pipeline)}
 
-    # Prepare Labels and Values for Chart.js
-    chart_labels = [d['_id'] for d in graph_data]
-    chart_values = [d['count'] for d in graph_data]
+    chart_labels = []
+    chart_values = []
+    for i in range(7, -1, -1):
+        date_obj = now - timedelta(days=i)
+        date_str = date_obj.strftime('%Y-%m-%d')
+        chart_labels.append(date_obj.strftime('%b %d'))
+        chart_values.append(raw_graph_data.get(date_str, 0))
 
-    # 4. Top Pages & Recent Logs
+    # 3. Client Distribution & System Faults
+    stats = {"browsers": {}, "os": {}, "devices": {}}
+    for log in analytics_collection.find({"status_code": 200}):
+        ua = parse(log.get('agent', ''))
+        stats["browsers"][ua.browser.family] = stats["browsers"].get(ua.browser.family, 0) + 1
+        stats["os"][ua.os.family] = stats["os"].get(ua.os.family, 0) + 1
+        d = "Mobile" if ua.is_mobile else "Tablet" if ua.is_tablet else "Desktop"
+        stats["devices"][d] = stats["devices"].get(d, 0) + 1
+
     top_pages = list(analytics_collection.aggregate([
+        {"$match": {"status_code": 200}},
         {"$group": {"_id": "$path", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 5}
+        {"$sort": {"count": -1}}, {"$limit": 8}
     ]))
-    recent_log = list(analytics_collection.find().sort("timestamp", -1).limit(10))
+
+    error_logs = list(analytics_collection.find({"status_code": {"$gte": 400}}).sort("timestamp", -1).limit(15))
 
     return render_template('analytics.html', 
                            total_hits=total_hits, 
-                           recent_hits=recent_hits, 
-                           top_pages=top_pages, 
-                           recent_log=recent_log,
-                           stats=stats,
+                           unique_visitors=unique_visitors,
+                           online_count=online_count,
                            chart_labels=chart_labels,
-                           chart_values=chart_values)
+                           chart_values=chart_values,
+                           stats=stats,
+                           top_pages=top_pages,
+                           error_logs=error_logs)
+
+# --- PAGE EDITOR ---
 
 @app.route('/admin/edit/<path:slug>', methods=['GET', 'POST'])
 @login_required
@@ -198,17 +241,18 @@ def edit_page(slug):
         pages_collection.update_one({"slug": slug}, {"$set": data}, upsert=True)
         return redirect(url_for('admin_dashboard'))
 
+    # Load page data
     page = pages_collection.find_one({"slug": slug})
+
+    # Load snippet data to fix the "snippets not defined" error
     snippet_data = {}
     snippet_path = os.path.join(app.root_path, 'static', 'data', 'snippets.json')
-
     try:
         if os.path.exists(snippet_path):
             with open(snippet_path, 'r') as f:
                 snippet_data = json.load(f)
     except Exception as e:
         print(f"Error loading snippets: {e}")
-        snippet_data = {}
 
     return render_template('edit_page.html', page=page, slug=slug, snippets=snippet_data)
 
@@ -218,9 +262,37 @@ def delete_page(slug):
     pages_collection.delete_one({"slug": slug})
     return redirect(url_for('admin_dashboard'))
 
+# --- DYNAMIC CMS ROUTER ---
+
+@app.route('/', defaults={'path': 'home'})
+@app.route('/<path:path>')
+def cms_router(path):
+    if path == "admin":
+        return redirect(url_for('admin_dashboard'))
+
+    if is_maintenance_mode():
+        return render_template('503.html'), 503
+
+    try:
+        page = pages_collection.find_one({"slug": path})
+        if page:
+            log_visit(path, 200)
+            return render_template('page.html', page=page)
+    except (ConnectionFailure, ServerSelectionTimeoutError):
+        return render_template('503.html'), 503
+
+    # Log 404s for the analytics dashboard
+    log_visit(path, 404)
+    abort(404)
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    log_visit(request.path, 500)
+    return render_template('500.html'), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
