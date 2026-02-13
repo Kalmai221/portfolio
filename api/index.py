@@ -206,7 +206,8 @@ def admin_analytics():
     # 3. Client Distribution & System Faults
     stats = {"browsers": {}, "os": {}, "devices": {}}
     for log in analytics_collection.find({"status_code": 200}):
-        ua = parse(log.get('agent', ''))
+        agent_string = log.get('agent') or ''
+        ua = parse(agent_string)
         stats["browsers"][ua.browser.family] = stats["browsers"].get(ua.browser.family, 0) + 1
         stats["os"][ua.os.family] = stats["os"].get(ua.os.family, 0) + 1
         d = "Mobile" if ua.is_mobile else "Tablet" if ua.is_tablet else "Desktop"
