@@ -402,6 +402,26 @@ def dynamic_og_image():
         # Fallback to a reliable external placeholder service
         return redirect("https://placehold.co/1200x630/020617/white?text=Portfolio+Node+Offline")
 
+@app.route('/sitemap.xml')
+def sitemap():
+    """Dynamically generate a sitemap for search engines."""
+    pages = []
+    # Add static routes
+    for rule in app.url_map.iter_rules():
+        if "GET" in rule.methods and len(rule.arguments) == 0:
+            pages.append(["https://klhportfolio.vercel.app" + str(rule.rule), "2026-02-13"])
+
+    # Add dynamic pages from MongoDB
+    cms_pages = pages_collection.find()
+    for p in cms_pages:
+        url = "https://klhportfolio.vercel.app/" + p['slug']
+        # Use updated_at if it exists, else today's date
+        lastmod = p.get('updated_at', datetime.now()).strftime('%Y-%m-%d')
+        pages.append([url, lastmod])
+
+    sitemap_xml = render_template('sitemap_template.xml', pages=pages)
+    return sitemap_xml, {'Content-Type': 'application/xml'}
+
 
 @app.errorhandler(404)
 def page_not_found(e):
