@@ -43,6 +43,11 @@ def get_site_settings():
                 "show_navbar": True,
                 "nav_links": []
             }
+        # Ensure fallback for missing fields in existing documents
+        if 'site_name_first' not in settings:
+            settings['site_name_first'] = "Kurtis-Lee"
+        if 'site_name_last' not in settings:
+            settings['site_name_last'] = "Hopewell"
         return settings
     except:
         return {"site_name_first": "Kurtis-Lee", "site_name_last": "Hopewell", "show_navbar": True, "nav_links": []}
