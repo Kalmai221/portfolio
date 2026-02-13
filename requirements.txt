@@ -4,3 +4,4 @@ python-dotenv
 certifi
 gunicorn
 user_agents
+requests

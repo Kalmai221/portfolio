@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, abort, session
+from flask import Flask, render_template, request, redirect, url_for, abort, session, send_file
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 import certifi
@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from functools import wraps
 import json
 from user_agents import parse
+import requests
+import io
 
 load_dotenv()
 
@@ -22,6 +24,10 @@ pages_collection = db.pages
 settings_collection = db.settings
 analytics_collection = db.analytics
 
+og_cache = {
+    "image": None,
+    "expiry": datetime.now()
+}
 
 # --- AUTH DECORATOR ---
 def login_required(f):
@@ -363,6 +369,34 @@ def cms_router(path):
     # Log 404s for the analytics dashboard
     log_visit(path, 404)
     abort(404)
+
+@app.route('/og-image.png')
+def dynamic_og_image():
+    global og_cache
+
+    # Check if we have a valid cached image
+    if og_cache["image"] and datetime.now() < og_cache["expiry"]:
+        return send_file(io.BytesIO(og_cache["image"]), mimetype='image/png')
+
+    API_KEY = os.environ.get("SCREENSHOT_API_KEY")
+    TARGET_URL = "https://klhportfolio.vercel.app"
+
+    # Options: added 'delay' to ensure fonts load before the snap
+    api_url = f"https://api.screenshotone.com/take?access_key={API_KEY}&url={TARGET_URL}&viewport_width=1200&viewport_height=630&format=png&delay=1"
+
+    try:
+        response = requests.get(api_url, timeout=10)
+        if response.status_code == 200:
+            # Update Cache
+            og_cache["image"] = response.content
+            og_cache["expiry"] = datetime.now() + timedelta(hours=24)
+
+            return send_file(io.BytesIO(response.content), mimetype='image/png')
+    except Exception as e:
+        print(f"OG Image Error: {e}")
+
+    # Fallback to a local file in /static/img/default-og.png
+    return redirect(url_for('static', filename='img/default-og.png'))
 
 
 @app.errorhandler(404)
