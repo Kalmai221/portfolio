@@ -374,29 +374,33 @@ def cms_router(path):
 def dynamic_og_image():
     global og_cache
 
-    # Check if we have a valid cached image
-    if og_cache["image"] and datetime.now() < og_cache["expiry"]:
+    # 1. Return Cache if valid
+    if og_cache.get("image") and datetime.now() < og_cache.get("expiry", datetime.now()):
         return send_file(io.BytesIO(og_cache["image"]), mimetype='image/png')
 
     API_KEY = os.environ.get("SCREENSHOT_API_KEY")
     TARGET_URL = "https://klhportfolio.vercel.app"
 
-    # Options: added 'delay' to ensure fonts load before the snap
-    api_url = f"https://api.screenshotone.com/take?access_key={API_KEY}&url={TARGET_URL}&viewport_width=1200&viewport_height=630&format=png&delay=1"
+    # If no API key is found, don't even try; jump to fallback
+    if not API_KEY:
+        return redirect("https://placehold.co/1200x630/020617/white?text=Kurtis+Lee+Hopewell+Portfolio")
+
+    api_url = f"https://api.screenshotone.com/take?access_key={API_KEY}&url={TARGET_URL}&viewport_width=1200&viewport_height=630&format=png&delay=2"
 
     try:
-        response = requests.get(api_url, timeout=10)
+        response = requests.get(api_url, timeout=12)
         if response.status_code == 200:
-            # Update Cache
             og_cache["image"] = response.content
             og_cache["expiry"] = datetime.now() + timedelta(hours=24)
-
             return send_file(io.BytesIO(response.content), mimetype='image/png')
-    except Exception as e:
-        print(f"OG Image Error: {e}")
 
-    # Fallback to a local file in /static/img/default-og.png
-    return redirect(url_for('static', filename='img/default-og.png'))
+        # If API returns an error code (e.g. 401 or 402), return a professional placeholder
+        return redirect(f"https://placehold.co/1200x630/020617/4f46e5?text={settings_collection.find_one()['site_name_first']}+Portfolio")
+
+    except Exception as e:
+        print(f"OG Proxy Error: {e}")
+        # Fallback to a reliable external placeholder service
+        return redirect("https://placehold.co/1200x630/020617/white?text=Portfolio+Node+Offline")
 
 
 @app.errorhandler(404)
