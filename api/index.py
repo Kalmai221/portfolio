@@ -404,23 +404,40 @@ def dynamic_og_image():
 
 @app.route('/sitemap.xml')
 def sitemap():
-    """Dynamically generate a sitemap for search engines."""
+    """Self-inspects the Flask app and MongoDB to build a full sitemap."""
     pages = []
-    # Add static routes
+    # We don't want search engines indexing these technical/private routes
+    excluded_endpoints = [
+        'static', 'login', 'logout', 'admin_dashboard', 
+        'update_settings', 'add_nav_link', 'delete_nav_link', 
+        'toggle_maintenance', 'admin_analytics', 'edit_page', 
+        'delete_page', 'sitemap', 'dynamic_og_image'
+    ]
+
+    # 1. Fetch static routes directly from your Python logic (app.url_map)
     for rule in app.url_map.iter_rules():
+        # Only index GET routes that don't require variables (like <path:slug>)
         if "GET" in rule.methods and len(rule.arguments) == 0:
-            pages.append(["https://klhportfolio.vercel.app" + str(rule.rule), "2026-02-13"])
+            if rule.endpoint not in excluded_endpoints:
+                url = f"https://klhportfolio.vercel.app{rule.rule}"
+                # If it's the root, give it top priority
+                priority = "1.0" if rule.rule == "/" else "0.7"
+                pages.append({"url": url, "lastmod": datetime.now().strftime('%Y-%m-%d'), "priority": priority})
 
-    # Add dynamic pages from MongoDB
-    cms_pages = pages_collection.find()
-    for p in cms_pages:
-        url = "https://klhportfolio.vercel.app/" + p['slug']
-        # Use updated_at if it exists, else today's date
-        lastmod = p.get('updated_at', datetime.now()).strftime('%Y-%m-%d')
-        pages.append([url, lastmod])
+    # 2. Fetch dynamic routes from MongoDB
+    try:
+        cms_pages = pages_collection.find()
+        for p in cms_pages:
+            # Skip the 'home' slug if you've already indexed the root '/'
+            if p['slug'] == 'home': continue
 
-    sitemap_xml = render_template('sitemap_template.xml', pages=pages)
-    return sitemap_xml, {'Content-Type': 'application/xml'}
+            url = f"https://klhportfolio.vercel.app/{p['slug']}"
+            lastmod = p.get('updated_at', datetime.now()).strftime('%Y-%m-%d')
+            pages.append({"url": url, "lastmod": lastmod, "priority": "0.8"})
+    except Exception as e:
+        print(f"Sitemap Data Fetch Error: {e}")
+
+    return render_template('sitemap_template.xml', pages=pages), 200, {'Content-Type': 'application/xml'}
 
 
 @app.errorhandler(404)
