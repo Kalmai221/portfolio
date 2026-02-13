@@ -73,7 +73,8 @@ def log_visit(path, status_code=200):
 @app.context_processor
 def inject_global_data():
     """Makes 'settings' available in all templates automatically."""
-    return dict(settings=get_site_settings())
+    from datetime import datetime
+    return dict(settings=get_site_settings(), now=datetime.now())
 
 # --- AUTH ROUTES ---
 
