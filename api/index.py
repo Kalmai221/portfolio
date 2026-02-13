@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, abort, session, send_file
+from flask import Flask, render_template, request, redirect, url_for, abort, session, send_file, send_from_directory
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 import certifi
@@ -448,6 +448,10 @@ def sitemap():
 
     return render_template('sitemap_template.xml', pages=pages), 200, {'Content-Type': 'application/xml'}
 
+@app.route('/robots.txt')
+def robots_dot_txt():
+    """Serves the robots.txt from the static folder at the root level."""
+    return send_from_directory(app.static_folder, 'robots.txt')
 
 @app.errorhandler(404)
 def page_not_found(e):
