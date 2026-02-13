@@ -1,109 +1,29 @@
 {% extends "layout.html" %}
 {% block content %}
-<style>
-    .full-page-fix {
-        min-height: calc(100vh - 64px);
-        width: 100%;
-    }
-    
-    .modal-overlay { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; }
-    .modal-active { opacity: 1 !important; pointer-events: auto !important; }
-    .modal-active > div { transform: scale(1) !important; }
-
-    {{ page.css | safe }}
-</style>
-
-<div class="full-page-fix">
-    <div class="max-w-7xl mx-auto p-8 md:p-16">
-        <div id="page-render-content" class="text-slate-900 dark:text-slate-100">
-            {{ page.content | safe }}
+<div class="max-w-5xl mx-auto px-6 py-20">
+    {% if page.slug == 'home' %}
+    <div class="text-center mb-32 space-y-6">
+        <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight">
+            Building the <span class="gradient-text">future</span><br>of digital experiences.
+        </h1>
+        <p class="text-xl text-slate-400 max-w-2xl mx-auto font-medium">
+            A software engineer focused on crafting high-performance applications with elegant, minimalist design systems.
+        </p>
+        <div class="flex justify-center gap-4 pt-4">
+            <a href="#projects" class="px-8 py-4 bg-white text-slate-950 rounded-full font-bold hover:scale-105 transition-transform">
+                Explore Work
+            </a>
+            <a href="/contact" class="px-8 py-4 bg-slate-900 border border-slate-800 rounded-full font-bold hover:bg-slate-800 transition-colors">
+                Get in Touch
+            </a>
         </div>
     </div>
+    {% endif %}
+
+    <article id="projects" class="prose prose-invert prose-blue max-w-none">
+        <style>{{ page.css | safe }}</style>
+        {{ page.content | safe }}
+        <script>{{ page.js | safe }}</script>
+    </article>
 </div>
-
-<div id="redirect-modal" class="modal-overlay fixed inset-0 bg-slate-950/80 backdrop-blur-md opacity-0 pointer-events-none p-4 flex items-center justify-center">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-blue-500/30 w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl transform scale-95 transition-transform duration-300">
-        <div class="flex flex-col items-center text-center space-y-6">
-            <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-            </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Redirect Blocked</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest leading-relaxed">External infrastructure exit detected. Proceed to destination?</p>
-            </div>
-            <div class="w-full bg-slate-50 dark:bg-blue-500/5 rounded-2xl p-4 border border-slate-200 dark:border-blue-500/10">
-                <span class="text-[9px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.2em]">Target_URL:</span>
-                <p id="redirect-url-display" class="text-slate-700 dark:text-white font-mono text-xs mt-1 break-all italic">https://...</p>
-            </div>
-            <div class="flex w-full gap-3">
-                <button onclick="closeRedirectModal()" class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Cancel</button>
-                <button id="confirm-redirect-btn" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 active:scale-95 transition-all">Confirm</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const currentOrigin = window.location.origin;
-
-    // The function that handles all redirects
-    window.atlasSecureRedirect = function(url) {
-        if (!url) return;
-        const absoluteUrl = new URL(url, window.location.href).href;
-        
-        // Internal check
-        if (absoluteUrl.startsWith(currentOrigin) || absoluteUrl.startsWith('/') || absoluteUrl.startsWith('#')) {
-            window.location.href = url;
-            return;
-        }
-
-        const modal = document.getElementById('redirect-modal');
-        const display = document.getElementById('redirect-url-display');
-        const confirmBtn = document.getElementById('confirm-redirect-btn');
-
-        display.innerText = absoluteUrl;
-        modal.classList.add('modal-active');
-
-        confirmBtn.onclick = () => {
-            window.open(absoluteUrl, '_blank');
-            closeRedirectModal();
-        };
-    };
-
-    function closeRedirectModal() {
-        document.getElementById('redirect-modal').classList.remove('modal-active');
-    }
-
-    // Intercept <a> tags
-    document.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
-        if (link && link.href && !link.getAttribute('download') && link.target !== '_blank') {
-            if (!link.href.startsWith(currentOrigin) && !link.href.startsWith('javascript:')) {
-                e.preventDefault();
-                window.atlasSecureRedirect(link.href);
-            }
-        }
-    });
-
-    /**
-     * CODE INJECTION ENGINE
-     * Scans user JS and replaces dangerous redirect commands with our secure function.
-     */
-    
-    (function() {
-        let userJs = `{{ page.js | safe }}`;
-        
-        // 1. Swap 'location.href = ' with our function call
-        // 2. Swap '.assign(...)' and '.replace(...)' with our function call
-        userJs = userJs.replace(/(window\.)?location\.href\s*=\s*(['"`].*?['"`]|[^;]+)/g, 'atlasSecureRedirect($2)');
-        userJs = userJs.replace(/(window\.)?location\.(assign|replace)\((.*?)\)/g, 'atlasSecureRedirect($3)');
-        
-        // Create a script tag to execute the "cleaned" code in the global scope
-        const script = document.createElement('script');
-        script.textContent = userJs;
-        document.body.appendChild(script);
-    })();
-</script>
 {% endblock %}

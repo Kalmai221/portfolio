@@ -1,115 +1,68 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="p-4 md:p-8 space-y-6 md:space-y-10 transition-colors duration-500 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:20px_20px]">
-    
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-        <div class="space-y-1">
-            <h1 class="text-4xl md:text-5xl font-black tracking-tighter leading-none">
-                <span class="text-blue-600">Control</span> Center
-            </h1>
-            <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-[0.25em]">
-                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                INFRASTRUCTURE: PRODUCTION • NODE: ATLAS-V4
-            </div>
+<div class="max-w-6xl mx-auto px-6 py-12 space-y-12">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6">
+        <div>
+            <h1 class="text-4xl font-extrabold tracking-tight">System <span class="text-blue-500">Dashboard</span></h1>
+            <p class="text-slate-400 font-medium mt-1">Manage your digital infrastructure.</p>
         </div>
-
-        <div class="w-full lg:w-auto bg-white/80 dark:bg-slate-900/50 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-xl">
-            <input type="text" id="new_slug" placeholder="Enter path (e.g. /about)..." class="bg-transparent px-5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none flex-1 min-w-[200px] font-bold font-mono">
-            <button onclick="handleSlugRedirect()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-600/20">Deploy Node</button>
+        <div class="flex bg-slate-900 border border-slate-800 p-1.5 rounded-2xl w-full md:w-auto">
+            <input type="text" id="new_slug" placeholder="Page route (e.g. about)..." class="bg-transparent px-4 py-2 text-sm focus:outline-none flex-grow">
+            <button onclick="handleSlugRedirect()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap">
+                New Page
+            </button>
         </div>
     </div>
 
-    <div class="hud-card overflow-hidden border-blue-500/20 shadow-2xl shadow-blue-500/5">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-blue-600/10 rounded-lg text-blue-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                </div>
-                <h3 class="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Navigation_Link_Manager</h3>
-            </div>
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass p-8 rounded-3xl">
+            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">Active Pages</p>
+            <p class="text-4xl font-extrabold mt-2">{{ pages|length }}</p>
         </div>
-
-        <div class="p-6 md:p-8">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {% if settings.nav_links %}
-                    {% for link in settings.nav_links %}
-                    <div class="relative group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 transition-all hover:border-blue-500/50 hover:shadow-lg">
-                        <a href="/admin/delete-nav/{{ loop.index0 }}" class="absolute -top-2 -right-2 w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 z-10 hover:bg-red-600">✕</a>
-                        <div class="space-y-2">
-                            <span class="text-[9px] font-black text-blue-500 uppercase tracking-widest">Protocol_{{ loop.index }}</span>
-                            <h4 class="text-md font-black text-slate-900 dark:text-white truncate uppercase">{{ link.label }}</h4>
-                            <code class="text-[10px] font-mono text-slate-400 block truncate">{{ link.url }}</code>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-span-full py-6 text-center text-slate-400 font-bold italic text-xs uppercase tracking-widest">No active navigation nodes.</div>
-                {% endif %}
-            </div>
+        <div class="glass p-8 rounded-3xl">
+            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Traffic</p>
+            <p class="text-4xl font-extrabold mt-2">{{ total_hits }}</p>
+            <a href="/admin/analytics" class="text-blue-500 text-sm font-bold hover:underline mt-2 inline-block">View Insights →</a>
         </div>
-
-        <div class="p-6 md:p-8 bg-slate-50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800">
-            <form action="/admin/add-nav" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" name="label" placeholder="LABEL (e.g. PORTFOLIO)" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 ring-blue-500/20" required>
-                <input type="text" name="url" placeholder="URL (e.g. /projects)" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 ring-blue-500/20" required>
-                <button type="submit" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:invert transition-all">Inject Route</button>
-            </form>
+        <div class="glass p-8 rounded-3xl flex justify-between items-center">
+            <div>
+                <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">Status</p>
+                <p class="text-2xl font-extrabold mt-2 {{ 'text-red-500' if maintenance_active else 'text-emerald-500' }}">
+                    {{ "LOCKED" if maintenance_active else "LIVE" }}
+                </p>
+            </div>
+            <a href="/admin/toggle-maintenance" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold transition-colors">
+                Toggle
+            </a>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        <div class="hud-card p-6 md:p-8">
-            <span class="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-black tracking-widest">System Protocol</span>
-            <div class="flex items-center justify-between mt-3">
-                <span class="text-2xl font-black {{ 'text-red-500' if maintenance_active else 'text-emerald-500' }}">{{ "LOCKED" if maintenance_active else "PUBLIC" }}</span>
-                <a href="/admin/toggle-maintenance" class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-all border border-slate-200 dark:border-slate-700">Toggle</a>
-            </div>
-        </div>
-        <div class="hud-card p-6 md:p-8">
-            <span class="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-black tracking-widest">Global Nodes</span>
-            <div class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mt-2">{{ pages|length }}<span class="text-[10px] text-slate-400 ml-2 font-black uppercase tracking-widest">Active</span></div>
-        </div>
-        <div class="hud-card p-6 md:p-8 bg-blue-600 text-white border-none shadow-blue-600/20">
-            <span class="text-blue-100 text-[10px] uppercase font-black tracking-widest">Traffic Volume</span>
-            <div class="flex items-center justify-between mt-3">
-                <div class="text-3xl md:text-4xl font-black italic">{{ total_hits }}</div>
-                <a href="/admin/analytics" class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase bg-white/20 hover:bg-white/40 transition-all">Insights</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="hud-card overflow-hidden">
-        <div class="px-6 md:px-10 py-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
-            <h2 class="font-black text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Node_Inventory</h2>
+    <!-- Page List -->
+    <div class="glass rounded-3xl overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+            <h2 class="font-bold text-slate-400 uppercase tracking-widest text-sm">Node Inventory</h2>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full text-left min-w-[700px]">
-                <thead>
-                    <tr class="text-slate-400 dark:text-slate-500 text-[11px] uppercase font-black tracking-[0.3em] bg-slate-50 dark:bg-slate-800/10">
-                        <th class="px-6 md:px-10 py-5">Identity & Route</th>
-                        <th class="px-6 md:px-10 py-5 text-center">Sync Date</th>
-                        <th class="px-6 md:px-10 py-5 text-right">Operations</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            <table class="w-full text-left">
+                <tbody class="divide-y divide-slate-800">
                     {% for p in pages %}
-                    <tr class="group hover:bg-blue-600/[0.03] transition-all">
-                        <td class="px-6 md:px-10 py-6">
-                            <div class="flex flex-col">
-                                <span class="text-slate-900 dark:text-white font-black text-lg md:text-xl group-hover:text-blue-600 transition-colors">{{ p.title }}</span>
-                                <code class="text-blue-600 dark:text-blue-400 text-[13px] font-black font-mono lowercase opacity-70">/{{ p.slug if p.slug != 'home' else '' }}</code>
-                            </div>
+                    <tr class="hover:bg-slate-900/50 transition-colors group">
+                        <td class="px-8 py-6">
+                            <div class="font-bold text-lg group-hover:text-blue-400 transition-colors">{{ p.title }}</div>
+                            <div class="text-slate-500 text-sm font-mono">/{{ p.slug if p.slug != 'home' else '' }}</div>
                         </td>
-                        <td class="px-6 md:px-10 py-6 text-center text-slate-500 dark:text-slate-400 text-sm font-bold font-mono">{{ p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '---' }}</td>
-                        <td class="px-6 md:px-10 py-6 text-right">
-                            <div class="flex justify-end gap-2 md:gap-4">
-                                <a href="/{{ p.slug if p.slug != 'home' else '' }}" target="_blank" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-xl transition-all">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                </a>
-                                <a href="{{ url_for('edit_page', slug=p.slug) }}" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl transition-all active:scale-95 shadow-xl">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                </a>
-                            </div>
+                        <td class="px-8 py-6 text-slate-500 text-sm font-medium">
+                            {{ p.updated_at.strftime('%b %d, %Y') if p.updated_at else '---' }}
+                        </td>
+                        <td class="px-8 py-6 text-right space-x-2">
+                            <a href="/{{ p.slug if p.slug != 'home' else '' }}" target="_blank" class="inline-flex p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2"/></svg>
+                            </a>
+                            <a href="{{ url_for('edit_page', slug=p.slug) }}" class="inline-flex p-3 bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2"/></svg>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -118,12 +71,6 @@
         </div>
     </div>
 </div>
-
-<style>
-    .hud-card {
-        @apply bg-white/80 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl transition-all duration-300;
-    }
-</style>
 
 <script>
 function handleSlugRedirect() {

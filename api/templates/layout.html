@@ -3,203 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kurtis-Lee Hopewell | Portfolio Engine</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <style type="text/tailwindcss">
-      @custom-variant dark (&:where(.dark, .dark *));
-      @theme {
-        --font-jakarta: "Plus Jakarta Sans", sans-serif;
-        --color-obsidian: #020617;
-        --color-hud-blue: #2563eb;
-        
-        /* Animation States */
-        --animate-scan: scan 3s linear infinite;
-        --animate-glow: glow 2s ease-in-out infinite;
-      }
-
-      @layer base {
-        *, ::after, ::before {
-          box-sizing: border-box;
-          border-color: var(--color-slate-200, currentColor);
-        }
-        .dark *, .dark ::after, .dark ::before {
-          border-color: var(--color-slate-800);
-        }
-        body {
-          @apply antialiased transition-colors duration-500;
-          font-family: var(--font-jakarta);
-          -webkit-font-smoothing: antialiased;
-        }
-      }
-
-      @layer components {
-        .hud-card {
-          @apply relative overflow-hidden bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-slate-800 shadow-2xl backdrop-blur-xl rounded-[2.5rem];
-        }
-        .progress-fill {
-          @apply h-full bg-blue-600 rounded-full transition-all duration-1000 ease-out;
-        }
-      }
-
-      @keyframes scan {
-        0% { transform: translateY(-100%); }
-        100% { transform: translateY(100%); }
-      }
-
-      @keyframes glow {
-        0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px #3b82f6); }
-        50% { opacity: .6; filter: drop-shadow(0 0 10px #3b82f6); }
-      }
-    </style>
-
+    <title>{{ settings.site_name_first }} {{ settings.site_name_last }} | Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                        }
+                    }
+                }
             }
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
+        }
     </script>
-
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    
-    <style>
-        html, body { 
-            min-height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow-x: hidden; 
-            overflow-y: auto; 
+    <style type="text/tailwindcss">
+        @layer base {
+            body { @apply bg-slate-950 text-slate-100 antialiased selection:bg-blue-500/30; }
         }
-        
-        .glass-nav {
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-
-        #mobile-sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        .glass { @apply bg-slate-900/50 backdrop-blur-md border border-slate-800/50; }
+        .gradient-text { @apply bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100">
-    
-    <nav class="shrink-0 px-4 md:px-8 py-4 flex justify-between items-center glass-nav sticky top-0 z-[100] border-b border-slate-200/50 dark:border-slate-800/50 bg-white/70 dark:bg-slate-950/70">
-        <div class="flex items-center gap-3 md:gap-6">
-            <button onclick="toggleMobileSidebar(true)" class="md:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
-            </button>
-
-            <a href="/" class="group flex flex-col">
-                <span class="font-extrabold text-lg md:text-xl tracking-tighter text-slate-900 dark:text-white leading-none group-hover:text-blue-600 transition-colors">
-                    Kurtis-Lee <span class="text-blue-600 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Hopewell</span>
+<body class="min-h-screen flex flex-col">
+    <nav class="glass sticky top-0 z-50 border-x-0 border-t-0 border-b">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="group flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white group-hover:rotate-12 transition-transform">
+                    {{ settings.site_name_first[0] }}
+                </div>
+                <span class="font-bold text-lg tracking-tight">
+                    {{ settings.site_name_first }}<span class="text-blue-500">{{ settings.site_name_last }}</span>
                 </span>
-                <span class="hidden sm:block text-[9px] uppercase tracking-[0.3em] font-black text-slate-500 mt-1">Portfolio Engine v1.0</span>
             </a>
-        </div>
-
-        <div class="hidden md:flex gap-4 items-center mx-auto">
-            {% if settings and settings.nav_links %}
-                {% for link in settings.nav_links %}
-                <a href="{{ link.url }}" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-500 transition-all border border-transparent hover:border-blue-500/20 rounded-lg">
-                    {{ link.label }}
-                </a>
-                {% endfor %}
-            {% endif %}
-        </div>
-        
-        <div class="flex gap-3 md:gap-6 items-center">
-            {% if session.get('user') %}
-                <div class="hidden md:flex gap-2 items-center mr-2">
-                    <a href="/admin" class="px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-blue-500 transition-all">Dashboard</a>
-                    <a href="/logout" class="ml-2 px-4 py-2 text-xs font-black uppercase bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all">Exit</a>
-                </div>
-            {% else %}
-                <a href="/login" class="px-4 md:px-6 py-2 md:py-2.5 text-[10px] md:text-xs font-black uppercase tracking-widest bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-500 transition-all active:scale-95">Log In</a>
-            {% endif %}
-
-            <button onclick="toggleGlobalTheme()" 
-                    class="group relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl hover:border-blue-500 transition-all overflow-hidden shadow-sm">
-                <div id="theme-icon-sun" class="absolute transform transition-transform duration-500 dark:translate-y-12">
-                    <span class="text-base md:text-lg">☀️</span>
-                </div>
-                <div id="theme-icon-moon" class="absolute transform transition-transform duration-500 -translate-y-12 dark:translate-y-0">
-                    <span class="text-base md:text-lg">🌙</span>
-                </div>
-            </button>
+            
+            <div class="hidden md:flex items-center gap-8">
+                {% if settings and settings.nav_links %}
+                    {% for link in settings.nav_links %}
+                    <a href="{{ link.url }}" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                        {{ link.label }}
+                    </a>
+                    {% endfor %}
+                {% endif %}
+                
+                {% if session.get('user') %}
+                    <a href="/admin" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Dashboard</a>
+                    <a href="/logout" class="text-sm font-medium text-red-400 hover:text-red-300 transition-colors">Logout</a>
+                {% else %}
+                    <a href="/login" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 rounded-full text-sm font-bold transition-all hover:shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+                        Login
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </nav>
 
-    <div id="sidebar-overlay" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] opacity-0 pointer-events-none transition-opacity duration-300"></div>
-    
-    <aside id="mobile-sidebar" class="fixed top-0 left-0 h-full w-72 bg-white dark:bg-slate-950 z-[200] transform -translate-x-full shadow-2xl md:hidden flex flex-col p-6">
-        <div class="flex justify-between items-center mb-10">
-            <span class="text-xs font-black uppercase tracking-[0.3em] text-blue-600">Menu</span>
-            <button onclick="toggleMobileSidebar(false)" class="p-2 text-slate-400">✕</button>
-        </div>
-        
-        <div class="flex flex-col gap-4">
-            {% if settings and settings.nav_links %}
-                {% for link in settings.nav_links %}
-                <a href="{{ link.url }}" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 font-black uppercase tracking-widest text-xs">
-                    {{ link.label }}
-                </a>
-                {% endfor %}
-            {% endif %}
-            
-            {% if session.get('user') %}
-                <a href="/admin" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 font-black uppercase tracking-widest text-xs">Dashboard</a>
-                <hr class="border-slate-100 dark:border-slate-800/50 my-2">
-                <a href="/logout" class="p-4 rounded-2xl bg-red-500/10 text-red-500 font-black uppercase tracking-widest text-xs">Logout</a>
-            {% endif %}
-        </div>
-
-        <div class="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800/50">
-            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">System Engine v1.0</p>
-        </div>
-    </aside>
-
-    <main class="flex-1 relative">
+    <main class="flex-grow">
         {% block content %}{% endblock %}
     </main>
 
-    <script>
-        function toggleMobileSidebar(open) {
-            const sidebar = document.getElementById('mobile-sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            if (open) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('pointer-events-none', 'opacity-0');
-                overlay.classList.add('opacity-100');
-                document.body.style.overflow = 'hidden';
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('pointer-events-none', 'opacity-0');
-                overlay.classList.remove('opacity-100');
-                document.body.style.overflow = '';
-            }
-        }
-
-        function toggleGlobalTheme() {
-            const html = document.documentElement;
-            const isDark = html.classList.contains('dark');
-            const newTheme = isDark ? 'light' : 'dark';
-
-            if (newTheme === 'dark') {
-                html.classList.add('dark');
-            } else {
-                html.classList.remove('dark');
-            }
-
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        }
-    </script>
+    <footer class="border-t border-slate-900 bg-slate-950/50 py-12">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-slate-500 text-sm font-medium">
+                &copy; {{ now.year if now else '2026' }} {{ settings.site_name_first }} {{ settings.site_name_last }}. All rights reserved.
+            </div>
+            <div class="flex gap-6">
+                <a href="#" class="text-slate-500 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg></a>
+                <a href="#" class="text-slate-500 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.042-1.416-4.042-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
