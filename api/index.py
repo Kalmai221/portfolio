@@ -404,9 +404,9 @@ def dynamic_og_image():
 
 @app.route('/sitemap.xml')
 def sitemap():
-    """Self-inspects the Flask app and MongoDB to build a full sitemap."""
+    """Self-inspects the Flask app and MongoDB to build a full sitemap, filtering out test nodes."""
     pages = []
-    # We don't want search engines indexing these technical/private routes
+    # Technical/private routes to exclude
     excluded_endpoints = [
         'static', 'login', 'logout', 'admin_dashboard', 
         'update_settings', 'add_nav_link', 'delete_nav_link', 
@@ -414,24 +414,33 @@ def sitemap():
         'delete_page', 'sitemap', 'dynamic_og_image'
     ]
 
-    # 1. Fetch static routes directly from your Python logic (app.url_map)
+    # 1. Fetch static routes from Python logic
     for rule in app.url_map.iter_rules():
-        # Only index GET routes that don't require variables (like <path:slug>)
         if "GET" in rule.methods and len(rule.arguments) == 0:
+            route_path = str(rule.rule)
+            # BLOCK: Skip if "test" is in the route path or endpoint name
+            if "test" in route_path.lower() or "test" in rule.endpoint.lower():
+                continue
+
             if rule.endpoint not in excluded_endpoints:
-                url = f"https://klhportfolio.vercel.app{rule.rule}"
-                # If it's the root, give it top priority
-                priority = "1.0" if rule.rule == "/" else "0.7"
+                url = f"https://klhportfolio.vercel.app{route_path}"
+                priority = "1.0" if route_path == "/" else "0.7"
                 pages.append({"url": url, "lastmod": datetime.now().strftime('%Y-%m-%d'), "priority": priority})
 
     # 2. Fetch dynamic routes from MongoDB
     try:
         cms_pages = pages_collection.find()
         for p in cms_pages:
-            # Skip the 'home' slug if you've already indexed the root '/'
-            if p['slug'] == 'home': continue
+            slug = p.get('slug', '')
+            title = p.get('title', '')
 
-            url = f"https://klhportfolio.vercel.app/{p['slug']}"
+            # BLOCK: Skip if "test" is in the slug or the page title
+            if "test" in slug.lower() or "test" in title.lower():
+                continue
+
+            if slug == 'home': continue
+
+            url = f"https://klhportfolio.vercel.app/{slug}"
             lastmod = p.get('updated_at', datetime.now()).strftime('%Y-%m-%d')
             pages.append({"url": url, "lastmod": lastmod, "priority": "0.8"})
     except Exception as e:
