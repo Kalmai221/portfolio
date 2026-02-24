@@ -24,10 +24,8 @@ pages_collection = db.pages
 settings_collection = db.settings
 analytics_collection = db.analytics
 
-og_cache = {
-    "image": None,
-    "expiry": datetime.now()
-}
+og_cache = {"image": None, "expiry": datetime.now()}
+
 
 # --- AUTH DECORATOR ---
 def login_required(f):
@@ -370,12 +368,14 @@ def cms_router(path):
     log_visit(path, 404)
     abort(404)
 
+
 @app.route('/og-image.png')
 def dynamic_og_image():
     global og_cache
 
     # 1. Return Cache if valid
-    if og_cache.get("image") and datetime.now() < og_cache.get("expiry", datetime.now()):
+    if og_cache.get("image") and datetime.now() < og_cache.get(
+            "expiry", datetime.now()):
         return send_file(io.BytesIO(og_cache["image"]), mimetype='image/png')
 
     API_KEY = os.environ.get("SCREENSHOT_API_KEY")
@@ -383,7 +383,9 @@ def dynamic_og_image():
 
     # If no API key is found, don't even try; jump to fallback
     if not API_KEY:
-        return redirect("https://placehold.co/1200x630/020617/white?text=Kurtis+Lee+Hopewell+Portfolio")
+        return redirect(
+            "https://placehold.co/1200x630/020617/white?text=Kurtis+Lee+Hopewell+Portfolio"
+        )
 
     api_url = f"https://api.screenshotone.com/take?access_key={API_KEY}&url={TARGET_URL}&viewport_width=1200&viewport_height=630&format=png&delay=2"
 
@@ -392,66 +394,86 @@ def dynamic_og_image():
         if response.status_code == 200:
             og_cache["image"] = response.content
             og_cache["expiry"] = datetime.now() + timedelta(hours=24)
-            return send_file(io.BytesIO(response.content), mimetype='image/png')
+            return send_file(io.BytesIO(response.content),
+                             mimetype='image/png')
 
         # If API returns an error code (e.g. 401 or 402), return a professional placeholder
-        return redirect(f"https://placehold.co/1200x630/020617/4f46e5?text={settings_collection.find_one()['site_name_first']}+Portfolio")
+        return redirect(
+            f"https://placehold.co/1200x630/020617/4f46e5?text={settings_collection.find_one()['site_name_first']}+Portfolio"
+        )
 
     except Exception as e:
         print(f"OG Proxy Error: {e}")
         # Fallback to a reliable external placeholder service
-        return redirect("https://placehold.co/1200x630/020617/white?text=Portfolio+Node+Offline")
+        return redirect(
+            "https://placehold.co/1200x630/020617/white?text=Portfolio+Node+Offline"
+        )
+
 
 @app.route('/sitemap.xml')
 def sitemap():
-    """Self-inspects the Flask app and MongoDB to build a full sitemap, filtering out test nodes."""
+    """Self-inspects the Flask app and MongoDB to build a full sitemap."""
     pages = []
-    # Technical/private routes to exclude
+    base_url = "https://klhportfolio.vercel.app"
+
+    # Manually ensure the root is added first to guarantee its presence
+    pages.append({
+        "url": f"{base_url}/",
+        "lastmod": datetime.now().strftime('%Y-%m-%d'),
+        "priority": "1.0"
+    })
+
     excluded_endpoints = [
-        'static', 'login', 'logout', 'admin_dashboard', 
-        'update_settings', 'add_nav_link', 'delete_nav_link', 
-        'toggle_maintenance', 'admin_analytics', 'edit_page', 
-        'delete_page', 'sitemap', 'dynamic_og_image'
+        'static', 'login', 'logout', 'admin_dashboard', 'update_settings',
+        'add_nav_link', 'delete_nav_link', 'toggle_maintenance',
+        'admin_analytics', 'edit_page', 'delete_page', 'sitemap',
+        'dynamic_og_image', 'robots_dot_txt'
     ]
 
-    # 1. Fetch static routes from Python logic
+    # 1. Static Routes (Python logic)
     for rule in app.url_map.iter_rules():
         if "GET" in rule.methods and len(rule.arguments) == 0:
             route_path = str(rule.rule)
-            # BLOCK: Skip if "test" is in the route path or endpoint name
-            if "test" in route_path.lower() or "test" in rule.endpoint.lower():
+            # Skip root (already added), admin paths, and test nodes
+            if route_path == "/" or any(
+                    x in route_path.lower() or x in rule.endpoint.lower()
+                    for x in ["test", "admin"]):
                 continue
-
             if rule.endpoint not in excluded_endpoints:
-                url = f"https://klhportfolio.vercel.app{route_path}"
-                priority = "1.0" if route_path == "/" else "0.7"
-                pages.append({"url": url, "lastmod": datetime.now().strftime('%Y-%m-%d'), "priority": priority})
+                pages.append({
+                    "url": f"{base_url}{route_path}",
+                    "lastmod": datetime.now().strftime('%Y-%m-%d'),
+                    "priority": "0.7"
+                })
 
-    # 2. Fetch dynamic routes from MongoDB
+    # 2. CMS Routes (MongoDB)
     try:
         cms_pages = pages_collection.find()
         for p in cms_pages:
             slug = p.get('slug', '')
-            title = p.get('title', '')
-
-            # BLOCK: Skip if "test" is in the slug or the page title
-            if "test" in slug.lower() or "test" in title.lower():
+            # Skip empty slugs, the 'home' alias (root), and test pages
+            if not slug or slug == 'home' or "test" in slug.lower():
                 continue
 
-            if slug == 'home': continue
-
-            url = f"https://klhportfolio.vercel.app/{slug}"
             lastmod = p.get('updated_at', datetime.now()).strftime('%Y-%m-%d')
-            pages.append({"url": url, "lastmod": lastmod, "priority": "0.8"})
+            pages.append({
+                "url": f"{base_url}/{slug}",
+                "lastmod": lastmod,
+                "priority": "0.8"
+            })
     except Exception as e:
-        print(f"Sitemap Data Fetch Error: {e}")
+        print(f"Sitemap Error: {e}")
 
-    return render_template('sitemap_template.xml', pages=pages), 200, {'Content-Type': 'application/xml'}
+    return render_template('sitemap_template.xml', pages=pages), 200, {
+        'Content-Type': 'application/xml'
+    }
+
 
 @app.route('/robots.txt')
 def robots_dot_txt():
     """Serves the robots.txt from the static folder at the root level."""
     return send_from_directory(app.static_folder, 'robots.txt')
+
 
 @app.errorhandler(404)
 def page_not_found(e):
