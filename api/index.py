@@ -504,14 +504,13 @@ def dynamic_og_image():
         f"https://placehold.co/1200x630/020617/ffffff/png?text={clean_title}&font=playfair-display"
     )
 
-
 @app.route('/sitemap.xml')
 def sitemap():
     """Self-inspects the Flask app and MongoDB to build a full sitemap."""
     pages = []
     base_url = "https://klhportfolio.vercel.app"
 
-    # Manually ensure the root is added first to guarantee its presence
+    # Manually ensure the root is added first
     pages.append({
         "url": f"{base_url}/",
         "lastmod": datetime.now().strftime('%Y-%m-%d'),
@@ -529,7 +528,7 @@ def sitemap():
     for rule in app.url_map.iter_rules():
         if "GET" in rule.methods and len(rule.arguments) == 0:
             route_path = str(rule.rule)
-            # Skip root (already added), admin paths, and test nodes
+            # Skip root, admin paths, and test nodes
             if route_path == "/" or any(
                     x in route_path.lower() or x in rule.endpoint.lower()
                     for x in ["test", "admin"]):
@@ -545,10 +544,13 @@ def sitemap():
     try:
         cms_pages = pages_collection.find()
         for p in cms_pages:
-            slug = p.get('slug', '')
-            # Skip empty slugs, the 'home' alias (root), and test pages
-            if not slug or slug == 'home' or "test" in slug.lower():
+            slug = p.get('slug', '').strip("/")
+
+            # --- NEW FILTER LOGIC ---
+            # Skip if slug is empty, 'home', contains 'test', or contains 'admin'
+            if not slug or slug == 'home' or "test" in slug.lower() or "admin" in slug.lower():
                 continue
+            # ------------------------
 
             lastmod = p.get('updated_at', datetime.now()).strftime('%Y-%m-%d')
             pages.append({
@@ -562,7 +564,6 @@ def sitemap():
     return render_template('sitemap_template.xml', pages=pages), 200, {
         'Content-Type': 'application/xml'
     }
-
 
 @app.route('/robots.txt')
 def robots_dot_txt():
