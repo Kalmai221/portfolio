@@ -10,6 +10,7 @@ import json
 from user_agents import parse
 import requests
 import io
+import traceback
 
 load_dotenv()
 
@@ -351,7 +352,6 @@ def cms_router(path):
         if page:
             log_visit(path, 200)
 
-            # Define the context
             template_context = {
                 "db": db,
                 "session": session,
@@ -363,16 +363,17 @@ def cms_router(path):
 
             if page.get('python_logic'):
                 try:
-                    # Pass template_context as the local scope
-                    # This makes 'template_context' a variable the script can see
                     exec(page['python_logic'], {"template_context": template_context}, template_context)
                 except Exception as e:
+                    # 1. Log the error to analytics for later review
+                    log_visit(path, 500) 
+                    # 2. Capture the detailed technical breakdown
                     template_context['logic_error'] = str(e)
+                    template_context['error_traceback'] = traceback.format_exc()
 
-            # Render logic
-            raw_content = page.get('content', '')
+            # ... (rendering logic remains the same)
             from flask import render_template_string
-            rendered_node_content = render_template_string(raw_content, **template_context)
+            rendered_node_content = render_template_string(page.get('content', ''), **template_context)
 
             return render_template('page.html', 
                                  rendered_node_content=rendered_node_content, 

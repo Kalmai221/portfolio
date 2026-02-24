@@ -1,68 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
-<style>
-    .bg-grid {
-        background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
-        background-size: 32px 32px;
-    }
-    .glitch-text {
-        text-shadow: 2px 0 #2563eb, -2px 0 #ef4444;
-    }
-    /* Prevent the massive text from causing horizontal scroll */
-    .hero-container { overflow: visible; width: 100%; position: relative; }
-</style>
+<div class="fixed inset-0 -z-10 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] opacity-30"></div>
 
-<div class="flex flex-col items-center justify-center min-h-full text-center p-4 md:p-10 bg-grid text-slate-200/5 dark:text-slate-800/20 transition-colors duration-500 overflow-hidden">
+<div class="flex flex-col items-center justify-center min-h-[75vh] p-6 text-center">
     
-    <div class="relative mb-8 md:mb-12 select-none hero-container">
-        <h1 class="text-[8rem] sm:text-[10rem] md:text-[14rem] font-black leading-none opacity-20 dark:opacity-40 glitch-text tracking-tighter transition-all">
+    <div class="relative mb-8">
+        <h1 class="text-[12rem] md:text-[16rem] font-black leading-none tracking-tighter text-slate-100 dark:text-slate-900 select-none">
             404
         </h1>
-        
-        <div class="absolute inset-0 flex items-center justify-center translate-y-4 md:translate-y-8">
-            <div class="bg-blue-600 text-white px-4 md:px-6 py-2 rounded-xl md:rounded-2xl font-black text-[10px] md:text-sm uppercase tracking-[0.2em] md:tracking-[0.3em] shadow-2xl shadow-blue-600/40 border-2 border-white/20 -rotate-2 whitespace-nowrap">
-                Null Pointer Exception
-            </div>
+        <div class="absolute inset-0 flex items-center justify-center">
+            <span class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                Node Not Found
+            </span>
         </div>
     </div>
 
-    <div class="max-w-xl w-full z-10 px-2">
-        <h2 class="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 dark:text-white mb-4">
-            Route <span class="text-blue-600">Untraceable</span>
-        </h2>
-        
-        <p class="text-slate-500 dark:text-slate-400 font-medium mb-8 md:mb-10 max-w-sm mx-auto leading-relaxed text-sm md:text-base">
-            The requested document hash does not exist in the <span class="text-blue-500 font-bold italic">MongoDB</span> collection.
+    <div class="max-w-md space-y-6">
+        <p class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+            The resource at <span class="font-mono text-blue-500">/{{ request.path.strip('/') }}</span> does not exist in our current architecture. 
         </p>
 
-        <div class="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-[2rem] md:rounded-[2.5rem] mb-8 md:mb-12 shadow-2xl overflow-hidden relative">
-            <div class="bg-slate-50 dark:bg-black/40 p-5 md:p-6 text-left font-mono text-[10px] md:text-[11px] leading-relaxed space-y-1 text-slate-600 dark:text-slate-400">
-                <p class="text-red-500 break-all">> [GET] Failed for: {{ request.path }}</p>
-                <p>> [QUERY] Searching index...</p>
-                <p>> [RESULT] 404 NOT_FOUND</p>
-                <div class="flex items-center gap-1">
-                    <span class="text-blue-500">> Awaiting user redirect</span>
-                    <span class="w-1.5 h-3 bg-blue-500 animate-pulse"></span>
-                </div>
-            </div>
+        <div class="inline-flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-full">
+            <span class="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+            <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">
+                Error Trace: Null_Pointer_Slug
+            </span>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/" class="group flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 md:px-10 py-4 rounded-2xl transition-all font-black text-xs md:text-sm shadow-xl active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        <div class="pt-8">
+            <a href="/" class="group inline-flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-8 py-4 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-slate-900/10 dark:shadow-white/5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                BACK TO HUB
+                Return Home
             </a>
-            
-            {% if session.get('user') %}
-            <a href="/admin" class="group flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 md:px-10 py-4 rounded-2xl transition-all font-black text-xs md:text-sm shadow-xl shadow-blue-600/20 active:scale-95">
-                ADMIN PANEL
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:translate-y-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
-                </svg>
-            </a>
-            {% endif %}
         </div>
     </div>
 </div>
