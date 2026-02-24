@@ -419,8 +419,8 @@ def delete_page(slug):
 
 
 # --- DYNAMIC CMS ROUTER ---
-@app.route('/', defaults={'path': 'home'})
-@app.route('/<path:path>')
+@app.route('/', defaults={'path': 'home'}, methods=['GET', 'POST']) # Added methods here
+@app.route('/<path:path>', methods=['GET', 'POST'])
 def cms_router(path):
     if path == "admin":
         return redirect(url_for('admin_dashboard'))
