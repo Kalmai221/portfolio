@@ -56,9 +56,13 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+
+        /* Mobile Menu Transitions */
+        #mobile-menu { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #mobile-menu.closed { transform: translateX(100%); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col overflow-x-hidden">
 
     <div id="cookie-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm hidden">
         <div class="glass max-w-lg w-full p-8 rounded-2xl shadow-2xl border-blue-500/20">
@@ -94,6 +98,33 @@
         </div>
     </div>
 
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[60] hidden"></div>
+    <div id="mobile-menu" class="fixed top-0 right-0 bottom-0 w-[280px] glass z-[70] p-6 flex flex-col closed">
+        <div class="flex items-center justify-between mb-8">
+            <span class="font-bold text-lg">Menu</span>
+            <button id="close-menu" class="p-2 text-slate-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        
+        <div class="flex flex-col gap-4">
+            {% if settings and settings.nav_links %}
+                {% for link in settings.nav_links %}
+                <a href="{{ link.url }}" class="text-lg font-medium py-2 border-b border-slate-800/50">{{ link.label }}</a>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="mt-4 pt-4 border-t border-slate-800">
+                {% if session.get('user') %}
+                    <a href="/admin" class="block py-2 text-blue-400">Admin Panel</a>
+                    <a href="/logout" class="block py-2 text-red-400">Logout</a>
+                {% else %}
+                    <a href="/login" class="w-full py-3 bg-blue-600 rounded-xl text-center font-bold">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <nav class="glass sticky top-0 z-50 border-x-0 border-t-0 border-b">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <a href="/" class="group flex items-center gap-3">
@@ -124,9 +155,9 @@
                 {% endif %}
             </div>
 
-            <div class="md:hidden text-slate-400">
+            <button id="open-menu" class="md:hidden text-slate-400 hover:text-white p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
-            </div>
+            </button>
         </div>
     </nav>
 
@@ -172,13 +203,32 @@
     <script>
         const modal = document.getElementById('cookie-modal');
         const acceptBtn = document.getElementById('accept-cookies');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileOverlay = document.getElementById('mobile-menu-overlay');
+        const openBtn = document.getElementById('open-menu');
+        const closeBtn = document.getElementById('close-menu');
 
+        // Privacy Modal Logic
         function showPrivacyModal() {
             modal.classList.remove('hidden');
             document.body.classList.add('modal-open');
         }
 
+        // Mobile Menu Logic
+        function toggleMobileMenu(show) {
+            if (show) {
+                mobileMenu.classList.remove('closed');
+                mobileOverlay.classList.remove('hidden');
+                document.body.classList.add('modal-open');
+            } else {
+                mobileMenu.classList.add('closed');
+                mobileOverlay.classList.add('hidden');
+                document.body.classList.remove('modal-open');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // Check Cookie Consent
             if (!localStorage.getItem('cookieConsent')) {
                 showPrivacyModal();
             }
@@ -187,9 +237,13 @@
                 localStorage.setItem('cookieConsent', 'true');
                 modal.classList.add('hidden');
                 document.body.classList.remove('modal-open');
-                // Optional: trigger analytics hit only after consent
                 location.reload(); 
             });
+
+            // Mobile Menu Listeners
+            openBtn.addEventListener('click', () => toggleMobileMenu(true));
+            closeBtn.addEventListener('click', () => toggleMobileMenu(false));
+            mobileOverlay.addEventListener('click', () => toggleMobileMenu(false));
         });
     </script>
 </body>
