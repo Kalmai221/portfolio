@@ -74,13 +74,36 @@ def is_maintenance_mode():
     except:
         return False
 
-
-# --- IMPROVED ANALYTICS ENGINE ---
 def log_visit(path, status_code=200):
-    """Logs project traffic and system faults."""
-    if path.startswith('admin') or path.startswith(
-            'static') or path == 'favicon.ico':
+    if path.startswith('admin') or path.startswith('static') or path == 'favicon.ico':
         return
+
+    # 1. Detect Source
+    custom_ref = request.args.get('redirectfrom')
+    raw_referrer = request.referrer or ""
+    current_host = request.host # e.g., klhportfolio.vercel.app
+
+    # 2. Filter out internal redirects
+    if current_host in raw_referrer and not custom_ref:
+        final_source = "Direct / Internal"
+        full_url = raw_referrer
+    else:
+        # 3. Clean Naming Logic
+        ref_low = raw_referrer.lower()
+        if custom_ref:
+            final_source = f"Campaign: {custom_ref}"
+        elif "google" in ref_low:
+            final_source = "Google Search"
+        elif "linkedin" in ref_low:
+            final_source = "LinkedIn"
+        elif "github" in ref_low:
+            final_source = "GitHub"
+        elif not raw_referrer:
+            final_source = "Direct Entry"
+        else:
+            final_source = raw_referrer.split('//')[-1].split('/')[0] # Get domain only
+
+        full_url = raw_referrer
 
     analytics_collection.insert_one({
         "path": path,
@@ -88,9 +111,9 @@ def log_visit(path, status_code=200):
         "timestamp": datetime.now(),
         "ip": request.remote_addr,
         "agent": request.headers.get('User-Agent'),
-        "referrer": request.referrer or "Direct"
+        "referrer": final_source,
+        "full_referrer_url": full_url
     })
-
 
 # --- CONTEXT PROCESSOR ---
 @app.context_processor
@@ -196,51 +219,41 @@ def toggle_maintenance():
 
 
 # --- VERCEL-STYLE ANALYTICS ---
-
-
 @app.route('/admin/analytics')
 @login_required
 def admin_analytics():
     now = datetime.now()
     seven_days_ago = now - timedelta(days=7)
 
-    # 1. High-Level Metrics
-    total_hits = analytics_collection.count_documents({"status_code": 200})
-    unique_visitors = len(
-        analytics_collection.distinct("ip", {"status_code": 200}))
+    # Get filter params from URL: ?type=browser&val=Chrome
+    f_type = request.args.get('type')
+    f_val = request.args.get('val')
 
-    # Real-time: Active unique IPs in last 5 minutes
-    online_count = len(
-        analytics_collection.distinct(
-            "ip", {"timestamp": {
-                "$gt": now - timedelta(minutes=5)
-            }}))
+    # --- 1. BUILD THE DYNAMIC QUERY ---
+    base_filter = {"status_code": 200, "timestamp": {"$gt": seven_days_ago}}
 
-    # 2. Fix the Graph: Continuous 7-day timeline
-    graph_pipeline = [{
-        "$match": {
-            "timestamp": {
-                "$gt": seven_days_ago
-            },
-            "status_code": 200
-        }
-    }, {
-        "$group": {
-            "_id": {
-                "$dateToString": {
-                    "format": "%Y-%m-%d",
-                    "date": "$timestamp"
-                }
-            },
-            "count": {
-                "$sum": 1
-            }
-        }
-    }]
-    raw_graph_data = {
-        d['_id']: d['count']
-        for d in analytics_collection.aggregate(graph_pipeline)
-    }
+    if f_type == 'path':
+        base_filter['path'] = f_val
+    elif f_type == 'referrer':
+        base_filter['referrer'] = f_val
+
+    # --- 2. HIGH-LEVEL METRICS ---
+    total_hits = analytics_collection.count_documents(base_filter)
+    unique_visitors = len(analytics_collection.distinct("ip", base_filter))
+    online_count = len(analytics_collection.distinct("ip", {
+        "timestamp": {"$gt": now - timedelta(minutes=5)}
+    }))
+
+    # --- 3. THE GRAPH (Filtered) ---
+    graph_pipeline = [
+        {"$match": base_filter},
+        {"$group": {
+            "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    raw_graph_data = {d['_id']: d['count'] for d in analytics_collection.aggregate(graph_pipeline)}
 
     chart_labels = []
     chart_values = []
@@ -250,54 +263,73 @@ def admin_analytics():
         chart_labels.append(date_obj.strftime('%b %d'))
         chart_values.append(raw_graph_data.get(date_str, 0))
 
-    # 3. Client Distribution & System Faults
-    stats = {"browsers": {}, "os": {}, "devices": {}}
-    for log in analytics_collection.find({"status_code": 200}):
-        agent_string = log.get('agent') or ''
-        ua = parse(agent_string)
-        stats["browsers"][ua.browser.family] = stats["browsers"].get(
-            ua.browser.family, 0) + 1
-        stats["os"][ua.os.family] = stats["os"].get(ua.os.family, 0) + 1
-        d = "Mobile" if ua.is_mobile else "Tablet" if ua.is_tablet else "Desktop"
-        stats["devices"][d] = stats["devices"].get(d, 0) + 1
+    # --- 4. CLIENT SPECS & REFERRERS ---
+    # Initialize correctly: 'referrers' is for simple counts, 'referrers_detailed' for URLs
+    stats = {
+        "browsers": {}, 
+        "os": {}, 
+        "devices": {}, 
+        "referrers": {}, 
+        "referrers_detailed": {}
+    }
 
-    top_pages = list(
-        analytics_collection.aggregate([{
-            "$match": {
-                "status_code": 200
-            }
-        }, {
-            "$group": {
-                "_id": "$path",
-                "count": {
-                    "$sum": 1
-                }
-            }
-        }, {
-            "$sort": {
-                "count": -1
-            }
-        }, {
-            "$limit": 8
-        }]))
+    logs = list(analytics_collection.find(base_filter))
 
-    error_logs = list(
-        analytics_collection.find({
-            "status_code": {
-                "$gte": 400
-            }
-        }).sort("timestamp", -1).limit(15))
+    filtered_logs_count = 0
+    for log in logs:
+        ua = parse(log.get('agent') or '')
+        browser = ua.browser.family
+        os_family = ua.os.family
+        device = "Mobile" if ua.is_mobile else "Tablet" if ua.is_tablet else "Desktop"
+
+        # Apply Python-side filtering for UA-parsed fields
+        if f_type == 'browser' and f_val != browser: continue
+        if f_type == 'os' and f_val != os_family: continue
+        if f_type == 'device' and f_val != device: continue
+
+        # If we passed filters, increment counts
+        filtered_logs_count += 1
+
+        # Basic Stats
+        stats["browsers"][browser] = stats["browsers"].get(browser, 0) + 1
+        stats["os"][os_family] = stats["os"].get(os_family, 0) + 1
+        stats["devices"][device] = stats["devices"].get(device, 0) + 1
+
+        # Referrer Logic
+        ref_name = log.get('referrer', 'Direct Entry')
+        ref_url = log.get('full_referrer_url', '')
+
+        # Simple count for progress bars
+        stats["referrers"][ref_name] = stats["referrers"].get(ref_name, 0) + 1
+
+        # Detailed entry for "View Exact Link"
+        if ref_name not in stats["referrers_detailed"]:
+            stats["referrers_detailed"][ref_name] = {"count": 0, "url": ref_url}
+        stats["referrers_detailed"][ref_name]["count"] += 1
+
+    # --- 5. TOP PAGES & ERRORS ---
+    top_pages = list(analytics_collection.aggregate([
+        {"$match": base_filter},
+        {"$group": {"_id": "$path", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}, 
+        {"$limit": 8}
+    ]))
+
+    error_logs = list(analytics_collection.find({
+        "status_code": {"$gte": 400},
+        "timestamp": {"$gt": seven_days_ago}
+    }).sort("timestamp", -1).limit(15))
 
     return render_template('analytics.html',
-                           total_hits=total_hits,
+                           total_hits=filtered_logs_count if f_type else total_hits,
                            unique_visitors=unique_visitors,
                            online_count=online_count,
                            chart_labels=chart_labels,
                            chart_values=chart_values,
                            stats=stats,
                            top_pages=top_pages,
-                           error_logs=error_logs)
-
+                           error_logs=error_logs,
+                           filter_active={'type': f_type, 'val': f_val})
 
 # --- PAGE EDITOR ---
 @app.route('/admin/edit/<path:slug>', methods=['GET', 'POST'])
@@ -426,7 +458,7 @@ def dynamic_og_image():
 
 
 @app.route('/sitemap.xml')
-def sitemap():
+def sitemap():    
     """Self-inspects the Flask app and MongoDB to build a full sitemap."""
     pages = []
     base_url = "https://klhportfolio.vercel.app"

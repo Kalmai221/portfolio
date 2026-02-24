@@ -6,14 +6,19 @@
     
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-slate-200 dark:border-slate-800 pb-8 gap-6">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Web Analytics</h1>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">System Telemetry</h1>
             <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-slate-500">
                 <span class="flex items-center gap-2 bg-white dark:bg-slate-900/50 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 
-                    <span class="text-slate-900 dark:text-white font-bold">{{ online_count }}</span> online
+                    <span class="text-slate-900 dark:text-white font-bold">{{ online_count }}</span> active nodes
                 </span>
-                <span class="uppercase tracking-widest text-[10px] font-black text-slate-400 dark:text-slate-600">Environment: Production</span>
-                <span class="uppercase tracking-widest text-[10px] font-black text-slate-400 dark:text-slate-600">Cycle: Last 7 Days</span>
+                
+                {% if filter_active.val %}
+                <div class="flex items-center gap-2 bg-blue-600/10 border border-blue-600/20 px-3 py-1 rounded-full text-[10px] font-black uppercase text-blue-600 dark:text-blue-400">
+                    Filter: {{ filter_active.type }} = {{ filter_active.val }}
+                    <a href="/admin/analytics" class="hover:text-red-500 ml-1">✕</a>
+                </div>
+                {% endif %}
             </div>
         </div>
         <div class="flex gap-3">
@@ -24,15 +29,15 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-950/50 shadow-sm dark:shadow-2xl">
-        <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+        <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
             <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">Unique_Visitors</p>
             <h2 class="text-4xl font-black text-slate-900 dark:text-white mt-2 italic">{{ unique_visitors }}</h2>
         </div>
-        <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">Total_Page_Views</p>
+        <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">Total_Uplinks</p>
             <h2 class="text-4xl font-black text-slate-900 dark:text-white mt-2 italic">{{ total_hits }}</h2>
         </div>
-        <div class="p-8 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+        <div class="p-8">
             <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">System_Health</p>
             <div class="flex items-center gap-3 mt-2">
                 <h2 class="text-4xl font-black text-emerald-600 dark:text-emerald-500 italic">100%</h2>
@@ -41,70 +46,81 @@
         </div>
     </div>
 
-    <div class="hud-card p-6 md:p-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/20 rounded-[2.5rem]">
-        <div class="flex justify-between items-center mb-8">
-            <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic">Request_Velocity_Telemetry</h4>
-        </div>
+    <div class="hud-card p-6 md:p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/20 rounded-[2.5rem]">
+        <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic mb-8">Request_Velocity_Telemetry</h4>
         <div class="h-[350px] w-full">
             <canvas id="vercelChart"></canvas>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
             <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Client_Engines</h4>
             <div class="space-y-5">
                 {% for browser, count in stats.browsers.items() %}
-                <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-bold">
+                <a href="?type=browser&val={{ browser }}" class="block group space-y-1">
+                    <div class="flex justify-between text-xs font-bold transition-colors group-hover:text-blue-500">
                         <span class="text-slate-900 dark:text-white">{{ browser }}</span>
                         <span class="text-blue-600 dark:text-blue-500 font-mono">{{ count }}</span>
                     </div>
                     <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div class="progress-fill h-full bg-blue-600 rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                        <div class="h-full bg-blue-600 group-hover:bg-blue-400 transition-all rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
-                </div>
+                </a>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
             <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Platform_Kernel</h4>
             <div class="space-y-5">
                 {% for os, count in stats.os.items() %}
-                <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-bold">
+                <a href="?type=os&val={{ os }}" class="block group space-y-1">
+                    <div class="flex justify-between text-xs font-bold transition-colors group-hover:text-blue-500">
                         <span class="text-slate-900 dark:text-white">{{ os }}</span>
                         <span class="text-blue-600 dark:text-blue-500 font-mono">{{ count }}</span>
                     </div>
                     <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div class="progress-fill h-full bg-blue-600 rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                        <div class="h-full bg-blue-600 group-hover:bg-blue-400 transition-all rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
-                </div>
+                </a>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
-            <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Input_Hardware</h4>
+        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+            <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Signal_Origin</h4>
             <div class="space-y-5">
-                {% for device, count in stats.devices.items() %}
-                <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-bold">
-                        <span class="text-slate-900 dark:text-white">{{ device }}</span>
-                        <span class="text-blue-600 dark:text-blue-500 font-mono">{{ count }}</span>
+                {% for source, data in stats.referrers_detailed.items() | sort(attribute='1.count', reverse=True) %}
+                {% if loop.index <= 6 %}
+                <div class="group space-y-1">
+                    <div class="flex justify-between items-center text-xs font-bold">
+                        <div class="flex items-center gap-2 truncate">
+                            <a href="?type=referrer&val={{ source }}" class="text-slate-900 dark:text-white hover:text-blue-500 transition-colors truncate max-w-[140px]">
+                                {{ source }}
+                            </a>
+                            {% if data.url and "http" in data.url %}
+                            <a href="{{ data.url }}" target="_blank" title="View Exact Link" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-blue-400 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                        <span class="text-blue-600 dark:text-blue-500 font-mono">{{ data.count }}</span>
                     </div>
                     <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div class="progress-fill h-full bg-blue-600 rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                        <div class="h-full bg-blue-600 rounded-full" style="width: {{ (data.count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div class="border border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-white dark:bg-slate-950/50 overflow-hidden shadow-sm dark:shadow-2xl">
+        <div class="border border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-white dark:bg-slate-950/50 overflow-hidden shadow-sm">
             <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
                 <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic">High_Traffic_Nodes</h3>
             </div>
@@ -112,7 +128,9 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     {% for page in top_pages %}
                     <tr class="hover:bg-blue-500/[0.04] transition-colors">
-                        <td class="px-8 py-5 text-blue-600 dark:text-blue-400 font-mono text-xs italic">/{{ page._id }}</td>
+                        <td class="px-8 py-5 text-blue-600 dark:text-blue-400 font-mono text-xs italic">
+                            <a href="?type=path&val={{ page._id }}">/{{ page._id }}</a>
+                        </td>
                         <td class="px-8 py-5 text-right font-black text-slate-900 dark:text-white italic text-lg">{{ page.count }}</td>
                     </tr>
                     {% endfor %}
@@ -120,7 +138,7 @@
             </table>
         </div>
 
-        <div class="border border-red-200 dark:border-red-900/30 rounded-[2.5rem] bg-red-50/30 dark:bg-red-950/5 overflow-hidden shadow-sm dark:shadow-2xl">
+        <div class="border border-red-200 dark:border-red-900/30 rounded-[2.5rem] bg-red-50/30 dark:bg-red-950/5 overflow-hidden shadow-sm">
             <div class="px-8 py-6 border-b border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-950/10">
                 <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-red-600 dark:text-red-500 italic">System_Fault_Registry</h3>
             </div>
@@ -141,8 +159,6 @@
 
 <script>
     const ctx = document.getElementById('vercelChart').getContext('2d');
-    
-    // Function to check current theme
     const isDark = () => document.documentElement.classList.contains('dark');
     
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -200,7 +216,6 @@
         }
     });
 
-    // Re-draw chart on theme change to update colors
     const observer = new MutationObserver(() => {
         trafficChart.options.scales.y.grid.color = isDark() ? '#1e293b' : '#f1f5f9';
         trafficChart.options.plugins.tooltip.backgroundColor = isDark() ? '#0f172a' : '#ffffff';
