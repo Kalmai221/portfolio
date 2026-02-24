@@ -50,13 +50,52 @@
         }
         .glass { @apply bg-slate-900/50 backdrop-blur-md border border-slate-800/50; }
         .nav-link { @apply text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200; }
+        
+        body.modal-open { overflow: hidden; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
+    <div id="cookie-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm hidden">
+        <div class="glass max-w-lg w-full p-8 rounded-2xl shadow-2xl border-blue-500/20">
+            <div class="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center mb-6">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+            </div>
+            
+            <h2 class="text-2xl font-bold mb-4">System Transparency</h2>
+            
+            <div class="space-y-4 text-slate-400 text-sm leading-relaxed mb-8 max-h-72 overflow-y-auto pr-3 custom-scrollbar">
+                <p>This portfolio utilizes basic telemetry to monitor the health and performance of the application. By proceeding, you acknowledge the following data collection logic:</p>
+                
+                <div class="space-y-3">
+                    <div class="p-3 bg-slate-950/50 rounded-lg border border-slate-800">
+                        <p class="font-bold text-blue-400 text-[10px] uppercase tracking-widest mb-1">Technical Analytics</p>
+                        <p class="text-xs">We log your <strong>IP address</strong>, <strong>browser type</strong>, and <strong>referral source</strong>. This helps us identify bot traffic and optimize the site for specific devices.</p>
+                    </div>
+                    
+                    <div class="p-3 bg-slate-950/50 rounded-lg border border-slate-800">
+                        <p class="font-bold text-blue-400 text-[10px] uppercase tracking-widest mb-1">Session Data</p>
+                        <p class="text-xs">A local storage key is used to remember your privacy preferences so you aren't prompted on every visit.</p>
+                    </div>
+                </div>
+
+                <p>We do not use tracking pixels or sell data. All logs are stored securely in our MongoDB instance and used purely for architectural refinement.</p>
+            </div>
+
+            <button id="accept-cookies" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+                I Understand & Accept
+            </button>
+        </div>
+    </div>
+
     <nav class="glass sticky top-0 z-50 border-x-0 border-t-0 border-b">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            
             <a href="/" class="group flex items-center gap-3">
                 <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white group-hover:rotate-12 transition-transform uppercase shadow-[0_0_15px_rgba(37,99,235,0.4)]">
                     {{ settings.site_name_first[0] if settings.site_name_first else 'K' }}
@@ -97,14 +136,17 @@
 
     <footer class="border-t border-slate-900 bg-slate-950/80 py-16">
         <div class="max-w-6xl mx-auto px-6">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
-                <div class="space-y-2 text-center md:text-left">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                <div class="space-y-2 text-left">
                     <p class="text-white font-bold tracking-tight">
                         {{ settings.site_name_first }} {{ settings.site_name_last }}
                     </p>
                     <p class="text-slate-500 text-xs font-medium uppercase tracking-widest">
                         Digital Apprenticeship Candidate // Intake 2026
                     </p>
+                    <button onclick="showPrivacyModal()" class="text-slate-600 hover:text-blue-400 text-[10px] uppercase tracking-widest mt-4 transition-colors">
+                        Review Privacy Policy
+                    </button>
                 </div>
 
                 <div class="flex items-center gap-8">
@@ -126,5 +168,29 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        const modal = document.getElementById('cookie-modal');
+        const acceptBtn = document.getElementById('accept-cookies');
+
+        function showPrivacyModal() {
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-open');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('cookieConsent')) {
+                showPrivacyModal();
+            }
+
+            acceptBtn.addEventListener('click', () => {
+                localStorage.setItem('cookieConsent', 'true');
+                modal.classList.add('hidden');
+                document.body.classList.remove('modal-open');
+                // Optional: trigger analytics hit only after consent
+                location.reload(); 
+            });
+        });
+    </script>
 </body>
 </html>
