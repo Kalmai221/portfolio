@@ -74,14 +74,16 @@ def is_maintenance_mode():
     except:
         return False
 
+
 def log_visit(path, status_code=200):
-    if path.startswith('admin') or path.startswith('static') or path == 'favicon.ico':
+    if path.startswith('admin') or path.startswith(
+            'static') or path == 'favicon.ico':
         return
 
     # 1. Detect Source
     custom_ref = request.args.get('redirectfrom')
     raw_referrer = request.referrer or ""
-    current_host = request.host # e.g., klhportfolio.vercel.app
+    current_host = request.host  # e.g., klhportfolio.vercel.app
 
     # 2. Filter out internal redirects
     if current_host in raw_referrer and not custom_ref:
@@ -101,7 +103,8 @@ def log_visit(path, status_code=200):
         elif not raw_referrer:
             final_source = "Direct Entry"
         else:
-            final_source = raw_referrer.split('//')[-1].split('/')[0] # Get domain only
+            final_source = raw_referrer.split('//')[-1].split('/')[
+                0]  # Get domain only
 
         full_url = raw_referrer
 
@@ -114,6 +117,7 @@ def log_visit(path, status_code=200):
         "referrer": final_source,
         "full_referrer_url": full_url
     })
+
 
 # --- CONTEXT PROCESSOR ---
 @app.context_processor
@@ -240,20 +244,36 @@ def admin_analytics():
     # --- 2. HIGH-LEVEL METRICS ---
     total_hits = analytics_collection.count_documents(base_filter)
     unique_visitors = len(analytics_collection.distinct("ip", base_filter))
-    online_count = len(analytics_collection.distinct("ip", {
-        "timestamp": {"$gt": now - timedelta(minutes=5)}
-    }))
+    online_count = len(
+        analytics_collection.distinct(
+            "ip", {"timestamp": {
+                "$gt": now - timedelta(minutes=5)
+            }}))
 
     # --- 3. THE GRAPH (Filtered) ---
-    graph_pipeline = [
-        {"$match": base_filter},
-        {"$group": {
-            "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}},
-            "count": {"$sum": 1}
-        }},
-        {"$sort": {"_id": 1}}
-    ]
-    raw_graph_data = {d['_id']: d['count'] for d in analytics_collection.aggregate(graph_pipeline)}
+    graph_pipeline = [{
+        "$match": base_filter
+    }, {
+        "$group": {
+            "_id": {
+                "$dateToString": {
+                    "format": "%Y-%m-%d",
+                    "date": "$timestamp"
+                }
+            },
+            "count": {
+                "$sum": 1
+            }
+        }
+    }, {
+        "$sort": {
+            "_id": 1
+        }
+    }]
+    raw_graph_data = {
+        d['_id']: d['count']
+        for d in analytics_collection.aggregate(graph_pipeline)
+    }
 
     chart_labels = []
     chart_values = []
@@ -266,10 +286,10 @@ def admin_analytics():
     # --- 4. CLIENT SPECS & REFERRERS ---
     # Initialize correctly: 'referrers' is for simple counts, 'referrers_detailed' for URLs
     stats = {
-        "browsers": {}, 
-        "os": {}, 
-        "devices": {}, 
-        "referrers": {}, 
+        "browsers": {},
+        "os": {},
+        "devices": {},
+        "referrers": {},
         "referrers_detailed": {}
     }
 
@@ -304,32 +324,56 @@ def admin_analytics():
 
         # Detailed entry for "View Exact Link"
         if ref_name not in stats["referrers_detailed"]:
-            stats["referrers_detailed"][ref_name] = {"count": 0, "url": ref_url}
+            stats["referrers_detailed"][ref_name] = {
+                "count": 0,
+                "url": ref_url
+            }
         stats["referrers_detailed"][ref_name]["count"] += 1
 
     # --- 5. TOP PAGES & ERRORS ---
-    top_pages = list(analytics_collection.aggregate([
-        {"$match": base_filter},
-        {"$group": {"_id": "$path", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}}, 
-        {"$limit": 8}
-    ]))
+    top_pages = list(
+        analytics_collection.aggregate([{
+            "$match": base_filter
+        }, {
+            "$group": {
+                "_id": "$path",
+                "count": {
+                    "$sum": 1
+                }
+            }
+        }, {
+            "$sort": {
+                "count": -1
+            }
+        }, {
+            "$limit": 8
+        }]))
 
-    error_logs = list(analytics_collection.find({
-        "status_code": {"$gte": 400},
-        "timestamp": {"$gt": seven_days_ago}
-    }).sort("timestamp", -1).limit(15))
+    error_logs = list(
+        analytics_collection.find({
+            "status_code": {
+                "$gte": 400
+            },
+            "timestamp": {
+                "$gt": seven_days_ago
+            }
+        }).sort("timestamp", -1).limit(15))
 
-    return render_template('analytics.html',
-                           total_hits=filtered_logs_count if f_type else total_hits,
-                           unique_visitors=unique_visitors,
-                           online_count=online_count,
-                           chart_labels=chart_labels,
-                           chart_values=chart_values,
-                           stats=stats,
-                           top_pages=top_pages,
-                           error_logs=error_logs,
-                           filter_active={'type': f_type, 'val': f_val})
+    return render_template(
+        'analytics.html',
+        total_hits=filtered_logs_count if f_type else total_hits,
+        unique_visitors=unique_visitors,
+        online_count=online_count,
+        chart_labels=chart_labels,
+        chart_values=chart_values,
+        stats=stats,
+        top_pages=top_pages,
+        error_logs=error_logs,
+        filter_active={
+            'type': f_type,
+            'val': f_val
+        })
+
 
 # --- PAGE EDITOR ---
 @app.route('/admin/edit/<path:slug>', methods=['GET', 'POST'])
@@ -345,13 +389,15 @@ def edit_page(slug):
             "python_logic": request.form.get("python_logic"),
             "updated_at": datetime.now()
         }
-        pages_collection.update_one({"slug": slug}, {"$set": data}, upsert=True)
+        pages_collection.update_one({"slug": slug}, {"$set": data},
+                                    upsert=True)
         return redirect(url_for('admin_dashboard'))
 
     page = pages_collection.find_one({"slug": slug})
 
     snippet_data = {}
-    snippet_path = os.path.join(app.root_path, 'static', 'data', 'snippets.json')
+    snippet_path = os.path.join(app.root_path, 'static', 'data',
+                                'snippets.json')
     try:
         if os.path.exists(snippet_path):
             with open(snippet_path, 'r') as f:
@@ -359,7 +405,10 @@ def edit_page(slug):
     except Exception as e:
         print(f"Error loading snippets: {e}")
 
-    return render_template('edit_page.html', page=page, slug=slug, snippets=snippet_data)
+    return render_template('edit_page.html',
+                           page=page,
+                           slug=slug,
+                           snippets=snippet_data)
 
 
 @app.route('/admin/delete/<path:slug>')
@@ -395,70 +444,69 @@ def cms_router(path):
 
             if page.get('python_logic'):
                 try:
-                    exec(page['python_logic'], {"template_context": template_context}, template_context)
+                    exec(page['python_logic'],
+                         {"template_context": template_context},
+                         template_context)
                 except Exception as e:
                     # 1. Log the error to analytics for later review
-                    log_visit(path, 500) 
+                    log_visit(path, 500)
                     # 2. Capture the detailed technical breakdown
                     template_context['logic_error'] = str(e)
-                    template_context['error_traceback'] = traceback.format_exc()
+                    template_context['error_traceback'] = traceback.format_exc(
+                    )
 
             # ... (rendering logic remains the same)
             from flask import render_template_string
-            rendered_node_content = render_template_string(page.get('content', ''), **template_context)
+            rendered_node_content = render_template_string(
+                page.get('content', ''), **template_context)
 
-            return render_template('page.html', 
-                                 rendered_node_content=rendered_node_content, 
-                                 **template_context)
+            return render_template('page.html',
+                                   rendered_node_content=rendered_node_content,
+                                   **template_context)
     except Exception as e:
         return render_template('503.html'), 503
 
     log_visit(path, 404)
     abort(404)
 
+
 @app.route('/og-image.png')
 def dynamic_og_image():
-    global og_cache
+    # 1. Target your live homepage
+    target_url = "https://klhportfolio.vercel.app"
+    settings = get_site_settings()
+    first_name = settings.get('site_name_first', 'Kurtis-Lee')
+    last_name = settings.get('site_name_last', 'Hopewell')
 
-    # 1. Return Cache if valid
-    if og_cache.get("image") and datetime.now() < og_cache.get(
-            "expiry", datetime.now()):
-        return send_file(io.BytesIO(og_cache["image"]), mimetype='image/png')
+    # 2. Construct a professional branding string
+    site_title = f"{first_name} {last_name}"
 
-    API_KEY = os.environ.get("SCREENSHOT_API_KEY")
-    TARGET_URL = "https://klhportfolio.vercel.app"
-
-    # If no API key is found, don't even try; jump to fallback
-    if not API_KEY:
-        return redirect(
-            "https://placehold.co/1200x630/020617/white?text=Kurtis+Lee+Hopewell+Portfolio"
-        )
-
-    api_url = f"https://api.screenshotone.com/take?access_key={API_KEY}&url={TARGET_URL}&viewport_width=1200&viewport_height=630&format=png&delay=2"
+    # 2. Thum.io Keyless URL (Width 1200, Crop to 630 for OG standard)
+    # This service allows a certain amount of free keyless requests per IP
+    api_url = f"https://image.thum.io/get/width/1200/crop/630/noanimate/{target_url}"
+    from urllib.parse import quote
+    clean_title = quote(f"{site_title} | Portfolio")
 
     try:
-        response = requests.get(api_url, timeout=12)
+        # 3. Fetch the image from the provider
+        response = requests.get(api_url, timeout=15)
+
         if response.status_code == 200:
-            og_cache["image"] = response.content
-            og_cache["expiry"] = datetime.now() + timedelta(hours=24)
+            # 4. Serve the actual image bytes to the crawler
             return send_file(io.BytesIO(response.content),
-                             mimetype='image/png')
-
-        # If API returns an error code (e.g. 401 or 402), return a professional placeholder
-        return redirect(
-            f"https://placehold.co/1200x630/020617/4f46e5?text={settings_collection.find_one()['site_name_first']}+Portfolio"
-        )
-
+                             mimetype='image/png',
+                             download_name='og-image.png')
     except Exception as e:
-        print(f"OG Proxy Error: {e}")
-        # Fallback to a reliable external placeholder service
-        return redirect(
-            "https://placehold.co/1200x630/020617/white?text=Portfolio+Node+Offline"
-        )
+        print(f"Screenshot Error: {e}")
+
+    # Fallback to a solid color placeholder if the service is down
+    return redirect(
+        f"https://placehold.co/1200x630/020617/ffffff/png?text={clean_title}&font=playfair-display"
+    )
 
 
 @app.route('/sitemap.xml')
-def sitemap():    
+def sitemap():
     """Self-inspects the Flask app and MongoDB to build a full sitemap."""
     pages = []
     base_url = "https://klhportfolio.vercel.app"
