@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, abort, session, send_file, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, abort, session, send_file, send_from_directory, render_template_string
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 import certifi
@@ -299,8 +299,6 @@ def admin_analytics():
 
 
 # --- PAGE EDITOR ---
-
-
 @app.route('/admin/edit/<path:slug>', methods=['GET', 'POST'])
 @login_required
 def edit_page(slug):
@@ -311,19 +309,16 @@ def edit_page(slug):
             "content": request.form.get("content"),
             "css": request.form.get("css_content"),
             "js": request.form.get("js_content"),
+            "python_logic": request.form.get("python_logic"),
             "updated_at": datetime.now()
         }
-        pages_collection.update_one({"slug": slug}, {"$set": data},
-                                    upsert=True)
+        pages_collection.update_one({"slug": slug}, {"$set": data}, upsert=True)
         return redirect(url_for('admin_dashboard'))
 
-    # Load page data
     page = pages_collection.find_one({"slug": slug})
 
-    # Load snippet data to fix the "snippets not defined" error
     snippet_data = {}
-    snippet_path = os.path.join(app.root_path, 'static', 'data',
-                                'snippets.json')
+    snippet_path = os.path.join(app.root_path, 'static', 'data', 'snippets.json')
     try:
         if os.path.exists(snippet_path):
             with open(snippet_path, 'r') as f:
@@ -331,10 +326,7 @@ def edit_page(slug):
     except Exception as e:
         print(f"Error loading snippets: {e}")
 
-    return render_template('edit_page.html',
-                           page=page,
-                           slug=slug,
-                           snippets=snippet_data)
+    return render_template('edit_page.html', page=page, slug=slug, snippets=snippet_data)
 
 
 @app.route('/admin/delete/<path:slug>')
@@ -345,8 +337,6 @@ def delete_page(slug):
 
 
 # --- DYNAMIC CMS ROUTER ---
-
-
 @app.route('/', defaults={'path': 'home'})
 @app.route('/<path:path>')
 def cms_router(path):
@@ -360,14 +350,38 @@ def cms_router(path):
         page = pages_collection.find_one({"slug": path})
         if page:
             log_visit(path, 200)
-            return render_template('page.html', page=page)
-    except (ConnectionFailure, ServerSelectionTimeoutError):
+
+            # Define the context
+            template_context = {
+                "db": db,
+                "session": session,
+                "request": request,
+                "datetime": datetime,
+                "timedelta": timedelta,
+                "page": page
+            }
+
+            if page.get('python_logic'):
+                try:
+                    # Pass template_context as the local scope
+                    # This makes 'template_context' a variable the script can see
+                    exec(page['python_logic'], {"template_context": template_context}, template_context)
+                except Exception as e:
+                    template_context['logic_error'] = str(e)
+
+            # Render logic
+            raw_content = page.get('content', '')
+            from flask import render_template_string
+            rendered_node_content = render_template_string(raw_content, **template_context)
+
+            return render_template('page.html', 
+                                 rendered_node_content=rendered_node_content, 
+                                 **template_context)
+    except Exception as e:
         return render_template('503.html'), 503
 
-    # Log 404s for the analytics dashboard
     log_visit(path, 404)
     abort(404)
-
 
 @app.route('/og-image.png')
 def dynamic_og_image():

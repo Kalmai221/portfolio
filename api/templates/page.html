@@ -6,24 +6,22 @@
         <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight">
             Building the <span class="gradient-text">future</span><br>of digital experiences.
         </h1>
-        <p class="text-xl text-slate-400 max-w-2xl mx-auto font-medium">
-            A software engineer focused on crafting high-performance applications with elegant, minimalist design systems.
-        </p>
-        <div class="flex justify-center gap-4 pt-4">
-            <a href="#projects" class="px-8 py-4 bg-white text-slate-950 rounded-full font-bold hover:scale-105 transition-transform">
-                Explore Work
-            </a>
-            <a href="/contact" class="px-8 py-4 bg-slate-900 border border-slate-800 rounded-full font-bold hover:bg-slate-800 transition-colors">
-                Get in Touch
-            </a>
         </div>
-    </div>
     {% endif %}
 
     <article id="projects" class="prose prose-invert prose-blue max-w-none">
         <style>{{ page.css | safe }}</style>
-        {{ page.content | safe }}
+        
+        {{ rendered_node_content | safe }}
+        
         <script>{{ page.js | safe }}</script>
     </article>
+
+    {% if logic_error %}
+    <div class="mt-20 p-6 bg-red-500/10 border border-red-500/20 rounded-3xl font-mono text-xs text-red-400">
+        <p class="font-bold mb-2 uppercase tracking-widest">Backend Execution Error:</p>
+        {{ logic_error }}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
