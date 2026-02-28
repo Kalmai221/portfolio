@@ -48,17 +48,31 @@
             body { @apply bg-slate-950 text-slate-100 antialiased selection:bg-blue-500/30; }
             h1, h2, h3, h4 { @apply tracking-tight; }
         }
-        .glass { @apply bg-slate-900/50 backdrop-blur-md border border-slate-800/50; }
-        .nav-link { @apply text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200; }
-        
+        :root{
+            --primary: #2563eb; /* blue-600 */
+            --accent: #06b6d4; /* cyan-500 */
+            --glass-bg: rgba(15,23,42,0.5);
+            --muted: #94a3b8;
+        }
+
+        @layer components {
+            .glass { background: var(--glass-bg); backdrop-filter: blur(8px); border: 1px solid rgba(148,163,184,0.06); }
+            .btn { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-semibold transition-all; }
+            .btn-primary { background: linear-gradient(90deg,var(--primary),#1e40af); color: white; box-shadow: 0 6px 20px rgba(37,99,235,0.12); }
+            .btn-ghost { @apply bg-transparent text-slate-300 border border-slate-800/40; }
+            .card { @apply rounded-2xl p-6 bg-slate-900/40 border border-slate-800; }
+            .badge { @apply text-xs uppercase px-2 py-1 rounded-full bg-slate-800/40 text-slate-300 font-bold; }
+            .nav-link { @apply text-sm font-medium text-slate-300 hover:text-white transition-colors duration-200; }
+        }
+
         body.modal-open { overflow: hidden; }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
 
         /* Mobile Menu Transitions */
-        #mobile-menu { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #mobile-menu { transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); }
         #mobile-menu.closed { transform: translateX(100%); }
     </style>
 </head>
@@ -126,32 +140,31 @@
     </div>
 
     <nav class="glass sticky top-0 z-50 border-x-0 border-t-0 border-b">
-        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="/" class="group flex items-center gap-3">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white group-hover:rotate-12 transition-transform uppercase shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="group flex items-center gap-4">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center font-extrabold text-white transform transition-transform group-hover:scale-105 uppercase shadow-[0_6px_30px_rgba(37,99,235,0.12)]">
                     {{ settings.site_name_first[0] if settings.site_name_first else 'K' }}
                 </div>
-                <span class="font-bold text-lg tracking-tight">
-                    {{ settings.site_name_first }}<span class="text-blue-500 ml-0.5">{{ settings.site_name_last }}</span>
-                </span>
+                <div class="leading-tight">
+                    <div class="font-extrabold text-lg tracking-tight">{{ settings.site_name_first }} <span class="text-indigo-400">{{ settings.site_name_last }}</span></div>
+                    <div class="text-xs text-slate-400">Software Engineering Portfolio</div>
+                </div>
             </a>
-            
-            <div class="hidden md:flex items-center gap-8">
+
+            <div class="hidden md:flex items-center gap-6">
                 {% if settings and settings.nav_links %}
                     {% for link in settings.nav_links %}
                     <a href="{{ link.url }}" class="nav-link">{{ link.label }}</a>
                     {% endfor %}
                 {% endif %}
-                
-                <div class="h-4 w-px bg-slate-800 mx-2"></div>
+
+                <div class="h-6 w-px bg-slate-800 mx-2"></div>
 
                 {% if session.get('user') %}
-                    <a href="/admin" class="nav-link text-blue-400 hover:text-blue-300">Admin</a>
-                    <a href="/logout" class="nav-link text-red-400 hover:text-red-300">Logout</a>
+                    <a href="/admin" class="btn btn-ghost">Admin Panel</a>
+                    <a href="/logout" class="btn btn-ghost text-red-400">Logout</a>
                 {% else %}
-                    <a href="/login" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 rounded-full text-sm font-bold transition-all hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]">
-                        Login
-                    </a>
+                    <a href="/login" class="btn btn-primary">Login</a>
                 {% endif %}
             </div>
 
@@ -161,7 +174,42 @@
         </div>
     </nav>
 
+    <!-- Trial countdown (visible on /trial pages or when trial session exists) -->
+    {% if request.path.startswith('/trial') or session.get('trial_expires') %}
+    <div id="trial-countdown-bar" class="w-full bg-yellow-900/10 border-t border-yellow-900/10 text-yellow-200 text-sm">
+        <div class="max-w-6xl mx-auto px-6 py-2 flex items-center justify-between">
+            <div>Trial mode active — changes are temporary and stored only for your session.</div>
+            <div id="trial-countdown" data-expiry="{{ session.get('trial_expires', '') }}">Expires in: <span id="trial-remaining">calculating...</span></div>
+        </div>
+    </div>
+    {% endif %}
+
     <main class="flex-grow">
+        <!-- Notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="max-w-7xl mx-auto px-6 py-4 space-y-2">
+                    {% for category, msg in messages %}
+                        <div class="p-3 rounded-xl flex items-start gap-4 justify-between card" role="alert">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-800/40">
+                                    {% if category == 'success' %}
+                                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    {% else %}
+                                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="text-sm text-slate-200">{{ msg }}</div>
+                                </div>
+                            </div>
+                            <button class="ml-4 text-slate-400 hover:text-slate-200 close-flash">✕</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
 
@@ -245,6 +293,40 @@
             closeBtn.addEventListener('click', () => toggleMobileMenu(false));
             mobileOverlay.addEventListener('click', () => toggleMobileMenu(false));
         });
+        
+            // Trial countdown logic
+        (function(){
+            const el = document.getElementById('trial-countdown');
+            if (!el) return;
+            const remainingEl = document.getElementById('trial-remaining');
+            let expiry = el.dataset.expiry;
+            if (!expiry) return;
+            function update(){
+                const now = new Date();
+                const exp = new Date(expiry);
+                let diff = Math.max(0, Math.floor((exp - now) / 1000));
+                if (diff <= 0) {
+                    remainingEl.textContent = '00:00';
+                    setTimeout(()=> location.reload(), 1200);
+                    return;
+                }
+                const mins = String(Math.floor(diff/60)).padStart(2,'0');
+                const secs = String(diff%60).padStart(2,'0');
+                remainingEl.textContent = mins + ':' + secs;
+            }
+            update();
+            setInterval(update, 1000);
+        })();
+
+        // Dismiss flash messages
+        (function(){
+            document.addEventListener('click', function(e){
+                if (e.target && e.target.classList.contains('close-flash')){
+                    const el = e.target.closest('[role="alert"]');
+                    if (el) el.remove();
+                }
+            });
+        })();
     </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="p-6 md:p-10 space-y-8 bg-slate-50 dark:bg-[#020617] min-h-screen text-slate-600 dark:text-slate-300 transition-colors duration-500">
+<div class="max-w-7xl mx-auto px-6 py-12 space-y-8 text-slate-600 dark:text-slate-300">
     
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-slate-200 dark:border-slate-800 pb-8 gap-6">
         <div>
@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-950/50 shadow-sm dark:shadow-2xl">
+    <div class="grid grid-cols-1 md:grid-cols-3 rounded-2xl overflow-hidden">
         <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
             <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">Unique_Visitors</p>
             <h2 class="text-4xl font-black text-slate-900 dark:text-white mt-2 italic">{{ unique_visitors }}</h2>
@@ -46,7 +46,7 @@
         </div>
     </div>
 
-    <div class="hud-card p-6 md:p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/20 rounded-[2.5rem]">
+    <div class="card p-6 md:p-8 rounded-[2.5rem]">
         <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic mb-8">Request_Velocity_Telemetry</h4>
         <div class="h-[350px] w-full">
             <canvas id="vercelChart"></canvas>
@@ -54,7 +54,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+        <div class="card p-8 rounded-[2.5rem]">
             <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Client_Engines</h4>
             <div class="space-y-5">
                 {% for browser, count in stats.browsers.items() %}
@@ -71,7 +71,7 @@
             </div>
         </div>
 
-        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+        <div class="card p-8 rounded-[2.5rem]">
             <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Platform_Kernel</h4>
             <div class="space-y-5">
                 {% for os, count in stats.os.items() %}
@@ -88,7 +88,7 @@
             </div>
         </div>
 
-        <div class="hud-card p-8 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-[2.5rem]">
+        <div class="card p-8 rounded-[2.5rem]">
             <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Signal_Origin</h4>
             <div class="space-y-5">
                 {% for source, data in stats.referrers_detailed.items() | sort(attribute='1.count', reverse=True) %}
@@ -120,7 +120,7 @@
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div class="border border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-white dark:bg-slate-950/50 overflow-hidden shadow-sm">
+        <div class="card overflow-hidden">
             <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
                 <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic">High_Traffic_Nodes</h3>
             </div>
@@ -138,7 +138,7 @@
             </table>
         </div>
 
-        <div class="border border-red-200 dark:border-red-900/30 rounded-[2.5rem] bg-red-50/30 dark:bg-red-950/5 overflow-hidden shadow-sm">
+        <div class="card overflow-hidden bg-red-900/5">
             <div class="px-8 py-6 border-b border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-950/10">
                 <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-red-600 dark:text-red-500 italic">System_Fault_Registry</h3>
             </div>

@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12 space-y-12">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-extrabold">Trial CMS <span class="text-blue-500">Dashboard</span></h1>
+            <p class="text-slate-400">This environment is temporary — changes live only in your session.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/trial/toggle-maintenance" class="px-4 py-2 bg-slate-800 rounded-xl text-sm">Toggle Status</a>
+            <a href="/trial/analytics" class="px-4 py-2 bg-blue-600 rounded-xl text-sm text-white">View Analytics</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-8 rounded-3xl">
+            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">Active Pages</p>
+            <p class="text-4xl font-extrabold mt-2">{{ pages|length }}</p>
+        </div>
+        <div class="card p-8 rounded-3xl">
+            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Traffic (fake)</p>
+            <p class="text-4xl font-extrabold mt-2">{{ total_hits }}</p>
+        </div>
+        <div class="card p-8 rounded-3xl flex justify-between items-center">
+            <div>
+                <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">Status</p>
+                <p class="text-2xl font-extrabold mt-2 {{ 'text-red-500' if maintenance_active else 'text-emerald-500' }}">{{ "LOCKED" if maintenance_active else "LIVE" }}</p>
+            </div>
+            <a href="/trial/toggle-maintenance" class="btn btn-ghost text-xs">Toggle</a>
+        </div>
+    </div>
+
+    <div class="card rounded-3xl overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+            <h2 class="font-bold text-slate-400 uppercase tracking-widest text-sm">Node Inventory (trial)</h2>
+            <a href="/trial/edit/home" class="btn btn-primary text-sm">New Page</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <tbody class="divide-y divide-slate-800">
+                    {% for p in pages %}
+                    <tr class="hover:bg-slate-900/50 transition-colors group">
+                        <td class="px-8 py-6">
+                            <div class="font-bold text-lg group-hover:text-blue-400 transition-colors">{{ p.title }}</div>
+                            <div class="text-slate-500 text-sm font-mono">/trial/{{ p.slug if p.slug != 'home' else '' }}</div>
+                        </td>
+                        <td class="px-8 py-6 text-slate-500 text-sm font-medium">{{ p.updated_at.strftime('%b %d, %Y') if p.updated_at else '---' }}</td>
+                        <td class="px-8 py-6 text-right space-x-2">
+                            <a href="/trial/view/{{ p.slug }}" target="_blank" class="inline-flex p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors">Preview</a>
+                            <a href="/trial/edit/{{ p.slug }}" class="inline-flex p-3 bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">Edit</a>
+                            <a href="/trial/delete/{{ p.slug }}" class="inline-flex p-3 bg-red-600 hover:bg-red-500 rounded-xl transition-colors">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

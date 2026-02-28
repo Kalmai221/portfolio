@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-screen-2xl mx-auto px-4 md:px-8 py-10 space-y-8">
+
+	<div class="flex flex-col md:flex-row justify-between items-center gap-6 glass p-6 rounded-[2rem] border-slate-800">
+		<div>
+			<h1 class="text-3xl font-extrabold tracking-tight">Trial Node <span class="text-blue-500">Editor</span></h1>
+			<p class="text-slate-400 font-medium mt-1">Editing trial node <span class="text-blue-400 font-mono">/{{ slug }}</span></p>
+		</div>
+		    <div class="flex items-center gap-4">
+			    <button id="trial-preview-btn" type="button" onclick="togglePreview()" class="btn btn-ghost">Preview Mode</button>
+			    <button onclick="document.getElementById('cms-form').submit()" class="btn btn-primary">Save to Session</button>
+		</div>
+
+	<form id="cms-form" method="POST" class="flex flex-col lg:flex-row gap-8">
+
+	<script>
+	async function togglePreview() {
+		const modal = document.getElementById('preview-modal');
+		const frame = document.getElementById('preview-frame');
+
+		if (!modal.classList.contains('hidden')) {
+			modal.classList.add('hidden');
+			return;
+		}
+
+		const html = document.getElementById('editor-html').value;
+		const css = document.getElementById('editor-css').value;
+		const js = document.getElementById('editor-js').value;
+		const form = new URLSearchParams();
+		form.append('content', html);
+		form.append('css', css);
+		form.append('js', js);
+		// Note: do NOT send python backend logic from trial editor (security)
+
+		const btn = document.getElementById('trial-preview-btn');
+		const origText = btn.innerHTML;
+		btn.disabled = true;
+		btn.innerHTML = 'Rendering...';
+
+		try {
+			const res = await fetch('/_preview', { method: 'POST', body: form, credentials: 'same-origin' });
+			if (!res.ok) {
+				const text = await res.text();
+				frame.srcdoc = '<pre style="color:#f87171;padding:16px;">Preview error:\n' + text + '</pre>';
+			} else {
+				const text = await res.text();
+				frame.srcdoc = text;
+			}
+			modal.classList.remove('hidden');
+		} catch (e) {
+			frame.srcdoc = '<pre style="color:#f87171;padding:16px;">Preview request failed: ' + e.toString() + '</pre>';
+			modal.classList.remove('hidden');
+		} finally {
+			btn.disabled = false;
+			btn.innerHTML = origText;
+		}
+	}
+	</script>
+
+			<div class="glass p-8 rounded-[2.5rem] space-y-6">
+				<div class="space-y-2">
+					<label class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Identity</label>
+					<input type="text" name="title" value="{{ page.title if page else '' }}" required placeholder="Page Title" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 font-bold text-2xl text-white">
+				</div>
+
+				<div class="space-y-2">
+					<label class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Structural Content (HTML)</label>
+					<textarea name="content" id="editor-html" rows="18" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 font-mono text-sm text-slate-300">{{ page.content if page else '' }}</textarea>
+				</div>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div class="glass p-6 rounded-[2rem] space-y-4">
+					<label class="text-xs font-bold text-blue-400 uppercase tracking-widest">Visual Logic (CSS)</label>
+					<textarea name="css_content" id="editor-css" rows="10" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-xs text-blue-300">{{ page.css if page else '' }}</textarea>
+				</div>
+				<div class="glass p-6 rounded-[2rem] space-y-4">
+					<label class="text-xs font-bold text-yellow-500 uppercase tracking-widest">Behavioral Logic (JS)</label>
+					<textarea name="js_content" id="editor-js" rows="10" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-xs text-yellow-200">{{ page.js if page else '' }}</textarea>
+				</div>
+			</div>
+		</div>
+
+		<div class="w-full lg:w-80 space-y-6">
+			<div class="glass p-6 rounded-[2rem] sticky top-24">
+				<h3 class="font-bold text-lg mb-4 text-white">Infrastructure</h3>
+
+				<div class="space-y-4">
+					<div class="space-y-1">
+						<label class="text-[10px] font-bold text-slate-500 uppercase">Slug Path</label>
+						<input type="text" name="slug" value="{{ slug }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 font-mono text-sm text-blue-400">
+					</div>
+
+					<div class="p-4 bg-slate-950 rounded-xl border border-slate-800/50">
+						<p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Status</p>
+						<div class="flex items-center gap-2">
+							<span class="w-2 h-2 rounded-full bg-green-500"></span>
+							<span class="text-xs text-slate-300 font-medium">Node Active (trial)</span>
+						</div>
+					</div>
+
+					<div class="pt-4">
+						{% if page %}
+						<a href="/trial/delete/{{ slug }}" onclick="return confirm('Decommission trial node?')" class="block w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-center text-xs font-bold">Decommission Node</a>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+    </form>
+    
+	<div id="preview-modal" class="hidden fixed inset-0 z-[100] bg-slate-950/98 backdrop-blur-md flex flex-col p-4 md:p-8">
+		<div class="flex justify-between items-center mb-4">
+			<h3 class="text-xl font-bold text-white">Live Node Preview</h3>
+			<button onclick="togglePreview()" class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold">Exit Preview</button>
+		</div>
+		<iframe id="preview-frame" class="w-full flex-1 bg-white rounded-2xl shadow-2xl overflow-hidden border-none"></iframe>
+	</div>
+    
+</div>
+
+<!-- legacy inline preview removed; server-side preview is used for trial too but without python execution -->
+
+{% endblock %}

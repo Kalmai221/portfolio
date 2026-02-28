@@ -3,9 +3,11 @@
 <div class="max-w-5xl mx-auto px-6 py-20">
     {% if page.slug == 'home' %}
     {% endif %}
-
     <article id="projects" class="prose prose-invert prose-blue max-w-none">
         <style>{{ page.css | safe }}</style>
+        <div class="card mb-8">
+            <!-- page content rendered below -->
+        </div>
         
         {% if logic_error %}
             {% if session.get('user') %}
@@ -45,9 +47,11 @@
                 </div>
             {% endif %}
         {% else %}
-            {{ rendered_node_content | safe }}
+            <div class="card p-6">
+                {{ rendered_node_content | safe }}
+            </div>
         {% endif %}
-        
+
         <script>{{ page.js | safe }}</script>
     </article>
 </div>

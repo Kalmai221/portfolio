@@ -8,14 +8,14 @@
             <p class="text-slate-400 font-medium mt-1">Modifying <span class="text-blue-400 font-mono">/{{ slug }}</span></p>
         </div>
         <div class="flex items-center gap-4">
-            <button type="button" onclick="togglePreview()" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm font-bold transition-all flex items-center gap-2">
+                <button id="preview-btn" type="button" onclick="togglePreview()" class="btn btn-ghost flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
                 Preview Mode
             </button>
-            <button onclick="document.getElementById('cms-form').submit()" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-blue-600/40">
+            <button onclick="document.getElementById('cms-form').submit()" class="btn btn-primary px-6 py-3">
                 Deploy Changes
             </button>
         </div>
@@ -25,7 +25,7 @@
 
         <div class="flex-1 space-y-6">
 
-            <div class="glass rounded-[2rem] border-l-4 border-emerald-500 overflow-hidden">
+            <div class="card rounded-[2rem] border-l-4 border-emerald-500 overflow-hidden">
                 <div class="bg-emerald-500/5 px-8 py-4 border-b border-slate-800/50 flex justify-between items-center">
                     <label class="text-xs font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Server-Side Logic
@@ -67,7 +67,7 @@
         </div>
 
         <div class="w-full lg:w-80 space-y-6">
-            <div class="glass p-6 rounded-[2rem] sticky top-24">
+            <div class="card p-6 rounded-[2rem] sticky top-24">
                 <h3 class="font-bold text-lg mb-4 text-white">Infrastructure</h3>
 
                 <div class="space-y-4">
@@ -88,9 +88,7 @@
                     <div class="pt-4">
                         {% if page %}
                         <a href="{{ url_for('delete_page', slug=slug) }}" onclick="return confirm('Decommission node?')" 
-                           class="block w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl text-center text-xs font-bold transition-all">
-                            Decommission Node
-                        </a>
+                           class="btn btn-ghost text-red-400 w-full text-center">Decommission Node</a>
                         {% endif %}
                     </div>
                 </div>
@@ -109,37 +107,54 @@
     <iframe id="preview-frame" class="w-full flex-1 bg-white rounded-2xl shadow-2xl overflow-hidden border-none"></iframe>
 </div>
 
-<script>
-    function togglePreview() {
+    <script>
+    async function togglePreview() {
         const modal = document.getElementById('preview-modal');
         const frame = document.getElementById('preview-frame');
 
-        if (modal.classList.contains('hidden')) {
-            const html = document.getElementById('editor-html').value;
-            const css = document.getElementById('editor-css').value;
-            const js = document.getElementById('editor-js').value;
-
-            // This ensures the preview matches your layout's dark baseline
-            frame.srcdoc = `
-                <!DOCTYPE html>
-                <html class="dark">
-                <head>
-                    <script src="https://cdn.tailwindcss.com"><\/script>
-                    <style>
-                        body { background-color: #020617; color: #f1f5f9; min-height: 100vh; font-family: sans-serif; }
-                        ${css}
-                    </style>
-                </head>
-                <body>
-                    ${html}
-                    <script>${js}<\/script>
-                </body>
-                </html>
-            `;
-            modal.classList.remove('hidden');
-        } else {
+        if (!modal.classList.contains('hidden')) {
             modal.classList.add('hidden');
+            return;
+        }
+
+        const html = document.getElementById('editor-html').value;
+        const css = document.getElementById('editor-css').value;
+        const js = document.getElementById('editor-js').value;
+        const python_logic = document.querySelector('textarea[name="python_logic"]').value || '';
+
+        const form = new URLSearchParams();
+        form.append('content', html);
+        form.append('css', css);
+        form.append('js', js);
+        form.append('python_logic', python_logic);
+
+        const btn = document.getElementById('preview-btn');
+        const origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Rendering...';
+
+        try {
+            const res = await fetch('/_preview', {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin'
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                frame.srcdoc = '<pre style="color:#f87171;padding:16px;">Preview error:\n' + text + '</pre>';
+            } else {
+                const text = await res.text();
+                frame.srcdoc = text;
+            }
+            modal.classList.remove('hidden');
+        } catch (e) {
+            frame.srcdoc = '<pre style="color:#f87171;padding:16px;">Preview request failed: ' + e.toString() + '</pre>';
+            modal.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origText;
         }
     }
-</script>
+    </script>
 {% endblock %}

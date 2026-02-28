@@ -11,6 +11,8 @@ from user_agents import parse
 import requests
 import io
 import traceback
+import hmac
+import random
 
 load_dotenv()
 
@@ -135,9 +137,17 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        if username == "admin" and password == "password":
+        # Load admin credentials from environment (fallback to old defaults)
+        admin_user = os.environ.get("ADMIN_USERNAME", "admin")
+        admin_pass = os.environ.get("ADMIN_PASSWORD", "password")
+
+        # Use constant-time comparison to mitigate timing attacks
+        if (username is not None and password is not None and
+                hmac.compare_digest(str(username), admin_user) and
+                hmac.compare_digest(str(password), admin_pass)):
             session['user'] = username
             return redirect(url_for('admin_dashboard'))
+
         return render_template('login.html', error="Invalid credentials")
     return render_template('login.html')
 
@@ -220,6 +230,274 @@ def toggle_maintenance():
                                    }},
                                    upsert=True)
     return redirect(url_for('admin_dashboard'))
+
+
+# --------------------
+# Trial CMS (session-backed, no DB writes)
+# --------------------
+
+
+def _ensure_trial_state():
+    """Initialize trial session state if missing."""
+    now = datetime.now()
+    if 'trial_pages' not in session:
+        session['trial_pages'] = {}
+    if 'trial_maintenance' not in session:
+        session['trial_maintenance'] = False
+    if 'trial_seed' not in session:
+        session['trial_seed'] = random.randint(1, 10**9)
+    # Set trial start/expiry once per session (10 minutes)
+    if 'trial_started_at' not in session:
+        session['trial_started_at'] = now.isoformat()
+    if 'trial_expires' not in session:
+        session['trial_expires'] = (now + timedelta(minutes=10)).isoformat()
+
+
+def _get_trial_pages_list():
+    _ensure_trial_state()
+    pages = []
+    for slug, p in session.get('trial_pages', {}).items():
+        # convert updated_at to datetime for templates
+        updated_at = None
+        if p.get('updated_at'):
+            try:
+                updated_at = datetime.fromisoformat(p.get('updated_at'))
+            except Exception:
+                updated_at = None
+        pages.append({
+            'slug': slug,
+            'title': p.get('title', '(untitled)'),
+            'content': p.get('content', ''),
+            'css': p.get('css', ''),
+            'js': p.get('js', ''),
+            'python_logic': p.get('python_logic', ''),
+            'updated_at': updated_at
+        })
+    return pages
+
+
+def _generate_fake_analytics():
+    """Return deterministic fake analytics based on session trial_seed."""
+    _ensure_trial_state()
+    seed = session.get('trial_seed')
+    rng = random.Random(seed)
+
+    now = datetime.now()
+    # 8 days labels/values
+    chart_labels = []
+    chart_values = []
+    for i in range(7, -1, -1):
+        d = now - timedelta(days=i)
+        chart_labels.append(d.strftime('%b %d'))
+        # small traffic influenced by number of trial pages
+        base = max(1, len(session.get('trial_pages', {})))
+        chart_values.append(base * rng.randint(1, 8))
+
+    browsers = {'Chrome': rng.randint(5, 30), 'Firefox': rng.randint(0, 10), 'Safari': rng.randint(0, 6)}
+    os = {'Windows': rng.randint(5, 20), 'macOS': rng.randint(1, 10), 'Linux': rng.randint(1, 8)}
+    devices = {'Desktop': rng.randint(5, 20), 'Mobile': rng.randint(1, 12), 'Tablet': rng.randint(0, 4)}
+
+    top_pages = []
+    for slug, p in session.get('trial_pages', {}).items():
+        top_pages.append({'_id': f"/trial/{slug}", 'count': rng.randint(1, 30)})
+
+    error_logs = []
+    # small chance of an error
+    if rng.random() < 0.2:
+        error_logs.append({'timestamp': now.isoformat(), 'path': '/trial/sample', 'status_code': 500, 'message': 'Sample error'})
+
+    stats = {
+        'browsers': browsers,
+        'os': os,
+        'devices': devices,
+        'referrers': {'Direct Entry': rng.randint(5, 20), 'Google Search': rng.randint(0, 8)}
+    }
+
+    return {
+        'chart_labels': chart_labels,
+        'chart_values': chart_values,
+        'stats': stats,
+        'top_pages': top_pages,
+        'error_logs': error_logs,
+        'total_hits': sum(chart_values)
+    }
+
+
+
+@app.before_request
+def _clear_expired_trial():
+    """Clear trial session data when the expiry timestamp passes."""
+    try:
+        if 'trial_expires' in session:
+            expires = datetime.fromisoformat(session.get('trial_expires'))
+            if datetime.now() > expires:
+                # clear trial keys
+                keys = ['trial_pages', 'trial_maintenance', 'trial_seed', 'trial_expires', 'trial_started_at']
+                for k in keys:
+                    session.pop(k, None)
+                from flask import flash
+                flash('Your trial session has expired and was cleared.', 'info')
+    except Exception:
+        pass
+
+
+@app.route('/trial')
+def trial_dashboard():
+    _ensure_trial_state()
+    pages = _get_trial_pages_list()
+    maintenance_active = session.get('trial_maintenance', False)
+    fake = _generate_fake_analytics()
+    return render_template('trial_admin.html', pages=pages, maintenance_active=maintenance_active, total_hits=fake['total_hits'])
+
+
+@app.route('/trial/edit/<path:slug>', methods=['GET', 'POST'])
+def trial_edit(slug):
+    _ensure_trial_state()
+    slug = slug.strip('/')
+    if request.method == 'POST':
+        data = {
+            'title': request.form.get('title') or '(untitled)',
+            'content': request.form.get('content') or '',
+            'css': request.form.get('css_content') or '',
+            'js': request.form.get('js_content') or '',
+            # NOTE: Python backend logic is not allowed in trial pages for security
+            # 'python_logic' intentionally omitted
+            'updated_at': datetime.now().isoformat()
+        }
+        trial_pages = session.get('trial_pages', {})
+        trial_pages[slug] = data
+        session['trial_pages'] = trial_pages
+        from flask import flash
+        flash('Saved changes to trial session', 'success')
+        return redirect(url_for('trial_dashboard'))
+
+    page = session.get('trial_pages', {}).get(slug)
+    snippets = {}
+    snippet_path = os.path.join(app.root_path, 'static', 'data', 'snippets.json')
+    try:
+        if os.path.exists(snippet_path):
+            with open(snippet_path, 'r') as f:
+                snippets = json.load(f)
+    except Exception:
+        snippets = {}
+
+    return render_template('trial_edit_page.html', page=page, slug=slug, snippets=snippets)
+
+
+@app.route('/trial/delete/<path:slug>')
+def trial_delete(slug):
+    _ensure_trial_state()
+    trial_pages = session.get('trial_pages', {})
+    if slug in trial_pages:
+        del trial_pages[slug]
+        session['trial_pages'] = trial_pages
+        from flask import flash
+        flash('Deleted trial page', 'success')
+    return redirect(url_for('trial_dashboard'))
+
+
+@app.route('/trial/toggle-maintenance')
+def trial_toggle_maintenance():
+    _ensure_trial_state()
+    session['trial_maintenance'] = not session.get('trial_maintenance', False)
+    from flask import flash
+    flash('Toggled trial site status', 'info')
+    return redirect(url_for('trial_dashboard'))
+
+
+@app.route('/trial/analytics')
+def trial_analytics():
+    fake = _generate_fake_analytics()
+    return render_template('trial_analytics.html',
+                           chart_labels=fake['chart_labels'],
+                           chart_values=fake['chart_values'],
+                           stats=fake['stats'],
+                           top_pages=fake['top_pages'],
+                           error_logs=fake['error_logs'],
+                           total_hits=fake['total_hits'])
+
+
+@app.route('/trial/view/<path:slug>', methods=['GET', 'POST'])
+def trial_view(slug):
+    """Render a trial page from session without touching DB or analytics."""
+    _ensure_trial_state()
+    slug = slug.strip('/')
+    page = session.get('trial_pages', {}).get(slug)
+    if not page:
+        abort(404)
+
+    template_context = {
+        'db': None,
+        'session': session,
+        'request': request,
+        'datetime': datetime,
+        'timedelta': timedelta,
+        'page': page
+    }
+
+    # For security: trial pages do NOT execute stored python logic
+
+    rendered_node_content = render_template_string(page.get('content', ''), **template_context)
+    return render_template('page.html', rendered_node_content=rendered_node_content, **template_context)
+
+
+
+@app.route('/_preview', methods=['POST'])
+def server_preview():
+    """Server-side preview: executes provided python_logic (if allowed) and returns rendered HTML.
+
+    Access allowed when editing (logged-in) or when trial session exists.
+    """
+    # Only allow preview if admin session or trial session present
+    if 'user' not in session and 'trial_pages' not in session:
+        abort(403)
+
+    content = request.form.get('content', '')
+    css = request.form.get('css', '')
+    js = request.form.get('js', '')
+    python_logic = request.form.get('python_logic', '')
+
+    template_context = {
+        'db': None,
+        'session': session,
+        'request': request,
+        'datetime': datetime,
+        'timedelta': timedelta,
+        'page': {
+            'content': content,
+            'css': css,
+            'js': js
+        }
+    }
+
+    if python_logic:
+        # Only allow python execution for admin users (not trial sessions)
+        if 'user' in session:
+            try:
+                exec(python_logic, {'template_context': template_context}, template_context)
+            except Exception as e:
+                template_context['logic_error'] = str(e)
+                template_context['error_traceback'] = traceback.format_exc()
+
+    # Render the content server-side using template_context
+    rendered_node_content = render_template_string(content, **template_context)
+
+    # Build full HTML for iframe
+    html = f"""<!doctype html>
+<html class=\"dark\"> 
+<head>
+<meta charset=\"utf-8\"> 
+<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"> 
+<script src=\"https://cdn.tailwindcss.com\"></script>
+<style>{css}</style>
+</head>
+<body>
+{rendered_node_content}
+<script>{js}</script>
+</body>
+</html>"""
+
+    return html, 200, {'Content-Type': 'text/html'}
 
 
 # --- VERCEL-STYLE ANALYTICS ---
