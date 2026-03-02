@@ -4,11 +4,7 @@
     {% if page.slug == 'home' %}
     {% endif %}
     <article id="projects" class="prose prose-invert prose-blue max-w-none">
-        <style>{{ page.css | safe }}</style>
-        <div class="card mb-8">
-            <!-- page content rendered below -->
-        </div>
-        
+        <style>{{ page.css | safe }}</style>        
         {% if logic_error %}
             {% if session.get('user') %}
                 <div class="glass p-8 rounded-[2.5rem] border-red-500/30 overflow-hidden">
