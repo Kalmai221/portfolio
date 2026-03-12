@@ -1,160 +1,306 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="max-w-screen-2xl mx-auto px-4 md:px-8 py-10 space-y-8">
+<div class="fixed inset-0 z-[200] bg-[#1e1e1e] flex flex-col lg:flex-row overflow-hidden font-sans selection:bg-brand/30">
+    
+    <div class="w-12 bg-[#333333] flex flex-col items-center py-4 gap-4 border-r border-[#191919] hidden lg:flex shrink-0">
+        <div class="p-2 text-zinc-100 border-l-2 border-brand cursor-pointer">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        </div>
+        <div onclick="togglePreview()" class="p-2 text-zinc-500 hover:text-zinc-100 transition-colors cursor-pointer" title="Live Preview">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12s-3-7-9-7-9 7-9 7 3 7 9 7 9-7 9-7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/></svg>
+        </div>
+        <a href="/admin" class="mt-auto p-2 text-zinc-600 hover:text-red-400 transition-colors" title="Exit Editor">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </a>
+    </div>
 
-    <div class="flex flex-col md:flex-row justify-between items-center gap-6 glass p-6 rounded-[2rem] border-slate-800">
-        <div>
-            <h1 class="text-3xl font-extrabold tracking-tight">Node <span class="text-blue-500">Architect</span></h1>
-            <p class="text-slate-400 font-medium mt-1">Modifying <span class="text-blue-400 font-mono">/{{ slug }}</span></p>
+    <div class="w-full lg:w-64 bg-[#252526] flex flex-col border-r border-[#1e1e1e] shrink-0">
+        <div class="px-4 py-3 flex items-center justify-between">
+            <span class="text-[11px] font-sans text-zinc-400 uppercase tracking-wider font-bold">Explorer</span>
+            <button onclick="document.getElementById('cms-form').submit()" class="text-zinc-500 hover:text-emerald-400 transition-colors" title="Deploy Changes">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+            </button>
+        </div>
+        
+        <div class="flex-grow overflow-y-auto custom-scrollbar">
+            <div class="bg-[#37373d]/50 px-2 py-1.5 flex items-center gap-2 text-[11px] font-bold text-zinc-200 uppercase cursor-default">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                Current_Node
+            </div>
+            
+            <div class="flex flex-col py-1">
+                <button type="button" onclick="switchTab('py')" class="sidebar-file active" id="side-tab-py">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 14h-1v-1h1v1zm0-2h-1V7h1v7z" fill="#3776AB"/></svg>
+                    {{ slug }}.py
+                </button>
+                <button type="button" onclick="switchTab('html')" class="sidebar-file" id="side-tab-html">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#E34F26"><path d="M1.5 0h21l-1.9 21.4L12 24l-7.6-2.6L2.5 0zM18.4 18.9l1.4-16.3H4.2l1.4 16.3 6.4 2.2 6.4-2.2zM12 5.5l-4.4 0 .3 3.4 4.1 0 0 3.4-3.1 0-.2-2.1H5.4l.5 7.1 6.1 2.1 6.1-2.1.8-8.2H12l0-3.4z"/></svg>
+                    {{ slug }}.html
+                </button>
+                <button type="button" onclick="switchTab('css')" class="sidebar-file" id="side-tab-css">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#1572B6"><path d="M1.5 0h21l-1.9 21.4L12 24l-7.6-2.6L2.5 0zM12 18.2l-3.5-1.2-.2-2.4H5.8l.4 5.3 5.8 2 5.8-2 .7-8.1H9.5l-.2-2.1h8.2l.2-2.1H7.8l-.2-2.1h11l.2-2.1H1.5z"/></svg>
+                    {{ slug }}.css
+                </button>
+                <button type="button" onclick="switchTab('js')" class="sidebar-file" id="side-tab-js">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="#F7DF1E"><path d="M0 0h24v24H0V0zm22.034 18.268c-.175-1.024-.836-1.843-2.115-2.348-.6-.245-1.12-.385-1.914-.543-.727-.15-1.285-.297-1.58-.516-.27-.192-.412-.41-.412-.764 0-.394.272-.656.81-.82.385-.123.866-.123 1.252-.023.368.105.744.385.99.736l1.637-.998c-.42-.647-1.033-1.155-1.847-1.392-.613-.184-1.33-.236-2.03-.184-1.33.105-2.292.595-2.73 1.348-.28.472-.34.98-.34 1.54 0 1.05.472 1.768 1.453 2.222.613.262 1.33.437 2.222.613.893.175 1.234.332 1.48.516.315.227.42.507.42.84 0 .49-.333.822-.98.998-.385.105-.893.07-1.313-.07-.49-.157-.84-.455-1.138-.91l-1.63 1.05c.49.875 1.155 1.452 2.152 1.732.893.245 1.873.193 2.766-.105 1.488-.508 2.275-1.4 2.275-2.783z"/></svg>
+                    {{ slug }}.js
+                </button>
+            </div>
+
+            <div class="mt-4 border-t border-[#1e1e1e]">
+                <div class="bg-[#37373d]/50 px-2 py-2 flex items-center gap-2 text-[11px] font-bold text-zinc-200 uppercase cursor-default tracking-wider">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+                    Properties
+                </div>
+                <div class="p-4 space-y-6">
+                    <form id="cms-form" method="POST" class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Display Name</label>
+                            <input type="text" name="title" value="{{ page.title if page else '' }}" required class="sidebar-field" placeholder="Node Title">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Route Slug</label>
+                            <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono text-brand/80" placeholder="Slug">
+                        </div>
+                        <div class="pt-2">
+                            <label class="flex items-center justify-between cursor-pointer group p-2 bg-[#1e1e1e] border border-zinc-800/40 rounded hover:border-zinc-700 transition-all">
+                                <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-tighter group-hover:text-zinc-200">Maintenance Mode</span>
+                                <input type="checkbox" name="maintenance" value="true" {% if page.maintenance %}checked{% endif %} class="w-3.5 h-3.5 accent-brand bg-zinc-900 border-zinc-800">
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-grow flex flex-col bg-[#1e1e1e] min-w-0 h-full">
+        <div class="flex bg-[#2d2d2d] shrink-0 overflow-x-auto no-scrollbar border-b border-[#191919]">
+            <button type="button" onclick="switchTab('py')" id="tab-py" class="editor-tab active">
+                <svg class="w-3.5 h-3.5 mr-2" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 14h-1v-1h1v1zm0-2h-1V7h1v7z" fill="#3776AB"/></svg>
+                {{ slug }}.py
+            </button>
+            <button type="button" onclick="switchTab('html')" id="tab-html" class="editor-tab">
+                <svg class="w-3.5 h-3.5 mr-2" viewBox="0 0 24 24" fill="#E34F26"><path d="M1.5 0h21l-1.9 21.4L12 24l-7.6-2.6L2.5 0zM18.4 18.9l1.4-16.3H4.2l1.4 16.3 6.4 2.2 6.4-2.2zM12 5.5l-4.4 0 .3 3.4 4.1 0 0 3.4-3.1 0-.2-2.1H5.4l.5 7.1 6.1 2.1 6.1-2.1.8-8.2H12l0-3.4z"/></svg>
+                {{ slug }}.html
+            </button>
+            <button type="button" onclick="switchTab('css')" id="tab-css" class="editor-tab">
+                <svg class="w-3.5 h-3.5 mr-2" viewBox="0 0 24 24" fill="#1572B6"><path d="M1.5 0h21l-1.9 21.4L12 24l-7.6-2.6L2.5 0zM12 18.2l-3.5-1.2-.2-2.4H5.8l.4 5.3 5.8 2 5.8-2 .7-8.1H9.5l-.2-2.1h8.2l.2-2.1H7.8l-.2-2.1h11l.2-2.1H1.5z"/></svg>
+                {{ slug }}.css
+            </button>
+            <button type="button" onclick="switchTab('js')" id="tab-js" class="editor-tab">
+                <svg class="w-3.5 h-3.5 mr-2" viewBox="0 0 24 24" fill="#F7DF1E"><path d="M0 0h24v24H0V0zm22.034 18.268c-.175-1.024-.836-1.843-2.115-2.348-.6-.245-1.12-.385-1.914-.543-.727-.15-1.285-.297-1.58-.516-.27-.192-.412-.41-.412-.764 0-.394.272-.656.81-.82.385-.123.866-.123 1.252-.023.368.105.744.385.99.736l1.637-.998c-.42-.647-1.033-1.155-1.847-1.392-.613-.184-1.33-.236-2.03-.184-1.33.105-2.292.595-2.73 1.348-.28.472-.34.98-.34 1.54 0 1.05.472 1.768 1.453 2.222.613.262 1.33.437 2.222.613.893.175 1.234.332 1.48.516.315.227.42.507.42.84 0 .49-.333.822-.98.998-.385.105-.893.07-1.313-.07-.49-.157-.84-.455-1.138-.91l-1.63 1.05c.49.875 1.155 1.452 2.152 1.732.893.245 1.873.193 2.766-.105 1.488-.508 2.275-1.4 2.275-2.783z"/></svg>
+                {{ slug }}.js
+            </button>
+        </div>
+
+        <div class="flex-grow flex relative overflow-hidden">
+            <div class="w-12 bg-[#1e1e1e] flex flex-col items-end pr-3 pt-4 select-none shrink-0 border-r border-[#2d2d2d] z-10">
+                {% for i in range(1, 400) %}<span class="text-[11px] font-mono text-[#858585] leading-6">{{ i }}</span>{% endfor %}
+            </div>
+
+            <div class="flex-grow relative h-full bg-[#1e1e1e] overflow-hidden">
+                <div id="highlight-layer" class="absolute inset-0 p-4 pointer-events-none font-mono text-[14px] leading-6 whitespace-pre overflow-hidden bg-transparent z-0"></div>
+                <div class="absolute inset-0 z-10 overflow-hidden">
+                    <div id="panel-py" class="editor-panel block h-full w-full">
+                        <textarea name="python_logic" form="cms-form" class="code-textarea" spellcheck="false" onscroll="syncScroll(this)">{{ page.python_logic if page else '' }}</textarea>
+                    </div>
+                    <div id="panel-html" class="editor-panel hidden h-full w-full">
+                        <textarea name="content" form="cms-form" class="code-textarea" spellcheck="false" onscroll="syncScroll(this)">{{ page.content if page else '' }}</textarea>
+                    </div>
+                    <div id="panel-css" class="editor-panel hidden h-full w-full">
+                        <textarea name="css_content" form="cms-form" class="code-textarea" spellcheck="false" onscroll="syncScroll(this)">{{ page.css if page else '' }}</textarea>
+                    </div>
+                    <div id="panel-js" class="editor-panel hidden h-full w-full">
+                        <textarea name="js_content" form="cms-form" class="code-textarea" spellcheck="false" onscroll="syncScroll(this)">{{ page.js if page else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="h-6 bg-brand flex items-center px-3 justify-between text-[11px] font-sans text-white shrink-0 z-20">
+            <div class="flex items-center gap-4">
+                <span class="font-bold tracking-tight flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-white opacity-60"></div> main*</span>
+                <span id="pos-indicator">Ln 1, Col 1</span>
+            </div>
+            <div class="flex items-center gap-4 opacity-90">
+                <span>Spaces: 4</span>
+                <span>UTF-8</span>
+                <span id="lang-label">Python</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="preview-modal" class="hidden fixed inset-0 z-[300] bg-[#0c0c0c]/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-6xl flex justify-between items-center mb-3 px-4 py-2 bg-[#252526] border border-zinc-800 rounded-t-lg shadow-2xl">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <h3 class="text-[11px] font-mono text-zinc-300 uppercase tracking-widest">Preview_Engine</h3>
+            </div>
+            <div class="flex bg-zinc-900 rounded p-1 border border-zinc-800">
+                <button onclick="setViewport('desktop')" id="view-desktop" class="px-3 py-1 rounded bg-zinc-800 text-white transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </button>
+                <button onclick="setViewport('mobile')" id="view-mobile" class="px-3 py-1 rounded text-zinc-500 hover:text-zinc-300 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                </button>
+            </div>
         </div>
         <div class="flex items-center gap-4">
-                <button id="preview-btn" type="button" onclick="togglePreview()" class="btn btn-ghost flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                Preview Mode
-            </button>
-            <button onclick="document.getElementById('cms-form').submit()" class="btn btn-primary px-6 py-3">
-                Deploy Changes
-            </button>
+            <button onclick="toggleConsole()" class="text-[10px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest">Terminal</button>
+            <button onclick="togglePreview()" class="text-zinc-500 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg></button>
         </div>
     </div>
-
-    <form id="cms-form" method="POST" class="flex flex-col lg:flex-row gap-8">
-
-        <div class="flex-1 space-y-6">
-
-            <div class="card rounded-[2rem] border-l-4 border-emerald-500 overflow-hidden">
-                <div class="bg-emerald-500/5 px-8 py-4 border-b border-slate-800/50 flex justify-between items-center">
-                    <label class="text-xs font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Server-Side Logic
-                    </label>
-                    <span class="text-[10px] text-slate-500 font-mono">Python 3.x</span>
-                </div>
-                <div class="p-6">
-                    <textarea name="python_logic" rows="8" placeholder="# Inject variables into template_context..."
-                              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-6 py-4 outline-none focus:ring-2 ring-emerald-500/30 transition-all font-mono text-xs text-emerald-400 leading-relaxed">{{ page.python_logic if page else '' }}</textarea>
-                </div>
-            </div>
-
-            <div class="glass p-8 rounded-[2.5rem] space-y-6">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Identity</label>
-                    <input type="text" name="title" value="{{ page.title if page else '' }}" required placeholder="Page Title"
-                           class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:ring-2 ring-blue-500/50 transition-all font-bold text-2xl text-white">
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Structural Content (HTML)</label>
-                    <textarea name="content" id="editor-html" rows="18" required placeholder="Build your markup..."
-                              class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 outline-none focus:ring-2 ring-blue-500/50 transition-all font-mono text-sm leading-relaxed text-slate-300">{{ page.content if page else '' }}</textarea>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="glass p-6 rounded-[2rem] space-y-4">
-                    <label class="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2">Visual Logic (CSS)</label>
-                    <textarea name="css_content" id="editor-css" rows="10" placeholder="/* Custom styles */"
-                              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none font-mono text-xs text-blue-300">{{ page.css if page else '' }}</textarea>
-                </div>
-                <div class="glass p-6 rounded-[2rem] space-y-4">
-                    <label class="text-xs font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-2">Behavioral Logic (JS)</label>
-                    <textarea name="js_content" id="editor-js" rows="10" placeholder="// Scripts"
-                              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 outline-none font-mono text-xs text-yellow-200">{{ page.js if page else '' }}</textarea>
-                </div>
-            </div>
+    
+    <div id="preview-container" class="w-full max-w-6xl flex-grow flex flex-col transition-all duration-500">
+        <iframe id="preview-frame" class="w-full h-full bg-white rounded-b-lg shadow-2xl border-none"></iframe>
+        
+        <div id="logic-console" class="hidden h-32 bg-black border-t border-zinc-800 p-4 font-mono text-xs overflow-y-auto custom-scrollbar">
+            <p class="text-zinc-600 mb-1">--- Python Runtime Handshake ---</p>
+            <div id="console-output"></div>
         </div>
-
-        <div class="w-full lg:w-80 space-y-6">
-            <div class="card p-6 rounded-[2rem] sticky top-24">
-                <h3 class="font-bold text-lg mb-4 text-white">Infrastructure</h3>
-
-                <div class="space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase">Slug Path</label>
-                        <input type="text" name="slug" value="{{ slug }}" required
-                               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 font-mono text-sm text-blue-400 outline-none">
-                    </div>
-
-                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-800/50">
-                        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Status</p>
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span class="text-xs text-slate-300 font-medium">Node Active</span>
-                        </div>
-                    </div>
-
-                    <div class="pt-4">
-                        {% if page %}
-                        <a href="{{ url_for('delete_page', slug=slug) }}" onclick="return confirm('Decommission node?')" 
-                           class="btn btn-ghost text-red-400 w-full text-center">Decommission Node</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
-</div>
-
-<div id="preview-modal" class="hidden fixed inset-0 z-[100] bg-slate-950/98 backdrop-blur-md flex flex-col p-4 md:p-8">
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold text-white">Live Node Preview</h3>
-        <button onclick="togglePreview()" class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition-all">
-            Exit Preview
-        </button>
     </div>
-    <iframe id="preview-frame" class="w-full flex-1 bg-white rounded-2xl shadow-2xl overflow-hidden border-none"></iframe>
 </div>
 
-    <script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+
+<style>
+    .sidebar-file { width: 100%; text-align: left; padding: 6px 20px; font-size: 13px; color: #a1a1aa; transition: all 0.2s; display: flex; align-items: center; gap: 8px; background: transparent; border: none; }
+    .sidebar-file:hover { background-color: #2a2d2e; color: #f4f4f5; }
+    .sidebar-file.active { background-color: #37373d; color: #ffffff; }
+
+    .sidebar-field { width: 100%; background-color: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 2px; padding: 6px 10px; font-size: 12px; color: #e4e4e7; outline: none; transition: border-color 0.2s; }
+    .sidebar-field:focus { border-color: #6366f1; }
+
+    .editor-tab { padding: 10px 20px; font-size: 12px; color: #969696; border-right: 1px solid #191919; background-color: #2d2d2d; min-width: 150px; text-align: left; display: flex; align-items: center; white-space: nowrap; cursor: pointer; border-top: 1px solid transparent; transition: color 0.2s; }
+    .editor-tab:hover { color: #e4e4e7; }
+    .editor-tab.active { background-color: #1e1e1e; color: #ffffff; border-top: 1px solid #6366f1; }
+
+    .code-textarea { display: block; width: 100%; height: 100% !important; background: transparent !important; padding: 1rem !important; outline: none !important; border: none !important; font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.5rem; resize: none; color: transparent !important; caret-color: #ffffff !important; white-space: pre; position: relative; overflow: auto; }
+    #highlight-layer { padding: 1rem !important; pointer-events: none; color: #d4d4d4; }
+
+    .token.keyword { color: #569cd6; }
+    .token.string { color: #ce9178; }
+    .token.comment { color: #6a9955; }
+    .token.function { color: #dcdcaa; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #424242; border: 2px solid #1e1e1e; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+
+<script>
+    let currentMode = 'py';
+
+    function switchTab(type) {
+        currentMode = type;
+        document.querySelectorAll('.editor-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.sidebar-file').forEach(f => f.classList.remove('active'));
+        document.getElementById(`panel-${type}`).classList.remove('hidden');
+        document.getElementById(`tab-${type}`).classList.add('active');
+        document.getElementById(`side-tab-${type}`).classList.add('active');
+        document.getElementById('lang-label').textContent = { 'py': 'Python', 'html': 'HTML', 'css': 'CSS', 'js': 'JavaScript' }[type];
+        syncHighlight();
+    }
+
+    function syncHighlight() {
+        const textarea = document.querySelector(`.editor-panel:not(.hidden) textarea`);
+        const highlightLayer = document.getElementById('highlight-layer');
+        if(!textarea || !highlightLayer) return;
+        const langMap = { 'py': 'python', 'html': 'markup', 'css': 'css', 'js': 'javascript' };
+        highlightLayer.innerHTML = Prism.highlight(textarea.value, Prism.languages[langMap[currentMode]], langMap[currentMode]);
+        syncScroll(textarea);
+    }
+
+    function syncScroll(el) {
+        const highlightLayer = document.getElementById('highlight-layer');
+        highlightLayer.scrollTop = el.scrollTop;
+        highlightLayer.scrollLeft = el.scrollLeft;
+    }
+
+    // Advanced Preview Features
+    function setViewport(mode) {
+        const container = document.getElementById('preview-container');
+        const btnD = document.getElementById('view-desktop');
+        const btnM = document.getElementById('view-mobile');
+        
+        if(mode === 'mobile') {
+            container.style.maxWidth = '375px';
+            btnM.classList.add('bg-zinc-800', 'text-white');
+            btnD.classList.remove('bg-zinc-800', 'text-white');
+        } else {
+            container.style.maxWidth = '100%';
+            btnD.classList.add('bg-zinc-800', 'text-white');
+            btnM.classList.remove('bg-zinc-800', 'text-white');
+        }
+    }
+
+    function toggleConsole() {
+        const con = document.getElementById('logic-console');
+        con.classList.toggle('hidden');
+    }
+
     async function togglePreview() {
         const modal = document.getElementById('preview-modal');
         const frame = document.getElementById('preview-frame');
-
-        if (!modal.classList.contains('hidden')) {
-            modal.classList.add('hidden');
-            return;
-        }
-
-        const html = document.getElementById('editor-html').value;
-        const css = document.getElementById('editor-css').value;
-        const js = document.getElementById('editor-js').value;
-        const python_logic = document.querySelector('textarea[name="python_logic"]').value || '';
-
+        const consoleOut = document.getElementById('console-output');
+        
+        if (!modal.classList.contains('hidden')) { modal.classList.add('hidden'); return; }
+        
+        consoleOut.innerHTML = '<span class="text-zinc-500">Executing server-side logic...</span>';
+        
         const form = new URLSearchParams();
-        form.append('content', html);
-        form.append('css', css);
-        form.append('js', js);
-        form.append('python_logic', python_logic);
-
-        const btn = document.getElementById('preview-btn');
-        const origText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = 'Rendering...';
+        form.append('content', document.querySelector('textarea[name="content"]').value);
+        form.append('css', document.querySelector('textarea[name="css_content"]').value);
+        form.append('js', document.querySelector('textarea[name="js_content"]').value);
+        form.append('python_logic', document.querySelector('textarea[name="python_logic"]').value);
 
         try {
-            const res = await fetch('/_preview', {
-                method: 'POST',
-                body: form,
-                credentials: 'same-origin'
-            });
-
-            if (!res.ok) {
-                const text = await res.text();
-                frame.srcdoc = '<pre style="color:#f87171;padding:16px;">Preview error:\n' + text + '</pre>';
+            const res = await fetch('/_preview', { method: 'POST', body: form });
+            const text = await res.text();
+            
+            // Check for execution errors in the rendered text
+            if(text.includes('logic_error')) {
+                consoleOut.innerHTML = '<span class="text-red-500">STATUS: Runtime Error detected in Python logic. Check Traceback.</span>';
             } else {
-                const text = await res.text();
-                frame.srcdoc = text;
+                consoleOut.innerHTML = '<span class="text-emerald-500">STATUS: 200 OK. Node logic executed successfully.</span>';
             }
+            
+            frame.srcdoc = text;
             modal.classList.remove('hidden');
         } catch (e) {
-            frame.srcdoc = '<pre style="color:#f87171;padding:16px;">Preview request failed: ' + e.toString() + '</pre>';
-            modal.classList.remove('hidden');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = origText;
+            consoleOut.innerHTML = `<span class="text-red-500">STATUS: Fetch Error. ${e}</span>`;
         }
     }
-    </script>
+
+    document.querySelectorAll('.code-textarea').forEach(el => {
+        el.addEventListener('input', syncHighlight);
+        el.addEventListener('scroll', () => syncScroll(el));
+        el.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+                syncHighlight();
+            }
+        });
+        el.addEventListener('keyup', (e) => {
+            const text = e.target.value.substring(0, e.target.selectionStart);
+            const lines = text.split('\n');
+            document.getElementById('pos-indicator').textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
+        });
+    });
+
+    window.onload = () => switchTab('py');
+</script>
 {% endblock %}

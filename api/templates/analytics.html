@@ -2,115 +2,116 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="max-w-7xl mx-auto px-6 py-12 space-y-8 text-slate-600 dark:text-slate-300">
+<div class="max-w-7xl mx-auto px-6 py-12 space-y-12 reveal">
     
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-slate-200 dark:border-slate-800 pb-8 gap-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-zinc-900 pb-8 gap-6">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">System Telemetry</h1>
-            <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-slate-500">
-                <span class="flex items-center gap-2 bg-white dark:bg-slate-900/50 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 
-                    <span class="text-slate-900 dark:text-white font-bold">{{ online_count }}</span> active nodes
+            <h1 class="text-3xl font-bold text-zinc-100 uppercase font-mono tracking-tight">System_Telemetry</h1>
+            <div class="flex flex-wrap items-center gap-4 mt-2">
+                <span class="flex items-center gap-2 bg-zinc-950 border border-zinc-800 px-3 py-1 rounded-sm shadow-sm">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 
+                    <span class="text-[10px] font-mono text-zinc-400 uppercase tracking-widest"><span class="text-zinc-100 font-bold">{{ online_count }}</span> Node_Active</span>
                 </span>
                 
                 {% if filter_active.val %}
-                <div class="flex items-center gap-2 bg-blue-600/10 border border-blue-600/20 px-3 py-1 rounded-full text-[10px] font-black uppercase text-blue-600 dark:text-blue-400">
-                    Filter: {{ filter_active.type }} = {{ filter_active.val }}
-                    <a href="/admin/analytics" class="hover:text-red-500 ml-1">✕</a>
+                <div class="flex items-center gap-2 bg-brand/10 border border-brand/20 px-3 py-1 rounded-sm text-[10px] font-mono uppercase text-brand tracking-widest">
+                    Filter::{{ filter_active.type }} == {{ filter_active.val }}
+                    <a href="/admin/analytics" class="hover:text-white ml-1 text-zinc-500">✕</a>
                 </div>
                 {% endif %}
             </div>
         </div>
         <div class="flex gap-3">
-            <a href="/admin" class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 dark:hover:bg-blue-600 dark:hover:border-blue-500 transition-all active:scale-95 shadow-sm">
-                Control Center
+            <a href="/admin" class="btn btn-secondary !px-5 !text-[11px] font-bold uppercase tracking-widest">
+                Exit_Logs
             </a>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 rounded-2xl overflow-hidden">
-        <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
-            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">Unique_Visitors</p>
-            <h2 class="text-4xl font-black text-slate-900 dark:text-white mt-2 italic">{{ unique_visitors }}</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden shadow-xl">
+        <div class="p-8 border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-950/30">
+            <p class="text-[10px] text-zinc-500 font-mono font-bold uppercase tracking-[0.2em]">Unique_Identities</p>
+            <h2 class="text-4xl font-bold text-zinc-100 mt-4 tabular-nums">{{ unique_visitors }}</h2>
         </div>
-        <div class="p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
-            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">Total_Uplinks</p>
-            <h2 class="text-4xl font-black text-slate-900 dark:text-white mt-2 italic">{{ total_hits }}</h2>
+        <div class="p-8 border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-950/30">
+            <p class="text-[10px] text-zinc-500 font-mono font-bold uppercase tracking-[0.2em]">Total_Requests</p>
+            <h2 class="text-4xl font-bold text-zinc-100 mt-4 tabular-nums">{{ total_hits }}</h2>
         </div>
-        <div class="p-8">
-            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.2em]">System_Health</p>
-            <div class="flex items-center gap-3 mt-2">
-                <h2 class="text-4xl font-black text-emerald-600 dark:text-emerald-500 italic">100%</h2>
-                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+        <div class="p-8 bg-zinc-950/30">
+            <p class="text-[10px] text-zinc-500 font-mono font-bold uppercase tracking-[0.2em]">Architecture_Health</p>
+            <div class="flex items-center gap-3 mt-4">
+                <h2 class="text-4xl font-bold text-emerald-500 tabular-nums">100%</h2>
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-ping opacity-50"></div>
             </div>
         </div>
     </div>
 
-    <div class="card p-6 md:p-8 rounded-[2.5rem]">
-        <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic mb-8">Request_Velocity_Telemetry</h4>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-sm p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-8 border-l-2 border-brand pl-4">
+            <h4 class="text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-zinc-400">Request_Velocity_Telemetry</h4>
+            <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">Resolution: 24H_Interval</span>
+        </div>
         <div class="h-[350px] w-full">
             <canvas id="vercelChart"></canvas>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="card p-8 rounded-[2.5rem]">
-            <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Client_Engines</h4>
-            <div class="space-y-5">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-sm p-8 flex flex-col h-full">
+            <h4 class="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500 mb-8 pb-4 border-b border-zinc-800/50">Client_Engines</h4>
+            <div class="space-y-6 flex-grow">
                 {% for browser, count in stats.browsers.items() %}
-                <a href="?type=browser&val={{ browser }}" class="block group space-y-1">
-                    <div class="flex justify-between text-xs font-bold transition-colors group-hover:text-blue-500">
-                        <span class="text-slate-900 dark:text-white">{{ browser }}</span>
-                        <span class="text-blue-600 dark:text-blue-500 font-mono">{{ count }}</span>
+                <a href="?type=browser&val={{ browser }}" class="block group">
+                    <div class="flex justify-between text-[11px] font-mono mb-2 group-hover:text-brand transition-colors">
+                        <span class="text-zinc-300">{{ browser }}</span>
+                        <span class="text-zinc-500 font-bold tracking-widest">{{ count }}</span>
                     </div>
-                    <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-blue-600 group-hover:bg-blue-400 transition-all rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
+                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-500" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </a>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="card p-8 rounded-[2.5rem]">
-            <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Platform_Kernel</h4>
-            <div class="space-y-5">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-sm p-8 flex flex-col h-full">
+            <h4 class="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500 mb-8 pb-4 border-b border-zinc-800/50">Platform_Kernel</h4>
+            <div class="space-y-6 flex-grow">
                 {% for os, count in stats.os.items() %}
-                <a href="?type=os&val={{ os }}" class="block group space-y-1">
-                    <div class="flex justify-between text-xs font-bold transition-colors group-hover:text-blue-500">
-                        <span class="text-slate-900 dark:text-white">{{ os }}</span>
-                        <span class="text-blue-600 dark:text-blue-500 font-mono">{{ count }}</span>
+                <a href="?type=os&val={{ os }}" class="block group">
+                    <div class="flex justify-between text-[11px] font-mono mb-2 group-hover:text-brand transition-colors">
+                        <span class="text-zinc-300">{{ os }}</span>
+                        <span class="text-zinc-500 font-bold tracking-widest">{{ count }}</span>
                     </div>
-                    <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-blue-600 group-hover:bg-blue-400 transition-all rounded-full" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
+                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-500" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </a>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="card p-8 rounded-[2.5rem]">
-            <h4 class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-8 border-b border-slate-100 dark:border-slate-800 pb-4 italic">Signal_Origin</h4>
-            <div class="space-y-5">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-sm p-8 flex flex-col h-full">
+            <h4 class="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500 mb-8 pb-4 border-b border-zinc-800/50">Signal_Origin</h4>
+            <div class="space-y-6 flex-grow">
                 {% for source, data in stats.referrers_detailed.items() | sort(attribute='1.count', reverse=True) %}
                 {% if loop.index <= 6 %}
-                <div class="group space-y-1">
-                    <div class="flex justify-between items-center text-xs font-bold">
+                <div class="group">
+                    <div class="flex justify-between items-center text-[11px] font-mono mb-2">
                         <div class="flex items-center gap-2 truncate">
-                            <a href="?type=referrer&val={{ source }}" class="text-slate-900 dark:text-white hover:text-blue-500 transition-colors truncate max-w-[140px]">
+                            <a href="?type=referrer&val={{ source }}" class="text-zinc-300 hover:text-brand transition-colors truncate">
                                 {{ source }}
                             </a>
                             {% if data.url and "http" in data.url %}
-                            <a href="{{ data.url }}" target="_blank" title="View Exact Link" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-blue-400 transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
+                            <a href="{{ data.url }}" target="_blank" class="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-zinc-100 transition-all">
+                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                             </a>
                             {% endif %}
                         </div>
-                        <span class="text-blue-600 dark:text-blue-500 font-mono">{{ data.count }}</span>
+                        <span class="text-zinc-500 font-bold tracking-widest">{{ data.count }}</span>
                     </div>
-                    <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-blue-600 rounded-full" style="width: {{ (data.count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
+                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-500" style="width: {{ (data.count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </div>
                 {% endif %}
@@ -120,37 +121,45 @@
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div class="card overflow-hidden">
-            <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
-                <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 italic">High_Traffic_Nodes</h3>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden shadow-sm">
+            <div class="px-8 py-5 border-b border-zinc-800 bg-zinc-950/50 flex justify-between items-center">
+                <h3 class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-400">High_Traffic_Nodes</h3>
+                <span class="text-[9px] font-mono text-zinc-600 uppercase">Requests_Sum</span>
             </div>
             <table class="w-full text-left">
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody class="divide-y divide-zinc-800/50">
                     {% for page in top_pages %}
-                    <tr class="hover:bg-blue-500/[0.04] transition-colors">
-                        <td class="px-8 py-5 text-blue-600 dark:text-blue-400 font-mono text-xs italic">
+                    <tr class="hover:bg-zinc-950/50 transition-colors">
+                        <td class="px-8 py-4 text-brand font-mono text-[11px] tracking-tight uppercase">
                             <a href="?type=path&val={{ page._id }}">/{{ page._id }}</a>
                         </td>
-                        <td class="px-8 py-5 text-right font-black text-slate-900 dark:text-white italic text-lg">{{ page.count }}</td>
+                        <td class="px-8 py-4 text-right font-bold text-zinc-100 tabular-nums font-mono text-lg">{{ page.count }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <div class="card overflow-hidden bg-red-900/5">
-            <div class="px-8 py-6 border-b border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-950/10">
-                <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-red-600 dark:text-red-500 italic">System_Fault_Registry</h3>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden shadow-sm">
+            <div class="px-8 py-5 border-b border-zinc-800 bg-zinc-950/50 flex justify-between items-center">
+                <h3 class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-red-500/80">System_Fault_Registry</h3>
+                <span class="text-[9px] font-mono text-zinc-600 uppercase">Registry_ID: 4XX/5XX</span>
             </div>
             <table class="w-full text-left text-xs">
-                <tbody class="divide-y divide-red-100 dark:divide-slate-800">
-                    {% for err in error_logs %}
-                    <tr class="hover:bg-red-500/[0.04]">
-                        <td class="px-8 py-4"><span class="bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500 px-2 py-1 rounded font-black">{{ err.status_code }}</span></td>
-                        <td class="px-2 py-4 font-mono text-slate-500 dark:text-slate-400 italic">/{{ err.path }}</td>
-                        <td class="px-8 py-4 text-right text-slate-400 dark:text-slate-600 font-bold uppercase tracking-tighter">{{ err.timestamp.strftime('%H:%M:%S') }}</td>
-                    </tr>
-                    {% endfor %}
+                <tbody class="divide-y divide-zinc-800/50">
+                    {% if error_logs %}
+                        {% for err in error_logs %}
+                        <tr class="hover:bg-red-500/[0.02]">
+                            <td class="px-8 py-4">
+                                <span class="bg-red-950/30 border border-red-900/40 text-red-500 px-2 py-0.5 rounded-sm font-mono font-bold text-[10px]">{{ err.status_code }}</span>
+                            </td>
+                            <td class="px-2 py-4 font-mono text-zinc-500 uppercase tracking-tighter">/{{ err.path }}</td>
+                            <td class="px-8 py-4 text-right text-zinc-600 font-mono font-bold text-[10px] uppercase tracking-tighter tabular-nums">{{ err.timestamp.strftime('%H:%M:%S') }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="3" class="px-8 py-20 text-center text-zinc-700 font-mono text-[10px] uppercase tracking-widest italic">Registry_Empty :: No_Faults_Logged</td></tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
@@ -159,11 +168,10 @@
 
 <script>
     const ctx = document.getElementById('vercelChart').getContext('2d');
-    const isDark = () => document.documentElement.classList.contains('dark');
     
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
-    gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.15)');
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
 
     const trafficChart = new Chart(ctx, {
         type: 'line',
@@ -171,15 +179,15 @@
             labels: {{ chart_labels|tojson }},
             datasets: [{
                 data: {{ chart_values|tojson }},
-                borderColor: '#3b82f6',
-                borderWidth: 3,
+                borderColor: '#6366f1',
+                borderWidth: 2,
                 fill: true,
                 backgroundColor: gradient,
-                tension: 0.4,
+                tension: 0.3,
                 pointRadius: 0,
                 pointHoverRadius: 6,
-                pointHoverBackgroundColor: '#3b82f6',
-                pointHoverBorderColor: '#fff',
+                pointHoverBackgroundColor: '#6366f1',
+                pointHoverBorderColor: '#000',
                 pointHoverBorderWidth: 2,
                 pointHitRadius: 30
             }]
@@ -191,36 +199,29 @@
             plugins: { 
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: isDark() ? '#0f172a' : '#ffffff',
-                    titleColor: isDark() ? '#94a3b8' : '#64748b',
-                    bodyColor: isDark() ? '#ffffff' : '#0f172a',
-                    titleFont: { size: 10, weight: 'bold', family: 'monospace' },
-                    bodyFont: { size: 13, weight: '900' },
+                    backgroundColor: '#18181b',
+                    titleColor: '#71717a',
+                    bodyColor: '#fafafa',
+                    titleFont: { size: 10, weight: 'bold', family: 'JetBrains Mono, monospace' },
+                    bodyFont: { size: 13, weight: 'bold', family: 'JetBrains Mono, monospace' },
                     padding: 12,
                     displayColors: false,
-                    borderRadius: 12,
+                    borderRadius: 2,
                     borderWidth: 1,
-                    borderColor: isDark() ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                    borderColor: '#27272a'
                 }
             },
             scales: {
                 y: { 
-                    grid: { color: isDark() ? '#1e293b' : '#f1f5f9', drawBorder: false }, 
-                    ticks: { color: '#64748b', font: { family: 'monospace', size: 10 }, maxTicksLimit: 5 } 
+                    grid: { color: '#27272a', drawBorder: false }, 
+                    ticks: { color: '#52525b', font: { family: 'JetBrains Mono, monospace', size: 9 }, maxTicksLimit: 5 } 
                 },
                 x: { 
                     grid: { display: false }, 
-                    ticks: { color: '#64748b', font: { family: 'monospace', size: 10 } } 
+                    ticks: { color: '#52525b', font: { family: 'JetBrains Mono, monospace', size: 9 } } 
                 }
             }
         }
     });
-
-    const observer = new MutationObserver(() => {
-        trafficChart.options.scales.y.grid.color = isDark() ? '#1e293b' : '#f1f5f9';
-        trafficChart.options.plugins.tooltip.backgroundColor = isDark() ? '#0f172a' : '#ffffff';
-        trafficChart.update();
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 </script>
 {% endblock %}

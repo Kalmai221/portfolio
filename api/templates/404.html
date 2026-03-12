@@ -1,39 +1,55 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="fixed inset-0 -z-10 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] opacity-30"></div>
+<div class="fixed inset-0 -z-10 bg-[#0c0c0c]">
+    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" 
+         style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+</div>
 
-<div class="flex flex-col items-center justify-center min-h-[75vh] p-6 text-center">
-    
-    <div class="relative mb-8">
-        <h1 class="text-[12rem] md:text-[16rem] font-black leading-none tracking-tighter text-slate-100 dark:text-slate-900 select-none">
-            404
-        </h1>
-        <div class="absolute inset-0 flex items-center justify-center">
-            <span class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Node Not Found
-            </span>
-        </div>
-    </div>
+<div class="flex flex-col items-center justify-center min-h-screen p-6 font-sans">
+    <div class="max-w-xl w-full reveal">
+        <div class="bg-[#1e1e1e] border border-zinc-800 rounded shadow-2xl overflow-hidden">
+            
+            <div class="px-6 py-4 bg-[#252526] border-b border-zinc-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-2 h-2 rounded-full bg-zinc-600"></div>
+                    <h3 class="font-mono text-[10px] uppercase tracking-widest text-zinc-400 font-bold">System Discovery</h3>
+                </div>
+                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest font-medium">Error 404</span>
+            </div>
 
-    <div class="max-w-md space-y-6">
-        <p class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-            The resource at <span class="font-mono text-blue-500">/{{ request.path.strip('/') }}</span> does not exist in our current architecture. 
-        </p>
+            <div class="p-12 space-y-10">
+                <div class="space-y-4">
+                    <h1 class="text-3xl font-bold text-zinc-100 tracking-tight uppercase font-mono">Resource Not Found</h1>
+                    <p class="text-zinc-400 text-sm leading-relaxed font-mono">
+                        the requested node <span class="text-brand">/{{ request.path.strip('/') }}</span> could not be resolved. The resource may have been decommissioned or the route path is invalid.
+                    </p>
+                </div>
 
-        <div class="inline-flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-full">
-            <span class="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-            <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">
-                Error Trace: Null_Pointer_Slug
-            </span>
-        </div>
+                <div class="grid grid-cols-1 gap-px bg-zinc-800 border border-zinc-800 rounded overflow-hidden">
+                    <div class="bg-[#1e1e1e] p-4 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Trace ID</span>
+                        <span class="text-[11px] font-mono text-zinc-300 uppercase">Null_Pointer_Reference</span>
+                    </div>
+                    <div class="bg-[#1e1e1e] p-4 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Environment</span>
+                        <span class="text-[11px] font-mono text-zinc-300">Production-Core</span>
+                    </div>
+                </div>
 
-        <div class="pt-8">
-            <a href="/" class="group inline-flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-8 py-4 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-slate-900/10 dark:shadow-white/5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Return Home
-            </a>
+                <div class="flex flex-col gap-3 pt-2">
+                    <a href="/" class="w-full bg-zinc-100 text-zinc-950 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all text-center">
+                        Return to Dashboard
+                    </a>
+                    <button onclick="history.back()" class="w-full border border-zinc-800 text-zinc-500 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:text-zinc-200 transition-all text-center">
+                        Go Back
+                    </button>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 bg-[#191919] border-t border-zinc-800 flex justify-between items-center opacity-50">
+                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-tighter">Diagnostic: Route_Resolution_Failure</span>
+                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-tighter">Status: Standby</span>
+            </div>
         </div>
     </div>
 </div>

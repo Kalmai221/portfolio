@@ -70,9 +70,18 @@ def get_site_settings():
 
 
 def is_maintenance_mode():
+    """Strict boolean check for global maintenance."""
     try:
         config = settings_collection.find_one({"name": "maintenance_mode"})
-        return config.get("active", False) if config else False
+        if not config:
+            return False
+        
+        active = config.get("active")
+        # Ensure we only return True if it is explicitly the boolean True 
+        # or the lowercase string "true"
+        if isinstance(active, str):
+            return active.lower() == "true"
+        return bool(active) is True
     except:
         return False
 
@@ -225,12 +234,9 @@ def delete_nav_link(index):
 def toggle_maintenance():
     current_status = is_maintenance_mode()
     settings_collection.update_one({"name": "maintenance_mode"},
-                                   {"$set": {
-                                       "active": not current_status
-                                   }},
+                                   {"$set": {"active": not current_status}},
                                    upsert=True)
     return redirect(url_for('admin_dashboard'))
-
 
 # --------------------
 # Trial CMS (session-backed, no DB writes)
@@ -665,10 +671,10 @@ def edit_page(slug):
             "css": request.form.get("css_content"),
             "js": request.form.get("js_content"),
             "python_logic": request.form.get("python_logic"),
+            "maintenance": request.form.get("maintenance") == "true", # New field
             "updated_at": datetime.now()
         }
-        pages_collection.update_one({"slug": slug}, {"$set": data},
-                                    upsert=True)
+        pages_collection.update_one({"slug": slug}, {"$set": data}, upsert=True)
         return redirect(url_for('admin_dashboard'))
 
     page = pages_collection.find_one({"slug": slug})
@@ -697,56 +703,53 @@ def delete_page(slug):
 
 
 # --- DYNAMIC CMS ROUTER ---
-@app.route('/', defaults={'path': 'home'}, methods=['GET', 'POST']) # Added methods here
+@app.route('/', defaults={'path': 'home'}, methods=['GET', 'POST'])
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def cms_router(path):
     if path == "admin":
         return redirect(url_for('admin_dashboard'))
 
-    if is_maintenance_mode():
+    # 1. Global Check (Admins bypass)
+    if is_maintenance_mode() and 'user' not in session:
         return render_template('503.html'), 503
 
     try:
         page = pages_collection.find_one({"slug": path})
         if page:
+            # 2. Per-Page Check (Strict boolean conversion)
+            maint_val = page.get('maintenance', False)
+            
+            # Type guard for per-page maintenance
+            if isinstance(maint_val, str):
+                is_under_maint = maint_val.lower() == "true"
+            else:
+                is_under_maint = bool(maint_val)
+
+            # 3. Apply Bypass
+            if is_under_maint and 'user' not in session:
+                return render_template('page_maintenance.html', page=page), 503
+
+            # --- Normal rendering follows ---
             log_visit(path, 200)
-
-            template_context = {
-                "db": db,
-                "session": session,
-                "request": request,
-                "datetime": datetime,
-                "timedelta": timedelta,
-                "page": page
-            }
-
+            template_context = {"db": db, "session": session, "request": request, "datetime": datetime, "timedelta": timedelta, "page": page}
+            
             if page.get('python_logic'):
                 try:
-                    exec(page['python_logic'],
-                         {"template_context": template_context},
-                         template_context)
+                    exec(page['python_logic'], {"template_context": template_context}, template_context)
                 except Exception as e:
-                    # 1. Log the error to analytics for later review
                     log_visit(path, 500)
-                    # 2. Capture the detailed technical breakdown
                     template_context['logic_error'] = str(e)
-                    template_context['error_traceback'] = traceback.format_exc(
-                    )
+                    template_context['error_traceback'] = traceback.format_exc()
 
-            # ... (rendering logic remains the same)
-            from flask import render_template_string
-            rendered_node_content = render_template_string(
-                page.get('content', ''), **template_context)
-
-            return render_template('page.html',
-                                   rendered_node_content=rendered_node_content,
-                                   **template_context)
+            rendered_node_content = render_template_string(page.get('content', ''), **template_context)
+            return render_template('page.html', rendered_node_content=rendered_node_content, **template_context)
+            
     except Exception as e:
+        # If we hit an error here, check if it's a DB timeout
         return render_template('503.html'), 503
 
     log_visit(path, 404)
     abort(404)
-
 
 @app.route('/og-image.png')
 def dynamic_og_image():
@@ -842,6 +845,41 @@ def sitemap():
     return render_template('sitemap_template.xml', pages=pages), 200, {
         'Content-Type': 'application/xml'
     }
+
+@app.route('/admin/update-settings', methods=['POST'])
+@login_required
+def update_settings_thing():
+    """Centralized handler for all global site configuration."""
+    from flask import flash
+    
+    # 1. Capture Identity Data
+    first_name = request.form.get("site_name_first", "Kurtis-Lee")
+    last_name = request.form.get("site_name_last", "Hopewell")
+    
+    # 2. Capture Feature Toggles
+    # In HTML, checkboxes only send a value if they are checked.
+    show_navbar = True if request.form.get("show_navbar") == "true" else False
+
+    # 3. Build Update Payload
+    data = {
+        "site_name_first": first_name,
+        "site_name_last": last_name,
+        "show_navbar": show_navbar,
+        "updated_at": datetime.now()
+    }
+
+    try:
+        # 4. Commit to MongoDB
+        settings_collection.update_one(
+            {"name": "global_config"}, 
+            {"$set": data},
+            upsert=True
+        )
+        flash('Configuration updated successfully', 'success')
+    except Exception as e:
+        flash(f'System Error: {str(e)}', 'error')
+
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/robots.txt')
 def robots_dot_txt():
