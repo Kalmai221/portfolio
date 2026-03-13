@@ -13,6 +13,7 @@ import io
 import traceback
 import hmac
 import random
+import sys
 
 load_dotenv()
 
@@ -446,64 +447,128 @@ def trial_view(slug):
     rendered_node_content = render_template_string(page.get('content', ''), **template_context)
     return render_template('page.html', rendered_node_content=rendered_node_content, **template_context)
 
+def render_preview_helper(content, css, js, logic, base_context=None):
+    context = base_context if base_context else {}
+    
+    if logic:
+        try:
+            exec(logic, {"__builtins__": __builtins__}, context)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            tb = traceback.extract_tb(exc_traceback)
+            line_no = tb[-1].lineno if tb else "Unknown"
+            full_trace = traceback.format_exc()
+            
+            # Error UI with improved Dev Info and Styling
+            return f"""
+            <style>
+                html, body {{ background: #09090b; margin: 0; padding: 0; height: 100vh; overflow: hidden; font-family: 'JetBrains Mono', monospace; }}
+                .error-wrapper {{ display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px; box-sizing: border-box; }}
+                .error-card {{ width: 100%; max-width: 700px; background: #111111; border: 1px solid #450a0a; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }}
+                .error-header {{ background: #450a0a; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #991b1b; }}
+                .error-title {{ color: #ffffff; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px; }}
+                .error-body {{ padding: 24px; }}
+                .error-type {{ color: #f87171; font-size: 16px; font-weight: bold; margin-bottom: 4px; }}
+                .error-msg {{ color: #a1a1aa; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }}
+                .dev-info {{ background: #000000; border: 1px solid #27272a; border-radius: 6px; padding: 16px; }}
+                .info-row {{ display: flex; gap: 20px; margin-bottom: 12px; font-size: 11px; }}
+                .info-label {{ color: #71717a; text-transform: uppercase; width: 80px; }}
+                .info-value {{ color: #e4e4e7; }}
+                .trace-block {{ margin-top: 12px; padding-top: 12px; border-top: 1px solid #18181b; color: #71717a; font-size: 10px; line-height: 1.6; white-space: pre-wrap; }}
+            </style>
+            <div class="error-wrapper">
+                <div class="error-card">
+                    <div class="error-header">
+                        <div class="error-title">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Runtime Exception
+                        </div>
+                        <div style="color: #f87171; font-size: 10px; font-weight: bold;">NODE_ERR_01</div>
+                    </div>
+                    <div class="error-body">
+                        <div class="error-type">{type(e).__name__}</div>
+                        <div class="error-msg">{str(e)}</div>
+                        
+                        <div class="dev-info">
+                            <div class="info-row">
+                                <div><span class="info-label">Line:</span><span class="info-value">{line_no}</span></div>
+                                <div><span class="info-label">Scope:</span><span class="info-value">Logic Tab</span></div>
+                            </div>
+                            <div class="trace-block">{full_trace.split('File "<string>", line', 1)[-1]}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """
 
-
-@app.route('/_preview', methods=['POST'])
-def server_preview():
-    """Server-side preview: executes provided python_logic (if allowed) and returns rendered HTML.
-
-    Access allowed when editing (logged-in) or when trial session exists.
+    # Normal rendering logic (with fixed white bars)
+    full_html = f"""
+    <!DOCTYPE html>
+    <html class="dark" style="background: #000; margin: 0; padding: 0;">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            html, body {{ background-color: #000; color: #a1a1aa; min-height: 100vh; margin: 0; padding: 0; }}
+            ::-webkit-scrollbar {{ width: 10px; height: 10px; }}
+            ::-webkit-scrollbar-track {{ background: #000; }}
+            ::-webkit-scrollbar-thumb {{ background: rgba(121, 121, 121, 0.2); border: 2px solid #000; border-radius: 10px; }}
+            ::-webkit-scrollbar-thumb:hover {{ background: rgba(121, 121, 121, 0.4); }}
+            {css}
+        </style>
+    </head>
+    <body style="margin: 0; padding: 0;">
+        {content}
+        <script>{js}</script>
+    </body>
+    </html>
     """
-    # Only allow preview if admin session or trial session present
+    
+    try:
+        from flask import render_template_string
+        return render_template_string(full_html, **context)
+    except Exception as e:
+        return f"<div style='background:#111; color:orange; padding:20px; font-family:monospace;'>Template Error: {str(e)}</div>"
+    
+@app.route('/_preview', methods=['GET', 'POST'])
+def preview_node():
+    # Security Check
     if 'user' not in session and 'trial_pages' not in session:
         abort(403)
 
-    content = request.form.get('content', '')
-    css = request.form.get('css', '')
-    js = request.form.get('js', '')
-    python_logic = request.form.get('python_logic', '')
-
-    template_context = {
-        'db': None,
+    # Base context available to all previews
+    base_context = {
         'session': session,
         'request': request,
         'datetime': datetime,
-        'timedelta': timedelta,
-        'page': {
-            'content': content,
-            'css': css,
-            'js': js
-        }
+        'now': datetime.now()
     }
 
-    if python_logic:
-        # Only allow python execution for admin users (not trial sessions)
-        if 'user' in session:
-            try:
-                exec(python_logic, {'template_context': template_context}, template_context)
-            except Exception as e:
-                template_context['logic_error'] = str(e)
-                template_context['error_traceback'] = traceback.format_exc()
+    if request.method == 'GET':
+        # Handling "Open in Preview" (Database-backed)
+        slug = request.args.get('target_slug', 'home')
+        page_data = pages_collection.find_one({"slug": slug})
+        if not page_data:
+            return "Node not found", 404
+        
+        return render_preview_helper(
+            content=page_data.get('content', ''),
+            css=page_data.get('css', ''),
+            js=page_data.get('js', ''),
+            logic=page_data.get('python_logic', ''),
+            base_context=base_context
+        )
 
-    # Render the content server-side using template_context
-    rendered_node_content = render_template_string(content, **template_context)
-
-    # Build full HTML for iframe
-    html = f"""<!doctype html>
-<html class=\"dark\"> 
-<head>
-<meta charset=\"utf-8\"> 
-<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"> 
-<script src=\"https://cdn.tailwindcss.com\"></script>
-<style>{css}</style>
-</head>
-<body>
-{rendered_node_content}
-<script>{js}</script>
-</body>
-</html>"""
-
-    return html, 200, {'Content-Type': 'text/html'}
+    else:
+        # Handling "Live Preview" (Editor-backed)
+        return render_preview_helper(
+            content=request.form.get('content', ''),
+            css=request.form.get('css', ''),
+            js=request.form.get('js', ''),
+            logic=request.form.get('python_logic', ''),
+            base_context=base_context
+        )
 
 
 # --- VERCEL-STYLE ANALYTICS ---

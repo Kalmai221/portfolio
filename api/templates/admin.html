@@ -93,6 +93,28 @@
     </div>
 </div>
 
+<div id="maintenance-modal" class="hidden fixed inset-0 z-[600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#252526] border border-zinc-800 w-full max-w-md p-8 rounded-lg shadow-2xl">
+        <div class="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded flex items-center justify-center mb-6">
+            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <h3 class="text-white font-bold text-xl mb-2 uppercase tracking-tight" id="m-modal-title">Confirm Action</h3>
+        <p class="text-zinc-400 text-sm mb-8 leading-relaxed" id="m-modal-desc">
+            This will modify public access to all site nodes. Are you sure you want to continue?
+        </p>
+        <div class="flex flex-col gap-3">
+            <a id="m-confirm-btn" href="/admin/toggle-maintenance" class="w-full bg-red-600 py-3 text-white text-[11px] font-bold uppercase tracking-widest rounded hover:bg-red-500 text-center transition-colors">
+                Confirm Change
+            </a>
+            <button onclick="toggleMaintenanceUI(false)" class="w-full py-3 text-zinc-500 text-[11px] font-bold uppercase tracking-widest hover:text-zinc-200 transition-colors">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="settings-modal" class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
     <div class="bg-zinc-900 max-w-4xl w-full border border-zinc-800 shadow-2xl rounded-sm flex flex-col max-h-[90vh]">
         
@@ -111,15 +133,15 @@
                 
                 <div class="space-y-8">
                     <div class="p-6 bg-zinc-950 border border-zinc-800 rounded">
-                        <h3 class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest mb-4">Runtime_Control</h3>
+                        <h3 class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest mb-4">Runtime_control</h3>
                         <div class="flex items-center justify-between">
                             <div class="space-y-1">
                                 <p class="text-xs font-bold text-zinc-100 uppercase font-mono">{{ "MAINTENANCE" if maintenance_active else "OPERATIONAL" }}</p>
                                 <p class="text-[10px] text-zinc-600 font-mono tracking-tight">Access Control Status</p>
                             </div>
-                            <a href="/admin/toggle-maintenance" class="btn {{ 'bg-red-600 text-white hover:bg-red-500' if not maintenance_active else 'btn-secondary' }} !py-2 !px-4 !text-[10px] uppercase font-bold tracking-widest">
+                            <button onclick="toggleMaintenanceUI(true, {{ 'true' if maintenance_active else 'false' }})" class="btn {{ 'bg-red-600 text-white hover:bg-red-500' if not maintenance_active else 'btn-secondary' }} !py-2 !px-4 !text-[10px] uppercase font-bold tracking-widest">
                                 Toggle State
-                            </a>
+                            </button>
                         </div>
                     </div>
 
@@ -156,33 +178,21 @@
                     <div class="bg-zinc-950 border border-zinc-800 rounded overflow-hidden">
                         <table class="w-full text-left">
                             <tbody class="divide-y divide-zinc-800/50">
-                                {% for p in pages %}
+                                {% for link in settings.nav_links %}
                                 <tr class="hover:bg-zinc-950/40 transition-colors group">
                                     <td class="px-8 py-6">
-                                        <div class="flex items-center gap-3">
-                                            <div class="font-bold text-zinc-200 group-hover:text-white transition-colors">{{ p.title }}</div>
-                                            {% if p.maintenance %}
-                                            <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-tighter">
-                                                Maintenance
-                                            </span>
-                                            {% endif %}
-                                        </div>
-                                        <div class="text-zinc-500 text-[11px] font-mono mt-1">/{{ p.slug if p.slug != 'home' else '' }}</div>
+                                        <div class="font-bold text-zinc-200 group-hover:text-white transition-colors">{{ link.label }}</div>
+                                        <div class="text-zinc-500 text-[11px] font-mono mt-1">{{ link.url }}</div>
                                     </td>
-                                    <td class="px-8 py-6 text-zinc-700 text-xs font-mono hidden md:table-cell">
-                                        {{ p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '0000-00-00' }}
-                                    </td>
-                                    <td class="px-8 py-6 text-right flex justify-end gap-3">
-                                        <a href="/{{ p.slug if p.slug != 'home' else '' }}" target="_blank" class="w-10 h-10 flex items-center justify-center bg-zinc-950 border border-zinc-800 hover:border-zinc-600 rounded text-zinc-500 hover:text-zinc-100 transition-all shadow-sm">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                        </a>
-                                        <a href="{{ url_for('edit_page', slug=p.slug) }}" class="w-10 h-10 flex items-center justify-center bg-zinc-950 border border-zinc-800 hover:border-brand rounded text-zinc-500 hover:text-brand transition-all shadow-sm">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                        </a>
-                                        <a href="{{ url_for('delete_page', slug=p.slug) }}" onclick="return confirm('Confirm node deletion?')" class="w-10 h-10 flex items-center justify-center bg-zinc-950 border border-zinc-800 hover:border-red-500 rounded text-zinc-700 hover:text-red-500 transition-all shadow-sm">
+                                    <td class="px-8 py-6 text-right">
+                                        <a href="{{ url_for('delete_nav_link', index=loop.index0) }}" class="w-10 h-10 flex items-center justify-center bg-zinc-950 border border-zinc-800 hover:border-red-500 rounded text-zinc-700 hover:text-red-500 transition-all shadow-sm ml-auto">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </a>
                                     </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="px-8 py-10 text-center text-zinc-600 text-xs font-mono italic">No navigation links configured</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -203,26 +213,50 @@
 </div>
 
 <script>
-function handleSlugRedirect() {
-    let slug = document.getElementById('new_slug').value.trim();
-    if (slug === "/" || slug === "") slug = "home";
-    slug = slug.replace(/^\/+/, ''); 
-    window.location.href = '/admin/edit/' + slug;
-}
-
-function toggleSettingsModal(show) {
-    const modal = document.getElementById('settings-modal');
-    if (show) {
-        modal.classList.remove('hidden');
-        setTimeout(() => modal.classList.add('opacity-100'), 10);
-        document.body.classList.add('modal-open');
-    } else {
-        modal.classList.remove('opacity-100');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            document.body.classList.remove('modal-open');
-        }, 300);
+    function handleSlugRedirect() {
+        let slug = document.getElementById('new_slug').value.trim();
+        if (slug === "/" || slug === "") slug = "home";
+        slug = slug.replace(/^\/+/, ''); 
+        window.location.href = '/admin/edit/' + slug;
     }
-}
+
+// New Function for Custom Maintenance UI
+    function toggleMaintenanceUI(show, isActive = false) {
+        const modal = document.getElementById('maintenance-modal');
+        const title = document.getElementById('m-modal-title');
+        const desc = document.getElementById('m-modal-desc');
+        const btn = document.getElementById('m-confirm-btn');
+
+        if (show) {
+            title.textContent = isActive ? "Deactivate Maintenance?" : "Activate Maintenance?";
+            desc.textContent = isActive 
+                ? "This will restore public access to all nodes and resume normal site operations." 
+                : "This will block public access to all nodes. Only authenticated administrators will be able to view content.";
+            
+            // Toggle button color based on action
+            if(isActive) {
+                btn.classList.replace('bg-red-600', 'bg-emerald-600');
+                btn.classList.replace('hover:bg-red-500', 'hover:bg-emerald-500');
+            } else {
+                btn.classList.replace('bg-emerald-600', 'bg-red-600');
+                btn.classList.replace('hover:bg-emerald-500', 'hover:bg-red-500');
+            }
+
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+    
+    function toggleSettingsModal(show) {
+        const modal = document.getElementById('settings-modal');
+        if (show) {
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('opacity-100'), 10);
+        } else {
+            modal.classList.remove('opacity-100');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+    }
 </script>
 {% endblock %}
