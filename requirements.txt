@@ -1,0 +1,8 @@
+Flask
+pymongo[srv]==3.11
+python-dotenv
+certifi
+gunicorn
+user_agents
+requests
+pytz

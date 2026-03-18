@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-12 lg:py-20 reveal">
+    
+    <article id="node-content" class="min-h-[50vh]">
+        <style>{{ page.css | safe }}</style>        
+
+        {% if logic_error %}
+            {% if session.get('user') %}
+                <div class="border border-red-900/50 bg-zinc-900 overflow-hidden rounded-sm">
+                    <div class="flex items-center justify-between px-4 py-3 bg-red-950/20 border-b border-red-900/30">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                            <h3 class="font-mono text-[11px] uppercase tracking-widest text-red-500 font-bold">Runtime_Execution_Fault</h3>
+                        </div>
+                        <span class="text-[10px] font-mono text-red-900 tracking-tighter">UID: {{ session.get('user') }}</span>
+                    </div>
+
+                    <div class="p-6 space-y-6">
+                        <div class="space-y-2">
+                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Exception_Message</p>
+                            <div class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-sm text-red-400">
+                                {{ logic_error }}
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Stack_Trace</p>
+                            <div class="p-4 bg-zinc-950 border border-zinc-800 overflow-x-auto custom-scrollbar">
+                                <pre class="text-[11px] leading-relaxed text-zinc-500 whitespace-pre font-mono">{{ error_traceback }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="px-4 py-3 bg-zinc-950 border-t border-zinc-800 flex justify-end">
+                        <a href="/admin/edit/{{ page.slug }}" class="text-[10px] font-mono text-zinc-400 hover:text-white uppercase tracking-widest">Return_to_Editor</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="max-w-xl mx-auto py-20 text-center space-y-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 border border-zinc-800 bg-zinc-900 rounded-lg">
+                        <svg class="w-8 h-8 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div class="space-y-3">
+                        <h2 class="text-2xl font-bold text-zinc-100 tracking-tight uppercase font-mono">System_Anomaly</h2>
+                        <p class="text-zinc-500 text-sm leading-relaxed max-w-sm mx-auto">
+                            A critical logic fault occurred during the execution of this node. The error has been logged for architectural review.
+                        </p>
+                    </div>
+                    <div class="pt-4">
+                        <a href="/" class="btn btn-secondary !text-xs uppercase tracking-[0.2em]">Return to Core</a>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                {{ rendered_node_content | safe }}
+            </div>
+        {% endif %}
+
+        <script>{{ page.js | safe }}</script>
+    </article>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+modules = ["python-3.11"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+packages = ["nodejs_24"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flask Portfolio"
+
+[[workflows.workflow]]
+name = "Flask Portfolio"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install -r requirements.txt && python api/index.py"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+exposeLocalhost = true
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "api.index:app"]

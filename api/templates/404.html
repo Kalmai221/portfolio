@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="fixed inset-0 -z-10 bg-[#0c0c0c]">
+    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" 
+         style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+</div>
+
+<div class="flex flex-col items-center justify-center min-h-screen p-6 font-sans">
+    <div class="max-w-xl w-full reveal">
+        <div class="bg-[#1e1e1e] border border-zinc-800 rounded shadow-2xl overflow-hidden">
+            
+            <div class="px-6 py-4 bg-[#252526] border-b border-zinc-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-2 h-2 rounded-full bg-zinc-600"></div>
+                    <h3 class="font-mono text-[10px] uppercase tracking-widest text-zinc-400 font-bold">System Discovery</h3>
+                </div>
+                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest font-medium">Error 404</span>
+            </div>
+
+            <div class="p-12 space-y-10">
+                <div class="space-y-4">
+                    <h1 class="text-3xl font-bold text-zinc-100 tracking-tight uppercase font-mono">Resource Not Found</h1>
+                    <p class="text-zinc-400 text-sm leading-relaxed font-mono">
+                        the requested node <span class="text-brand">/{{ request.path.strip('/') }}</span> could not be resolved. The resource may have been decommissioned or the route path is invalid.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-px bg-zinc-800 border border-zinc-800 rounded overflow-hidden">
+                    <div class="bg-[#1e1e1e] p-4 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Trace ID</span>
+                        <span class="text-[11px] font-mono text-zinc-300 uppercase">Null_Pointer_Reference</span>
+                    </div>
+                    <div class="bg-[#1e1e1e] p-4 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Environment</span>
+                        <span class="text-[11px] font-mono text-zinc-300">Production-Core</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 pt-2">
+                    <a href="/" class="w-full bg-zinc-100 text-zinc-950 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all text-center">
+                        Return to Dashboard
+                    </a>
+                    <button onclick="history.back()" class="w-full border border-zinc-800 text-zinc-500 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:text-zinc-200 transition-all text-center">
+                        Go Back
+                    </button>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 bg-[#191919] border-t border-zinc-800 flex justify-between items-center opacity-50">
+                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-tighter">Diagnostic: Route_Resolution_Failure</span>
+                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-tighter">Status: Standby</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

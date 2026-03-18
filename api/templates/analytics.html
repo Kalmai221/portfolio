@@ -1,0 +1,273 @@
+{% extends "layout.html" %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    /* Custom Scrollbar for Dashboard Cards */
+    .dashboard-scroll::-webkit-scrollbar { width: 4px; }
+    .dashboard-scroll::-webkit-scrollbar-track { background: transparent; }
+    .dashboard-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+    .dashboard-scroll::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+</style>
+
+<div class="max-w-7xl mx-auto px-5 py-10 space-y-8 reveal active">
+    
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-zinc-900 pb-8 gap-6">
+        <div class="space-y-1">
+            <h1 class="text-2xl font-bold text-white uppercase font-mono tracking-tighter">Telemetry_Dashboard <span class="text-zinc-700">v2.1</span></h1>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-sm">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-[9px] font-mono text-zinc-400 uppercase tracking-widest italic">Node_Stream: <span class="text-zinc-100 font-bold">{{ online_count }} Active</span></span>
+                </div>
+                
+                {% if filter_active.val %}
+                <div class="flex items-center gap-2 bg-brand/5 border border-brand/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-brand tracking-[0.2em]">
+                    Active_Filter::{{ filter_active.type }} == {{ filter_active.val }}
+                    <a href="/admin/analytics" class="hover:text-white ml-2 text-zinc-600 transition-colors">✕</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="hidden md:block text-right pr-4 border-r border-zinc-800">
+                <p class="text-[9px] font-mono text-zinc-600 uppercase">System_Clock</p>
+                <p class="text-[11px] font-mono text-zinc-400">{{ now.strftime('%H:%M:%S UTC') if now else 'SYNCING...' }}</p>
+            </div>
+            <a href="/admin" class="btn btn-primary !py-2 !px-6 !text-[10px] uppercase font-bold tracking-widest">
+                Return_to_Core
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+        <div class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-tl-sm">
+            <p class="text-[9px] text-zinc-600 font-mono font-bold uppercase tracking-[0.3em] mb-1">Total_Visitors</p>
+            <div class="flex items-baseline gap-2">
+                <h2 class="text-4xl font-bold text-white tabular-nums tracking-tighter">{{ unique_visitors }}</h2>
+                <span class="text-[10px] font-mono text-emerald-500/60 uppercase">Unique</span>
+            </div>
+        </div>
+        <div class="bg-zinc-900/50 border border-zinc-800 p-8">
+            <p class="text-[9px] text-zinc-600 font-mono font-bold uppercase tracking-[0.3em] mb-1">Request_Volume</p>
+            <div class="flex items-baseline gap-2">
+                <h2 class="text-4xl font-bold text-white tabular-nums tracking-tighter">{{ total_hits }}</h2>
+                <span class="text-[10px] font-mono text-brand/60 uppercase">Hits</span>
+            </div>
+        </div>
+        <div class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-tr-sm">
+            <p class="text-[9px] text-zinc-600 font-mono font-bold uppercase tracking-[0.3em] mb-1">Architecture_Uptime</p>
+            <div class="flex items-center gap-3 mt-1">
+                <h2 class="text-4xl font-bold text-emerald-500 tabular-nums tracking-tighter">100.0</h2>
+                <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 text-[8px] font-mono border border-emerald-500/20 rounded uppercase">Stable</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-zinc-900/30 border border-zinc-800 rounded-sm p-8 shadow-sm group">
+        <div class="flex items-center justify-between mb-10">
+            <div class="space-y-1">
+                <h4 class="text-[10px] font-mono font-bold uppercase tracking-[0.4em] text-zinc-400">Traffic_Velocity_Stream</h4>
+                <p class="text-[9px] font-mono text-zinc-600 uppercase">Input: HTTPS_Requests // Span: 24-Hour Cycle</p>
+            </div>
+            <div class="flex gap-2">
+                <div class="h-2 w-2 rounded-full bg-brand/50"></div>
+                <div class="h-2 w-2 rounded-full bg-zinc-800"></div>
+            </div>
+        </div>
+        <div class="h-[350px] w-full">
+            <canvas id="vercelChart"></canvas>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-sm">
+            <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600 mb-6 flex justify-between">
+                <span>Client_Engines</span>
+                <span>SHARE_%</span>
+            </h4>
+            <div class="space-y-5 max-h-[250px] overflow-y-auto pr-2 dashboard-scroll">
+                {% for browser, count in stats.browsers.items() %}
+                <a href="?type=browser&val={{ browser }}" class="block group">
+                    <div class="flex justify-between text-[10px] font-mono mb-2 group-hover:text-brand transition-colors">
+                        <span class="text-zinc-400 uppercase tracking-tighter">{{ browser }}</span>
+                        <span class="text-zinc-600 tabular-nums italic">{{ count }}</span>
+                    </div>
+                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
+                        <div class="h-full bg-zinc-800 group-hover:bg-brand transition-all duration-700" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-sm">
+            <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600 mb-6 flex justify-between">
+                <span>Platform_OS</span>
+                <span>KERNEL_DIST</span>
+            </h4>
+            <div class="space-y-5 max-h-[250px] overflow-y-auto pr-2 dashboard-scroll">
+                {% for os, count in stats.os.items() %}
+                <a href="?type=os&val={{ os }}" class="block group">
+                    <div class="flex justify-between text-[10px] font-mono mb-2 group-hover:text-brand transition-colors">
+                        <span class="text-zinc-400 uppercase tracking-tighter">{{ os }}</span>
+                        <span class="text-zinc-600 tabular-nums italic">{{ count }}</span>
+                    </div>
+                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
+                        <div class="h-full bg-zinc-800 group-hover:bg-brand transition-all duration-700" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-sm">
+            <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600 mb-6 flex justify-between">
+                <span>Signal_Referrers</span>
+                <span>ORIGIN_COUNT</span>
+            </h4>
+            <div class="space-y-5 max-h-[250px] overflow-y-auto pr-2 dashboard-scroll">
+                {% for source, data in stats.referrers_detailed.items() | sort(attribute='1.count', reverse=True) %}
+                <div class="group">
+                    <div class="flex justify-between items-center text-[10px] font-mono mb-2">
+                        <a href="?type=referrer&val={{ source }}" class="text-zinc-400 hover:text-brand transition-colors truncate pr-4">
+                            {{ source }}
+                        </a>
+                        <span class="text-zinc-600 font-bold tabular-nums italic">{{ data.count }}</span>
+                    </div>
+                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
+                        <div class="h-full bg-zinc-800 group-hover:bg-brand transition-all duration-700" style="width: {{ (data.count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-sm overflow-hidden flex flex-col">
+            <div class="px-8 py-5 border-b border-zinc-800 bg-zinc-950/50 flex justify-between items-center">
+                <h3 class="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-zinc-400">High_Traffic_Nodes</h3>
+                <span class="text-[8px] font-mono text-zinc-700 uppercase">Requests_Sum</span>
+            </div>
+            <div class="max-h-[400px] overflow-y-auto dashboard-scroll">
+                <table class="w-full text-left">
+                    <tbody class="divide-y divide-zinc-800/50">
+                        {% for page in top_pages %}
+                        <tr class="hover:bg-zinc-950/50 transition-colors group">
+                            <td class="px-8 py-4">
+                                <a href="?type=path&val={{ page._id }}" class="text-brand font-mono text-[11px] tracking-tight uppercase group-hover:underline">/{{ page._id }}</a>
+                            </td>
+                            <td class="px-8 py-4 text-right font-bold text-zinc-300 tabular-nums font-mono text-lg italic tracking-tighter">{{ page.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-sm overflow-hidden flex flex-col">
+            <div class="px-8 py-5 border-b border-zinc-800 bg-zinc-950/50 flex justify-between items-center">
+                <h3 class="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-red-500/80">Fault_Registry_Aggregated</h3>
+                <span class="text-[8px] font-mono text-zinc-700 uppercase">4XX_5XX_Events</span>
+            </div>
+            <div class="max-h-[400px] overflow-y-auto dashboard-scroll">
+                <table class="w-full text-left text-xs">
+                    <tbody class="divide-y divide-zinc-800/50">
+                        {% set grouped_errors = {} %}
+                        {% for err in error_logs %}
+                            {% set key = err.status_code ~ "-" ~ err.path %}
+                            {% if key in grouped_errors %}
+                                {% set _ = grouped_errors.update({key: grouped_errors[key] + 1}) %}
+                            {% else %}
+                                {% set _ = grouped_errors.update({key: 1}) %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if grouped_errors %}
+                            {% for key, count in grouped_errors.items() %}
+                            <tr class="hover:bg-red-500/[0.03] transition-colors">
+                                <td class="px-8 py-4">
+                                    <span class="bg-red-500/10 border border-red-500/20 text-red-500 px-2 py-0.5 rounded-sm font-mono font-bold text-[10px]">{{ key.split('-')[0] }}</span>
+                                </td>
+                                <td class="px-2 py-4 font-mono text-zinc-400 uppercase tracking-tighter truncate">/{{ key.split('-')[1] }}</td>
+                                <td class="px-8 py-4 text-right">
+                                    <div class="flex flex-col items-end">
+                                        <span class="text-zinc-100 font-bold tabular-nums italic text-lg tracking-tighter">x{{ count }}</span>
+                                        <span class="text-[8px] font-mono text-zinc-600 uppercase">Instances</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="px-8 py-20 text-center text-zinc-800 font-mono text-[10px] uppercase tracking-widest italic">Registry_Clean :: Zero_Faults_Found</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Theme colors
+    const brandColor = '#6366f1';
+    const gridColor = '#18181b';
+
+    const ctx = document.getElementById('vercelChart').getContext('2d');
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|tojson }},
+            datasets: [{
+                data: {{ chart_values|tojson }},
+                borderColor: brandColor,
+                borderWidth: 1.5,
+                fill: true,
+                backgroundColor: gradient,
+                tension: 0.4,
+                pointRadius: 2,
+                pointBackgroundColor: brandColor,
+                pointBorderColor: '#000',
+                pointHoverRadius: 5,
+                pointHoverBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#09090b',
+                    borderColor: '#27272a',
+                    borderWidth: 1,
+                    titleFont: { family: 'JetBrains Mono', size: 10 },
+                    bodyFont: { family: 'JetBrains Mono', size: 14, weight: 'bold' },
+                    cornerRadius: 2,
+                    displayColors: false,
+                    padding: 12
+                }
+            },
+            scales: {
+                y: { 
+                    grid: { color: gridColor, drawBorder: false }, 
+                    ticks: { color: '#52525b', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 6 } 
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { color: '#52525b', font: { family: 'JetBrains Mono', size: 9 } } 
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
