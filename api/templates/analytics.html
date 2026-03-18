@@ -8,6 +8,29 @@
     .dashboard-scroll::-webkit-scrollbar-track { background: transparent; }
     .dashboard-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
     .dashboard-scroll::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+    
+    .filter-tag:hover .filter-x { opacity: 1; }
+    .filter-x { opacity: 0.4; transition: opacity 0.2s; }
+
+    /* Tooltip styling for disabled buttons */
+    .range-locked { position: relative; cursor: help; }
+    .range-locked:hover::after {
+        content: "Remove the Date Filter to change Chart Range";
+        position: absolute;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #09090b;
+        border: 1px solid #27272a;
+        color: #a1a1aa;
+        padding: 6px 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 8px;
+        white-space: nowrap;
+        z-index: 50;
+        border-radius: 2px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
 </style>
 
 <div class="max-w-7xl mx-auto px-5 py-10 space-y-8 reveal active">
@@ -24,11 +47,21 @@
                     <span class="text-[9px] font-mono text-zinc-400 uppercase tracking-widest italic">Node_Stream: <span class="text-zinc-100 font-bold">{{ online_count }} Active</span></span>
                 </div>
                 
-                {% if filter_active.val %}
-                <div class="flex items-center gap-2 bg-brand/5 border border-brand/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-brand tracking-[0.2em]">
-                    Active_Filter::{{ filter_active.type }} == {{ filter_active.val }}
-                    <a href="/admin/analytics" class="hover:text-white ml-2 text-zinc-600 transition-colors">✕</a>
-                </div>
+                {% if active_filters or target_date %}
+                    {% if target_date %}
+                    <div class="filter-tag flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-emerald-500 tracking-[0.2em]">
+                        Timeline::{{ target_date }}
+                        <a href="{{ url_for('admin_analytics', range='7d', **active_filters) }}" class="filter-x hover:text-white ml-2 text-zinc-600 transition-colors font-bold">✕</a>
+                    </div>
+                    {% endif %}
+
+                    {% for type, val in active_filters.items() %}
+                    <div class="filter-tag flex items-center gap-2 bg-brand/5 border border-brand/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-brand tracking-[0.2em]">
+                        {{ type }}::{{ val }}
+                        <a href="{{ url_for('admin_analytics', **remove_filter(type)) }}" class="filter-x hover:text-white ml-2 text-zinc-600 transition-colors font-bold">✕</a>
+                    </div>
+                    {% endfor %}
+                    <a href="/admin/analytics" class="text-[9px] font-mono text-zinc-600 hover:text-white underline uppercase tracking-widest">Clear_All</a>
                 {% endif %}
             </div>
         </div>
@@ -68,14 +101,27 @@
     </div>
 
     <div class="bg-zinc-900/30 border border-zinc-800 rounded-sm p-8 shadow-sm group">
-        <div class="flex items-center justify-between mb-10">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-4">
             <div class="space-y-1">
                 <h4 class="text-[10px] font-mono font-bold uppercase tracking-[0.4em] text-zinc-400">Traffic_Velocity_Stream</h4>
-                <p class="text-[9px] font-mono text-zinc-600 uppercase">Input: HTTPS_Requests // Span: 24-Hour Cycle</p>
+                <p class="text-[9px] font-mono text-zinc-600 uppercase">Input: HTTPS_Requests // Span: {{ active_range }}</p>
             </div>
-            <div class="flex gap-2">
-                <div class="h-2 w-2 rounded-full bg-brand/50"></div>
-                <div class="h-2 w-2 rounded-full bg-zinc-800"></div>
+            
+            <div class="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm">
+                {% for r in ['24h', '7d', '4w'] %}
+                    {% if target_date %}
+                        <div class="range-locked px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
+                        {{ 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' if r == '24h' else 'text-zinc-800' }}">
+                            {{ r }}
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('admin_analytics', range=r, **active_filters) }}" 
+                        class="px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
+                        {{ 'bg-brand text-white' if active_range == r else 'text-zinc-500 hover:text-zinc-300' }}">
+                            {{ r }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
             </div>
         </div>
         <div class="h-[350px] w-full">
@@ -91,13 +137,13 @@
             </h4>
             <div class="space-y-5 max-h-[250px] overflow-y-auto pr-2 dashboard-scroll">
                 {% for browser, count in stats.browsers.items() %}
-                <a href="?type=browser&val={{ browser }}" class="block group">
+                <a href="{{ url_for('admin_analytics', **add_filter('browser', browser)) }}" class="block group">
                     <div class="flex justify-between text-[10px] font-mono mb-2 group-hover:text-brand transition-colors">
                         <span class="text-zinc-400 uppercase tracking-tighter">{{ browser }}</span>
                         <span class="text-zinc-600 tabular-nums italic">{{ count }}</span>
                     </div>
                     <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
-                        <div class="h-full bg-zinc-800 group-hover:bg-brand transition-all duration-700" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-700" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </a>
                 {% endfor %}
@@ -111,13 +157,13 @@
             </h4>
             <div class="space-y-5 max-h-[250px] overflow-y-auto pr-2 dashboard-scroll">
                 {% for os, count in stats.os.items() %}
-                <a href="?type=os&val={{ os }}" class="block group">
+                <a href="{{ url_for('admin_analytics', **add_filter('os', os)) }}" class="block group">
                     <div class="flex justify-between text-[10px] font-mono mb-2 group-hover:text-brand transition-colors">
                         <span class="text-zinc-400 uppercase tracking-tighter">{{ os }}</span>
                         <span class="text-zinc-600 tabular-nums italic">{{ count }}</span>
                     </div>
                     <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
-                        <div class="h-full bg-zinc-800 group-hover:bg-brand transition-all duration-700" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-700" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </a>
                 {% endfor %}
@@ -133,13 +179,13 @@
                 {% for source, data in stats.referrers_detailed.items() | sort(attribute='1.count', reverse=True) %}
                 <div class="group">
                     <div class="flex justify-between items-center text-[10px] font-mono mb-2">
-                        <a href="?type=referrer&val={{ source }}" class="text-zinc-400 hover:text-brand transition-colors truncate pr-4">
+                        <a href="{{ url_for('admin_analytics', **add_filter('referrer', source)) }}" class="text-zinc-400 hover:text-brand transition-colors truncate pr-4">
                             {{ source }}
                         </a>
                         <span class="text-zinc-600 font-bold tabular-nums italic">{{ data.count }}</span>
                     </div>
                     <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
-                        <div class="h-full bg-zinc-800 group-hover:bg-brand transition-all duration-700" style="width: {{ (data.count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-700" style="width: {{ (data.count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </div>
                 {% endfor %}
@@ -159,7 +205,7 @@
                         {% for page in top_pages %}
                         <tr class="hover:bg-zinc-950/50 transition-colors group">
                             <td class="px-8 py-4">
-                                <a href="?type=path&val={{ page._id }}" class="text-brand font-mono text-[11px] tracking-tight uppercase group-hover:underline">/{{ page._id }}</a>
+                                <a href="{{ url_for('admin_analytics', **add_filter('path', page._id.lstrip('/'))) }}" class="text-brand font-mono text-[11px] tracking-tight uppercase group-hover:underline">/{{ page._id }}</a>
                             </td>
                             <td class="px-8 py-4 text-right font-bold text-zinc-300 tabular-nums font-mono text-lg italic tracking-tighter">{{ page.count }}</td>
                         </tr>
@@ -213,17 +259,15 @@
 </div>
 
 <script>
-    // Theme colors
     const brandColor = '#6366f1';
     const gridColor = '#18181b';
-
     const ctx = document.getElementById('vercelChart').getContext('2d');
     
     const gradient = ctx.createLinearGradient(0, 0, 0, 350);
     gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
     gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
 
-    new Chart(ctx, {
+    const vercelChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: {{ chart_labels|tojson }},
@@ -234,19 +278,36 @@
                 fill: true,
                 backgroundColor: gradient,
                 tension: 0.4,
-                pointRadius: 2,
+                pointRadius: 4, 
                 pointBackgroundColor: brandColor,
                 pointBorderColor: '#000',
-                pointHoverRadius: 5,
+                pointHoverRadius: 6,
                 pointHoverBorderWidth: 2
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            onHover: (event, chartElement) => {
+                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+            },
+            onClick: (event, elements) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const label = vercelChart.data.labels[index];
+                    
+                    {% if delta_unit != 'hours' %}
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('date', label);
+                        url.searchParams.delete('range'); 
+                        window.location.href = url.toString();
+                    {% endif %}
+                }
+            },
             plugins: { 
                 legend: { display: false },
                 tooltip: {
+                    enabled: true,
                     backgroundColor: '#09090b',
                     borderColor: '#27272a',
                     borderWidth: 1,
@@ -254,7 +315,12 @@
                     bodyFont: { family: 'JetBrains Mono', size: 14, weight: 'bold' },
                     cornerRadius: 2,
                     displayColors: false,
-                    padding: 12
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + ' Requests';
+                        }
+                    }
                 }
             },
             scales: {
@@ -264,7 +330,24 @@
                 },
                 x: { 
                     grid: { display: false }, 
-                    ticks: { color: '#52525b', font: { family: 'JetBrains Mono', size: 9 } } 
+                    ticks: { 
+                        color: '#52525b', 
+                        font: { family: 'JetBrains Mono', size: 9 },
+                        autoSkip: false,
+                        callback: function(val, index) {
+                            const label = this.getLabelForValue(val);
+                            {% if active_range == '4w' %}
+                                const date = new Date(label + ', {{ now.year }}');
+                                if (index === 0 || index === {{ chart_labels|length - 1 }} || date.getDay() === 1) {
+                                    return label;
+                                }
+                                return '';
+                            {% else %}
+                                const skipInterval = {{ '4' if active_range == '24h' or delta_unit == 'hours' else '1' }};
+                                return (index % skipInterval === 0) ? label : '';
+                            {% endif %}
+                        }
+                    } 
                 }
             }
         }

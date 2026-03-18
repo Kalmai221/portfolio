@@ -1,5 +1,5 @@
 Flask
-pymongo[srv]==3.11
+pymongo
 python-dotenv
 certifi
 gunicorn

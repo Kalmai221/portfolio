@@ -570,159 +570,166 @@ def preview_node():
             base_context=base_context
         )
 
-
-# --- VERCEL-STYLE ANALYTICS ---
 @app.route('/admin/analytics')
 @login_required
 def admin_analytics():
     now = datetime.now()
-    seven_days_ago = now - timedelta(days=7)
+    
+    # 1. CAPTURE INPUTS
+    time_range = request.args.get('range', '7d')
+    target_date = request.args.get('date') 
+    
+    # 2. HANDLE TIME RANGE & DRILL-DOWN
+    if target_date:
+        try:
+            parsed_date = datetime.strptime(f"{target_date} {now.year}", "%b %d %Y")
+            start_date = parsed_date
+            end_date = parsed_date + timedelta(days=1)
+            display_range = f"Drill-down: {target_date}"
+            date_format = "%Y-%m-%d %H:00"
+            steps, delta_unit = 23, "hours"
+        except ValueError:
+            start_date, end_date = now - timedelta(days=7), now
+            display_range, date_format, steps, delta_unit = "7d", "%Y-%m-%d", 7, "days"
+    elif time_range == '24h':
+        start_date, end_date = now - timedelta(hours=24), now
+        display_range, date_format, steps, delta_unit = "24h", "%Y-%m-%d %H:00", 24, "hours"
+    elif time_range == '4w':
+        start_date, end_date = now - timedelta(weeks=4), now
+        display_range, date_format, steps, delta_unit = "4w", "%Y-%m-%d", 28, "days"
+    else:
+        start_date, end_date = now - timedelta(days=7), now
+        display_range, date_format, steps, delta_unit = "7d", "%Y-%m-%d", 7, "days"
 
-    # Get filter params from URL: ?type=browser&val=Chrome
-    f_type = request.args.get('type')
-    f_val = request.args.get('val')
+    # 3. CAPTURE FILTERS
+    valid_filters = ['path', 'referrer', 'browser', 'os', 'device']
+    active_filters = {k: request.args.get(k) for k in valid_filters if request.args.get(k)}
 
-    # --- 1. BUILD THE DYNAMIC QUERY ---
-    base_filter = {"status_code": 200, "timestamp": {"$gt": seven_days_ago}}
+    # 4. BUILD BASE DB FILTER (Affects Stats and Chart)
+    base_filter = {
+        "status_code": 200, 
+        "timestamp": {"$gte": start_date, "$lt": end_date}
+    }
+    
+    # --- CHART SYNC LOGIC ---
+    # Apply category filters directly to the DB query so the chart reflects them
+    if 'path' in active_filters: base_filter['path'] = active_filters['path']
+    if 'referrer' in active_filters: base_filter['referrer'] = active_filters['referrer']
+    
+    # Note: browser/os/device are parsed from User-Agent string via Python.
+    # To filter the CHART by these, we must filter the logs BEFORE aggregating, 
+    # or use a regex/keyword search if stored in DB. 
+    # Since we parse UA in Python, we'll filter the chart data manually for these.
 
-    if f_type == 'path':
-        base_filter['path'] = f_val
-    elif f_type == 'referrer':
-        base_filter['referrer'] = f_val
+    # 5. DYNAMIC CHART PIPELINE
+    graph_pipeline = [
+        {"$match": base_filter},
+        {"$group": {
+            "_id": {"$dateToString": {"format": date_format, "date": "$timestamp"}},
+            "logs": {"$push": "$agent"}, # Push agents to filter UA-based stats in Python
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    raw_results = list(analytics_collection.aggregate(graph_pipeline))
+    
+    # Process results to respect UA filters (Browser, OS, Device)
+    raw_graph_data = {}
+    for entry in raw_results:
+        key = entry['_id']
+        valid_count = 0
+        for agent in entry['logs']:
+            ua = parse(agent or '')
+            browser = ua.browser.family
+            os_family = ua.os.family
+            device = "Mobile" if ua.is_mobile else "Tablet" if ua.is_tablet else "Desktop"
+            
+            # Check if this log matches our UA filters
+            if 'browser' in active_filters and active_filters['browser'] != browser: continue
+            if 'os' in active_filters and active_filters['os'] != os_family: continue
+            if 'device' in active_filters and active_filters['device'] != device: continue
+            
+            valid_count += 1
+        raw_graph_data[key] = valid_count
 
-    # --- 2. HIGH-LEVEL METRICS ---
-    total_hits = analytics_collection.count_documents(base_filter)
+    # 6. GENERATE LABELS & VALUES
+    chart_labels, chart_values = [], []
+    for i in range(steps, -1, -1):
+        dt = end_date - timedelta(hours=i) if delta_unit == "hours" else end_date - timedelta(days=i)
+        key = dt.strftime(date_format)
+        label = dt.strftime("%H:00" if delta_unit == "hours" else "%b %d")
+        chart_labels.append(label)
+        chart_values.append(raw_graph_data.get(key, 0))
+
+    # 7. AGGREGATE SIDEBAR STATS
     unique_visitors = len(analytics_collection.distinct("ip", base_filter))
-    online_count = len(
-        analytics_collection.distinct(
-            "ip", {"timestamp": {
-                "$gt": now - timedelta(minutes=5)
-            }}))
-
-    # --- 3. THE GRAPH (Filtered) ---
-    graph_pipeline = [{
-        "$match": base_filter
-    }, {
-        "$group": {
-            "_id": {
-                "$dateToString": {
-                    "format": "%Y-%m-%d",
-                    "date": "$timestamp"
-                }
-            },
-            "count": {
-                "$sum": 1
-            }
-        }
-    }, {
-        "$sort": {
-            "_id": 1
-        }
-    }]
-    raw_graph_data = {
-        d['_id']: d['count']
-        for d in analytics_collection.aggregate(graph_pipeline)
-    }
-
-    chart_labels = []
-    chart_values = []
-    for i in range(7, -1, -1):
-        date_obj = now - timedelta(days=i)
-        date_str = date_obj.strftime('%Y-%m-%d')
-        chart_labels.append(date_obj.strftime('%b %d'))
-        chart_values.append(raw_graph_data.get(date_str, 0))
-
-    # --- 4. CLIENT SPECS & REFERRERS ---
-    # Initialize correctly: 'referrers' is for simple counts, 'referrers_detailed' for URLs
-    stats = {
-        "browsers": {},
-        "os": {},
-        "devices": {},
-        "referrers": {},
-        "referrers_detailed": {}
-    }
-
+    online_count = len(analytics_collection.distinct("ip", {"timestamp": {"$gt": now - timedelta(minutes=5)}}))
+    
+    stats = {"browsers": {}, "os": {}, "devices": {}, "referrers": {}, "referrers_detailed": {}}
     logs = list(analytics_collection.find(base_filter))
-
+    
     filtered_logs_count = 0
     for log in logs:
         ua = parse(log.get('agent') or '')
-        browser = ua.browser.family
-        os_family = ua.os.family
+        browser, os_family = ua.browser.family, ua.os.family
         device = "Mobile" if ua.is_mobile else "Tablet" if ua.is_tablet else "Desktop"
 
-        # Apply Python-side filtering for UA-parsed fields
-        if f_type == 'browser' and f_val != browser: continue
-        if f_type == 'os' and f_val != os_family: continue
-        if f_type == 'device' and f_val != device: continue
+        if 'browser' in active_filters and active_filters['browser'] != browser: continue
+        if 'os' in active_filters and active_filters['os'] != os_family: continue
+        if 'device' in active_filters and active_filters['device'] != device: continue
 
-        # If we passed filters, increment counts
         filtered_logs_count += 1
-
-        # Basic Stats
         stats["browsers"][browser] = stats["browsers"].get(browser, 0) + 1
         stats["os"][os_family] = stats["os"].get(os_family, 0) + 1
         stats["devices"][device] = stats["devices"].get(device, 0) + 1
-
-        # Referrer Logic
+        
         ref_name = log.get('referrer', 'Direct Entry')
-        ref_url = log.get('full_referrer_url', '')
-
-        # Simple count for progress bars
         stats["referrers"][ref_name] = stats["referrers"].get(ref_name, 0) + 1
-
-        # Detailed entry for "View Exact Link"
         if ref_name not in stats["referrers_detailed"]:
-            stats["referrers_detailed"][ref_name] = {
-                "count": 0,
-                "url": ref_url
-            }
+            stats["referrers_detailed"][ref_name] = {"count": 0, "url": log.get('full_referrer_url', '')}
         stats["referrers_detailed"][ref_name]["count"] += 1
 
-    # --- 5. TOP PAGES & ERRORS ---
-    top_pages = list(
-        analytics_collection.aggregate([{
-            "$match": base_filter
-        }, {
-            "$group": {
-                "_id": "$path",
-                "count": {
-                    "$sum": 1
-                }
-            }
-        }, {
-            "$sort": {
-                "count": -1
-            }
-        }, {
-            "$limit": 8
-        }]))
+    # 8. TOP PAGES & ERRORS
+    top_pages = list(analytics_collection.aggregate([
+        {"$match": base_filter}, 
+        {"$group": {"_id": "$path", "count": {"$sum": 1}}}, 
+        {"$sort": {"count": -1}}, {"$limit": 8}
+    ]))
+    
+    error_logs = list(analytics_collection.find({
+        "status_code": {"$gte": 400}, 
+        "timestamp": {"$gte": start_date, "$lt": end_date}
+    }).sort("timestamp", -1).limit(15))
 
-    error_logs = list(
-        analytics_collection.find({
-            "status_code": {
-                "$gte": 400
-            },
-            "timestamp": {
-                "$gt": seven_days_ago
-            }
-        }).sort("timestamp", -1).limit(15))
+    # 9. HELPERS
+    def add_filter(new_type, new_val):
+        params = active_filters.copy()
+        params[new_type], params['range'] = new_val, time_range
+        if target_date: params['date'] = target_date
+        return params
 
-    return render_template(
-        'analytics.html',
-        total_hits=filtered_logs_count if f_type else total_hits,
-        unique_visitors=unique_visitors,
-        online_count=online_count,
-        chart_labels=chart_labels,
-        chart_values=chart_values,
-        stats=stats,
-        top_pages=top_pages,
-        error_logs=error_logs,
-        filter_active={
-            'type': f_type,
-            'val': f_val
-        })
+    def remove_filter(type_to_remove):
+        params = active_filters.copy()
+        params.pop(type_to_remove, None)
+        params['range'] = time_range
+        if target_date: params['date'] = target_date
+        return params
 
+    return render_template('analytics.html',
+                           total_hits=filtered_logs_count,
+                           unique_visitors=unique_visitors,
+                           online_count=online_count,
+                           chart_labels=chart_labels,
+                           chart_values=chart_values,
+                           stats=stats,
+                           top_pages=top_pages,
+                           error_logs=error_logs,
+                           active_filters=active_filters,
+                           active_range=display_range,
+                           delta_unit=delta_unit,
+                           target_date=target_date,
+                           add_filter=add_filter,
+                           remove_filter=remove_filter)
 
 # --- PAGE EDITOR ---
 @app.route('/admin/edit/<path:slug>', methods=['GET', 'POST'])
