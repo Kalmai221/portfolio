@@ -202,7 +202,7 @@ def update_settings():
 def add_nav_link():
     """Injects a dynamic link into the navbar manager."""
     new_link = {
-        "label": request.form.get("label", "").upper(),
+        "label": request.form.get("label", ""),
         "url": request.form.get("url", "")
     }
     if new_link["label"] and new_link["url"]:
