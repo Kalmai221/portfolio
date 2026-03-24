@@ -108,17 +108,17 @@
             </div>
             
             <div class="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm">
-                {% for r in ['24h', '7d', '4w'] %}
+                {% for r in ['24h', '7d', '4w', 'all'] %}
                     {% if target_date %}
                         <div class="range-locked px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
                         {{ 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' if r == '24h' else 'text-zinc-800' }}">
-                            {{ r }}
+                            {{ r if r != 'all' else 'ALL' }}
                         </div>
                     {% else %}
                         <a href="{{ url_for('admin_analytics', range=r, **active_filters) }}" 
                         class="px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
-                        {{ 'bg-brand text-white' if active_range == r else 'text-zinc-500 hover:text-zinc-300' }}">
-                            {{ r }}
+                        {{ 'bg-brand text-white' if active_range == r or (active_range == 'All Time' and r == 'all') else 'text-zinc-500 hover:text-zinc-300' }}">
+                            {{ r if r != 'all' else 'ALL' }}
                         </a>
                     {% endif %}
                 {% endfor %}
@@ -334,9 +334,29 @@
                         color: '#52525b', 
                         font: { family: 'JetBrains Mono', size: 9 },
                         autoSkip: false,
+                        maxRotation: 0,
                         callback: function(val, index) {
-                            const label = this.getLabelForValue(val);
-                            {% if active_range == '4w' %}
+                            const label = this.getLabelForValue(val); // This is "Feb 01", "Feb 02", etc.
+                            
+                            {% if active_range == 'All Time' %}
+                                // Look for labels that represent the start of a month
+                                // Depending on your date format, we check if it's the 1st
+                                // We'll parse the label to check the day
+                                const date = new Date(label + ', {{ now.year }}');
+                                
+                                // Only show the label if it's the 1st day of the month
+                                if (date.getDate() === 1) {
+                                    return date.toLocaleString('default', { month: 'short' });
+                                }
+                                
+                                // Optional: Always show the very first and very last point labels
+                                if (index === 0 || index === {{ chart_labels|length - 1 }}) {
+                                    return date.toLocaleString('default', { month: 'short' });
+                                }
+                                
+                                return ''; 
+                            {% elif active_range == '4w' %}
+                                // ... your existing 4w logic ...
                                 const date = new Date(label + ', {{ now.year }}');
                                 if (index === 0 || index === {{ chart_labels|length - 1 }} || date.getDay() === 1) {
                                     return label;

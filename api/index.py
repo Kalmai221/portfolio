@@ -619,6 +619,17 @@ def admin_analytics():
     elif time_range == '4w':
         start_date, end_date = now - timedelta(weeks=4), now
         display_range, date_format, steps, delta_unit = "4w", "%Y-%m-%d", 28, "days"
+    elif time_range == 'all':
+        first_log = analytics_collection.find_one({"status_code": 200}, sort=[("timestamp", 1)])
+        start_date = first_log['timestamp'] if first_log else now - timedelta(days=365)
+        end_date = now
+        display_range = "All Time"
+        # KEY CHANGE: Keep daily granularity for the data points
+        date_format = "%Y-%m-%d" 
+        
+        # Calculate total days between start and now
+        delta = end_date - start_date
+        steps, delta_unit = delta.days, "days"
     else:
         start_date, end_date = now - timedelta(days=7), now
         display_range, date_format, steps, delta_unit = "7d", "%Y-%m-%d", 7, "days"
@@ -677,9 +688,22 @@ def admin_analytics():
     # 6. GENERATE LABELS & VALUES
     chart_labels, chart_values = [], []
     for i in range(steps, -1, -1):
-        dt = end_date - timedelta(hours=i) if delta_unit == "hours" else end_date - timedelta(days=i)
-        key = dt.strftime(date_format)
-        label = dt.strftime("%H:00" if delta_unit == "hours" else "%b %d")
+        if delta_unit == "months":
+            # Calculate the specific month/year for this step
+            dt = now - timedelta(days=i*30) # Rough estimate for key lookup
+            # Better: specifically calculate the month start
+            month_idx = (now.month - 1) - i
+            year_val = now.year + (month_idx // 12)
+            month_val = (month_idx % 12) + 1
+            dt = datetime(year_val, month_val, 1)
+            
+            key = dt.strftime(date_format)
+            label = dt.strftime("%b") # Just "Jan", "Feb", etc.
+        else:
+            dt = end_date - timedelta(hours=i) if delta_unit == "hours" else end_date - timedelta(days=i)
+            key = dt.strftime(date_format)
+            label = dt.strftime("%H:00" if delta_unit == "hours" else "%b %d")
+        
         chart_labels.append(label)
         chart_values.append(raw_graph_data.get(key, 0))
 
