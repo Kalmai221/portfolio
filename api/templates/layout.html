@@ -291,7 +291,10 @@
                 </div>
                 <div class="flex items-center gap-4 pl-4 border-l border-zinc-800">
                     {% if session.get('user') %}
-                        <a href="/admin" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Admin</a>
+                        <div class="flex items-center gap-3">
+                            <a href="/admin" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Admin</a>
+                            <a href="/logout" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Sign out</a>
+                        </div>
                     {% else %}
                         <a href="/login" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Sign In</a>
                     {% endif %}
