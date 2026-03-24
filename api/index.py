@@ -165,8 +165,8 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    session.pop('maintenance_bypass', None) # Clear the bypass flag
     return redirect(url_for('cms_router'))
-
 
 # --- ADMIN DASHBOARD ---
 
@@ -795,53 +795,89 @@ def delete_page(slug):
     pages_collection.delete_one({"slug": slug})
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/bypass-maintenance')
+@login_required
+def bypass_maintenance():
+    # Toggle a session variable that allows the admin to ignore maintenance screens
+    session['maintenance_bypass'] = True
+    # Redirect back to the page they were trying to see
+    return redirect(request.referrer or url_for('cms_router'))
 
-# --- DYNAMIC CMS ROUTER ---
 @app.route('/', defaults={'path': 'home'}, methods=['GET', 'POST'])
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def cms_router(path):
+    # Quick exit for admin route to avoid recursion/logic loops
     if path == "admin":
         return redirect(url_for('admin_dashboard'))
 
-    # 1. Global Check (Admins bypass)
-    if is_maintenance_mode() and 'user' not in session:
-        return render_template('503.html'), 503
+    # --- 1. PRE-FLIGHT CHECKS ---
+    is_admin = 'user' in session
+    has_bypass = session.get('maintenance_bypass', False)
+    
+    # Check global maintenance status
+    global_maint = is_maintenance_mode()
+
+    # --- 2. GLOBAL MAINTENANCE GATEKEEPER ---
+    # Show 503 if global maintenance is ON, unless an admin has bypassed it
+    if global_maint:
+        if not (is_admin and has_bypass):
+            return render_template('503.html', maintenance_active=True), 503
 
     try:
+        # Fetch page from MongoDB
         page = pages_collection.find_one({"slug": path})
+        
         if page:
-            # 2. Per-Page Check (Strict boolean conversion)
+            # --- 3. PER-PAGE MAINTENANCE GATEKEEPER ---
             maint_val = page.get('maintenance', False)
-            
-            # Type guard for per-page maintenance
-            if isinstance(maint_val, str):
-                is_under_maint = maint_val.lower() == "true"
-            else:
-                is_under_maint = bool(maint_val)
+            # Normalize boolean/string maintenance flag
+            is_under_maint = maint_val.lower() == "true" if isinstance(maint_val, str) else bool(maint_val)
 
-            # 3. Apply Bypass
-            if is_under_maint and 'user' not in session:
-                return render_template('page_maintenance.html', page=page), 503
+            # Block if page is locked, unless an admin has bypassed it
+            if is_under_maint and not (is_admin and has_bypass):
+                return render_template('page_maintenance.html', page=page, maintenance_active=True), 503
 
-            # --- Normal rendering follows ---
+            # --- 4. RENDERING LOGIC ---
             log_visit(path, 200)
-            template_context = {"db": db, "session": session, "request": request, "datetime": datetime, "timedelta": timedelta, "page": page}
             
+            # Prepare context for the template and python_logic
+            template_context = {
+                "db": db, 
+                "session": session, 
+                "request": request, 
+                "datetime": datetime, 
+                "timedelta": timedelta, 
+                "page": page,
+                "maintenance_active": global_maint or is_under_maint # Helpful for the UI badge
+            }
+            
+            # Execute embedded Python logic
             if page.get('python_logic'):
                 try:
-                    exec(page['python_logic'], {"template_context": template_context}, template_context)
+                    # Execute in a specific dict to avoid global namespace pollution
+                    exec_globals = {"template_context": template_context}
+                    exec(page['python_logic'], exec_globals, template_context)
                 except Exception as e:
                     log_visit(path, 500)
                     template_context['logic_error'] = str(e)
                     template_context['error_traceback'] = traceback.format_exc()
 
+            # Render final HTML
             rendered_node_content = render_template_string(page.get('content', ''), **template_context)
             return render_template('page.html', rendered_node_content=rendered_node_content, **template_context)
             
-    except Exception as e:
-        # If we hit an error here, check if it's a DB timeout
-        return render_template('503.html'), 503
+    except (ConnectionFailure, ServerSelectionTimeoutError) as db_err:
+        # TRUE DATABASE ERROR: Not a planned maintenance
+        print(f"Database Connection Error: {db_err}")
+        return render_template('503.html', maintenance_active=False), 503
 
+    except Exception as e:
+        # GENERAL SYSTEM ERROR: Logic crash or template failure
+        print(f"CMS Router Critical Failure: {e}")
+        traceback.print_exc()
+        return render_template('503.html', maintenance_active=global_maint), 503
+
+    # 404 FALLBACK
     log_visit(path, 404)
     abort(404)
 
@@ -985,12 +1021,10 @@ def robots_dot_txt():
 def page_not_found(e):
     return render_template('404.html'), 404
 
-
-@app.errorhandler(500)
-def server_error(e):
-    log_visit(request.path, 500)
-    return render_template('500.html'), 500
-
+@app.errorhandler(503)
+def service_unavailable(e):
+    # Pass maintenance status to the template
+    return render_template('503.html', maintenance_active=is_maintenance_mode()), 503
 
 if __name__ == '__main__':
     app.run(debug=True)

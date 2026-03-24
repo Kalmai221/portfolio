@@ -1,63 +1,78 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="fixed inset-0 -z-10 bg-[#0c0c0c]">
+<div class="fixed inset-0 -z-10 bg-[#09090b]">
     <div class="absolute inset-0 opacity-[0.03] pointer-events-none" 
          style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
 </div>
 
-<div class="flex flex-col items-center justify-center min-h-screen p-6 font-sans">
+<div class="flex flex-col items-center justify-center min-h-screen p-6">
     <div class="max-w-xl w-full reveal">
-        <div class="bg-[#1e1e1e] border border-zinc-800 rounded shadow-2xl overflow-hidden">
+        <div class="bg-zinc-900 border border-zinc-800 rounded shadow-2xl overflow-hidden">
             
-            <div class="px-6 py-4 bg-[#252526] border-b border-zinc-800 flex items-center justify-between">
+            <div class="px-6 py-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                    <h3 class="font-mono text-[10px] uppercase tracking-widest text-zinc-400 font-bold">System Status</h3>
+                    <div class="w-2 h-2 rounded-full {{ 'bg-amber-500' if maintenance_active else 'bg-red-500 animate-pulse' }}"></div>
+                    <h3 class="font-mono text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+                        {{ "System Maintenance" if maintenance_active else "Service Interruption" }}
+                    </h3>
                 </div>
-                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest font-medium">Error 503</span>
+                <span class="text-[9px] font-mono text-zinc-700 uppercase tracking-widest font-medium">Status 503</span>
             </div>
 
-            <div class="p-12 space-y-10">
+            <div class="p-10 md:p-14 space-y-10">
                 <div class="space-y-4">
-                    <h1 class="text-3xl font-bold text-zinc-100 tracking-tight uppercase font-mono">Service Unavailable</h1>
-                    <p class="text-zinc-400 text-sm leading-relaxed font-mono">
-                        The connection to the database cluster could not be established. This may be due to scheduled maintenance or an unexpected service interruption. 
+                    <h1 class="text-3xl font-bold text-zinc-100 tracking-tight uppercase font-mono">
+                        {{ "Currently Offline" if maintenance_active else "Service Unavailable" }}
+                    </h1>
+                    <p class="text-zinc-500 text-sm leading-relaxed font-sans">
+                        {% if maintenance_active %}
+                            The site is currently undergoing scheduled maintenance to improve performance and security. We expect to be back online shortly.
+                        {% else %}
+                            We are currently experiencing a connection issue with our data cluster. Our automated systems are attempting to restore the service.
+                        {% endif %}
                     </p>
                 </div>
 
                 <div class="grid grid-cols-1 gap-px bg-zinc-800 border border-zinc-800 rounded overflow-hidden">
-                    <div class="bg-[#1e1e1e] p-4 flex justify-between items-center">
-                        <span class="text-[10px] font-mono text-zinc-500 uppercase">Provider</span>
-                        <span class="text-[11px] font-mono text-zinc-300">MongoDB Atlas</span>
+                    <div class="bg-zinc-900 p-4 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-zinc-600 uppercase">Service</span>
+                        <span class="text-[11px] font-mono text-zinc-300">Application Node 01</span>
                     </div>
-                    <div class="bg-[#1e1e1e] p-4 flex justify-between items-center">
-                        <span class="text-[10px] font-mono text-zinc-500 uppercase">Auto-Reconnect</span>
-                        <span class="text-[11px] font-mono text-red-500 font-bold uppercase tracking-widest">
-                            In <span id="timer">10</span>s
+                    <div class="bg-zinc-900 p-4 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-zinc-600 uppercase">Auto-Refresh</span>
+                        <span class="text-[11px] font-mono text-brand font-bold uppercase tracking-widest">
+                            In <span id="timer">15</span>s
                         </span>
                     </div>
                 </div>
 
                 <div class="flex flex-col gap-3 pt-2">
                     <button onclick="window.location.reload()" class="w-full bg-zinc-100 text-zinc-950 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all">
-                        Reconnect Now
+                        Refresh Status
                     </button>
-                    <a href="/" class="w-full border border-zinc-800 text-zinc-500 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:text-zinc-200 transition-all text-center">
+
+                    {% if session.get('user') and maintenance_active %}
+                        <a href="/admin/bypass-maintenance" class="w-full bg-brand/10 border border-brand/30 text-brand py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:bg-brand/20 transition-all text-center">
+                            Admin: View Live Content
+                        </a>
+                    {% endif %}
+
+                    <a href="/" class="w-full border border-zinc-800 text-zinc-600 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:text-zinc-300 transition-all text-center">
                         Return to Dashboard
                     </a>
                 </div>
             </div>
 
-            <div class="px-6 py-3 bg-[#191919] border-t border-zinc-800 flex justify-between items-center opacity-50">
-                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-tighter">Instance: Production-01</span>
-                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-tighter">Coventry, UK</span>
+            <div class="px-6 py-4 bg-zinc-950/50 border-t border-zinc-800 flex justify-between items-center">
+                <span class="text-[9px] font-mono text-zinc-700 uppercase">Region: Coventry, UK</span>
+                <span class="text-[9px] font-mono text-zinc-700 uppercase">2026-Node-V2</span>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let seconds = 10;
+    let seconds = 15;
     const timerElement = document.getElementById('timer');
     const countdown = setInterval(() => {
         seconds--;

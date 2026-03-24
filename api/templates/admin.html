@@ -87,22 +87,27 @@
     </div>
 </div>
 
-<div id="settings-modal" class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-zinc-950/95 backdrop-blur-xl hidden opacity-0 transition-all duration-300">
-    <div class="bg-zinc-900 max-w-5xl w-full border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-lg flex flex-col max-h-[85vh] overflow-hidden">
+<div id="settings-modal" class="fixed inset-0 z-[120] flex items-center justify-center p-0 md:p-4 bg-zinc-950/95 backdrop-blur-xl hidden opacity-0 transition-all duration-300">
+    <div class="bg-zinc-900 w-full md:max-w-5xl h-full md:h-auto md:max-h-[85vh] border-x md:border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] md:rounded-lg flex flex-col overflow-hidden">
         
-        <div class="px-8 py-6 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
+        <div class="px-6 py-4 md:px-8 md:py-6 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between flex-shrink-0">
             <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-brand/10 border border-brand/20 rounded flex items-center justify-center text-brand">
+                <div class="hidden sm:flex w-10 h-10 bg-brand/10 border border-brand/20 rounded items-center justify-center text-brand">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
                 <div class="flex flex-col">
                     <h2 class="font-bold text-zinc-100 text-lg leading-tight">System Settings</h2>
-                    <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Administrative Access: Authorized</span>
+                    <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Authorized Session</span>
                 </div>
             </div>
-            <button onclick="toggleSettingsModal(false)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white transition-all">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <button onclick="toggleSettingsModal(false)" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
+        </div>
+
+        <div class="md:hidden flex overflow-x-auto border-b border-zinc-800 bg-zinc-950/50 px-4 scrollbar-hide">
+            <button onclick="switchTab('nav-tab', this)" class="tab-btn-mobile whitespace-nowrap px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-brand border-b-2 border-brand">Navigation</button>
+            <button onclick="switchTab('maintenance-tab', this)" class="tab-btn-mobile whitespace-nowrap px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 border-b-2 border-transparent">Maintenance</button>
         </div>
 
         <div class="flex flex-grow overflow-hidden">
@@ -128,7 +133,7 @@
                 </div>
             </div>
 
-            <div class="flex-grow overflow-y-auto p-8 custom-scrollbar bg-zinc-900/50">
+            <div class="flex-grow overflow-y-auto p-6 md:p-8 custom-scrollbar bg-zinc-900/50">
                 <div class="max-w-3xl mx-auto">
                     
                     <div id="nav-tab" class="tab-content space-y-8">
@@ -142,13 +147,13 @@
                                 <tbody class="divide-y divide-zinc-900">
                                     {% for link in settings.nav_links %}
                                     <tr class="hover:bg-zinc-900/30 transition-all group">
-                                        <td class="px-6 py-4">
+                                        <td class="px-4 md:px-6 py-4">
                                             <div class="flex flex-col gap-0.5">
                                                 <span class="font-bold text-zinc-200 text-sm group-hover:text-brand transition-colors">{{ link.label }}</span>
                                                 <span class="text-zinc-600 font-mono text-[10px] truncate">{{ link.url }}</span>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 text-right">
+                                        <td class="px-4 md:px-6 py-4 text-right">
                                             <a href="{{ url_for('delete_nav_link', index=loop.index0) }}" class="inline-flex w-8 h-8 items-center justify-center rounded bg-zinc-900 border border-zinc-800 text-zinc-600 hover:text-red-500 hover:border-red-500/50 transition-all">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </a>
@@ -159,7 +164,7 @@
                             </table>
                         </div>
 
-                        <form action="/admin/add-nav" method="POST" class="p-6 bg-zinc-900/30 border border-zinc-800 border-dashed rounded-lg flex flex-col gap-4">
+                        <form action="/admin/add-nav" method="POST" class="p-4 md:p-6 bg-zinc-900/30 border border-zinc-800 border-dashed rounded-lg flex flex-col gap-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-mono text-zinc-600 uppercase px-1">Display Label</label>
@@ -170,7 +175,7 @@
                                     <input type="text" name="url" placeholder="/projects or external link" required pattern="^\S+$" class="w-full bg-zinc-950 border border-zinc-800 rounded-md px-4 py-2 text-xs text-zinc-200 focus:border-brand/50 outline-none">
                                 </div>
                             </div>
-                            <button type="submit" class="w-full py-2.5 bg-zinc-100 hover:bg-white text-zinc-950 text-[10px] font-bold uppercase tracking-widest rounded transition-all">Add Navigation Item</button>
+                            <button type="submit" class="w-full py-3 bg-zinc-100 hover:bg-white text-zinc-950 text-[10px] font-bold uppercase tracking-widest rounded transition-all">Add Navigation Item</button>
                         </form>
                     </div>
 
@@ -178,7 +183,7 @@
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Availability Control</h3>
                         </div>
-                        <div class="p-8 bg-zinc-950 border border-zinc-800 rounded-lg flex flex-col items-center text-center gap-6 shadow-inner">
+                        <div class="p-6 md:p-8 bg-zinc-950 border border-zinc-800 rounded-lg flex flex-col items-center text-center gap-6 shadow-inner">
                             <div class="w-16 h-16 rounded-full flex items-center justify-center {{ 'bg-red-500/10 text-red-500' if maintenance_active else 'bg-emerald-500/10 text-emerald-500' }}">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             </div>
@@ -189,7 +194,7 @@
                                 <p class="text-sm text-zinc-500 max-w-sm mx-auto">Enabling maintenance mode will restrict site access to administrative users only.</p>
                             </div>
                             <button onclick="toggleMaintenanceUI(true, {{ 'true' if maintenance_active else 'false' }})" 
-                                class="btn {{ 'bg-red-600 text-white hover:bg-red-500' if not maintenance_active else 'btn-secondary' }} !py-3 !px-10 !text-[11px] uppercase font-bold tracking-widest transition-all">
+                                class="btn {{ 'bg-red-600 text-white hover:bg-red-500' if not maintenance_active else 'btn-secondary' }} !py-4 !px-10 !text-[11px] uppercase font-bold tracking-widest transition-all w-full md:w-auto">
                                 Toggle Maintenance
                             </button>
                         </div>
@@ -254,6 +259,7 @@
         const modal = document.getElementById('settings-modal');
         if (show) {
             modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modal.classList.add('opacity-100');
@@ -261,19 +267,36 @@
         } else {
             modal.classList.remove('opacity-100');
             modal.classList.add('opacity-0');
+            document.body.style.overflow = '';
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
     }
 
     function switchTab(tabId, btn) {
+        // Hide all content
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
         document.getElementById(tabId).classList.remove('hidden');
+        
+        // Reset Desktop Sidebar Buttons
         document.querySelectorAll('.tab-btn').forEach(b => {
             b.classList.remove('bg-brand/10', 'text-brand', 'border-brand/20');
             b.classList.add('text-zinc-500', 'hover:text-zinc-200', 'hover:bg-zinc-800/50');
         });
-        btn.classList.add('bg-brand/10', 'text-brand', 'border-brand/20');
-        btn.classList.remove('text-zinc-500', 'hover:text-zinc-200', 'hover:bg-zinc-800/50');
+
+        // Reset Mobile Tab Buttons
+        document.querySelectorAll('.tab-btn-mobile').forEach(b => {
+            b.classList.remove('text-brand', 'border-brand');
+            b.classList.add('text-zinc-500', 'border-transparent');
+        });
+
+        // Activate clicked button (Desktop or Mobile)
+        if (btn.classList.contains('tab-btn')) {
+            btn.classList.add('bg-brand/10', 'text-brand', 'border-brand/20');
+            btn.classList.remove('text-zinc-500', 'hover:text-zinc-200');
+        } else {
+            btn.classList.add('text-brand', 'border-brand');
+            btn.classList.remove('text-zinc-500', 'border-transparent');
+        }
     }
 </script>
 {% endblock %}

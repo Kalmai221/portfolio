@@ -7,50 +7,55 @@
 
         {% if logic_error %}
             {% if session.get('user') %}
-                <div class="border border-red-900/50 bg-zinc-900 overflow-hidden rounded-sm">
-                    <div class="flex items-center justify-between px-4 py-3 bg-red-950/20 border-b border-red-900/30">
+                <div class="border border-zinc-800 bg-zinc-900 overflow-hidden rounded-sm shadow-2xl">
+                    <div class="flex items-center justify-between px-5 py-4 bg-zinc-950 border-b border-zinc-800">
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                            <h3 class="font-mono text-[11px] uppercase tracking-widest text-red-500 font-bold">Runtime_Execution_Fault</h3>
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <h3 class="font-mono text-[11px] uppercase tracking-widest text-zinc-400 font-bold">Execution Error</h3>
                         </div>
-                        <span class="text-[10px] font-mono text-red-900 tracking-tighter">UID: {{ session.get('user') }}</span>
+                        <span class="text-[10px] font-mono text-zinc-600 tracking-tighter">Node: {{ page.slug }}</span>
                     </div>
 
-                    <div class="p-6 space-y-6">
-                        <div class="space-y-2">
-                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Exception_Message</p>
-                            <div class="p-4 bg-zinc-950 border border-zinc-800 font-mono text-sm text-red-400">
+                    <div class="p-8 space-y-8">
+                        <div class="space-y-3">
+                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest border-l-2 border-red-500 pl-3">Diagnostic Message</p>
+                            <div class="p-5 bg-zinc-950 border border-zinc-800 font-mono text-sm text-red-400 leading-relaxed">
                                 {{ logic_error }}
                             </div>
                         </div>
                         
-                        <div class="space-y-2">
-                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Stack_Trace</p>
-                            <div class="p-4 bg-zinc-950 border border-zinc-800 overflow-x-auto custom-scrollbar">
+                        <div class="space-y-3">
+                            <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest border-l-2 border-zinc-700 pl-3">Stack Trace</p>
+                            <div class="p-5 bg-zinc-950 border border-zinc-800 overflow-x-auto custom-scrollbar">
                                 <pre class="text-[11px] leading-relaxed text-zinc-500 whitespace-pre font-mono">{{ error_traceback }}</pre>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="px-4 py-3 bg-zinc-950 border-t border-zinc-800 flex justify-end">
-                        <a href="/admin/edit/{{ page.slug }}" class="text-[10px] font-mono text-zinc-400 hover:text-white uppercase tracking-widest">Return_to_Editor</a>
+                    <div class="px-6 py-4 bg-zinc-950/50 border-t border-zinc-800 flex justify-between items-center">
+                        <p class="text-[10px] text-zinc-600 font-mono italic">Check Python Logic tab in editor.</p>
+                        <a href="/admin/edit/{{ page.slug }}" class="px-4 py-2 bg-zinc-100 text-zinc-950 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-white transition-all">
+                            Edit Node Logic
+                        </a>
                     </div>
                 </div>
             {% else %}
-                <div class="max-w-xl mx-auto py-20 text-center space-y-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 border border-zinc-800 bg-zinc-900 rounded-lg">
-                        <svg class="w-8 h-8 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                <div class="max-w-xl mx-auto py-24 text-center space-y-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 border border-zinc-800 bg-zinc-900/50 rounded-full">
+                        <svg class="w-6 h-6 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                     </div>
                     <div class="space-y-3">
-                        <h2 class="text-2xl font-bold text-zinc-100 tracking-tight uppercase font-mono">System_Anomaly</h2>
+                        <h2 class="text-2xl font-bold text-zinc-100 tracking-tight uppercase font-mono">Application Error</h2>
                         <p class="text-zinc-500 text-sm leading-relaxed max-w-sm mx-auto">
-                            A critical logic fault occurred during the execution of this node. The error has been logged for architectural review.
+                            The system encountered an error while processing this request. The incident has been recorded for review.
                         </p>
                     </div>
                     <div class="pt-4">
-                        <a href="/" class="btn btn-secondary !text-xs uppercase tracking-[0.2em]">Return to Core</a>
+                        <a href="/" class="px-8 py-3 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 text-[11px] font-bold uppercase tracking-widest rounded-sm transition-all">
+                            Return Home
+                        </a>
                     </div>
                 </div>
             {% endif %}
@@ -63,4 +68,39 @@
         <script>{{ page.js | safe }}</script>
     </article>
 </div>
+
+{% if session.get('user') and session.get('maintenance_bypass') and maintenance_active %}
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] w-[calc(100%-3rem)] max-w-md animate-in fade-in slide-in-from-bottom-8 duration-500">
+    <div class="bg-zinc-900/80 backdrop-blur-2xl border border-brand/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+        <div class="flex items-center gap-4 p-4">
+            <div class="relative flex-shrink-0 flex items-center justify-center w-10 h-10">
+                <div class="absolute inset-0 bg-brand rounded-xl animate-pulse opacity-20"></div>
+                <div class="relative w-10 h-10 bg-brand/10 border border-brand/20 rounded-xl flex items-center justify-center text-brand">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="flex flex-col flex-grow min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-bold text-zinc-100 uppercase tracking-wider">Maintenance Bypass</span>
+                    <span class="px-1.5 py-0.5 rounded-full bg-brand/20 border border-brand/30 text-[8px] font-bold text-brand uppercase tracking-widest">Active</span>
+                </div>
+                <span class="text-[10px] font-mono text-zinc-500 truncate">Public view is currently restricted.</span>
+            </div>
+
+            <div class="flex items-center gap-2 border-l border-zinc-800 pl-4 ml-2">
+                <a href="/admin" class="p-2 text-zinc-500 hover:text-white transition-colors" title="Dashboard">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                </a>
+                <a href="/logout" class="px-3 py-1.5 bg-zinc-100 text-zinc-950 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-white transition-all">
+                    Re-Lock
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
