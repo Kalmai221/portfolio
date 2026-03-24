@@ -765,7 +765,6 @@ def edit_page(slug):
             "css": request.form.get("css_content"),
             "js": request.form.get("js_content"),
             "python_logic": request.form.get("python_logic"),
-            "maintenance": request.form.get("maintenance") == "true", # New field
             "updated_at": datetime.now()
         }
         pages_collection.update_one({"slug": slug}, {"$set": data}, upsert=True)

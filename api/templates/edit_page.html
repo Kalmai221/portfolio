@@ -2,17 +2,18 @@
 {% block content %}
 <div class="fixed inset-0 z-[1000] bg-zinc-950 flex flex-col items-center justify-center p-8 text-center lg:hidden">
     <div class="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
-        <i class="fa-solid fa-computer text-brand text-2xl"></i>
+        <i class="fa-solid fa-desktop text-brand text-2xl"></i>
     </div>
-    <h2 class="text-white font-bold text-xl mb-2 uppercase tracking-tight">Desktop Required</h2>
+    <h2 class="text-white font-bold text-xl mb-2 uppercase tracking-tight">Desktop Environment Required</h2>
     <p class="text-zinc-500 text-sm max-w-xs leading-relaxed mb-8">
-        The Node Editor requires a larger screen for precision code editing and system configuration. 
-        Please switch to a computer to continue.
+        The Node Editor is optimized for large displays to support precise code editing and configuration. 
+        Please switch to a desktop browser to continue.
     </p>
     <a href="/admin" class="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded hover:text-white transition-all">
         Return to Dashboard
     </a>
 </div>
+
 <div id="save-toast" class="fixed left-1/2 -translate-x-1/2 top-[-100px] z-[500] transition-all duration-500 ease-expo bg-zinc-900/90 backdrop-blur-md border border-emerald-500/30 px-6 py-3 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center gap-3">
     <div class="flex items-center justify-center w-6 h-6 bg-emerald-500 rounded-full">
         <svg class="w-4 h-4 text-zinc-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,32 +21,19 @@
         </svg>
     </div>
     <div class="flex flex-col">
-        <span class="text-[11px] font-bold text-white uppercase tracking-wider">Changes Deployed</span>
-        <span class="text-[9px] font-mono text-emerald-500/80 uppercase">Node synchronized successfully</span>
+        <span class="text-[11px] font-bold text-white uppercase tracking-wider">Changes Saved</span>
+        <span class="text-[9px] font-mono text-emerald-500/80 uppercase">Node synchronized with database</span>
     </div>
 </div>
+
 <div id="exit-modal" class="hidden fixed inset-0 z-[600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#252526] border border-zinc-800 w-full max-w-md p-6 rounded-lg shadow-2xl">
-        <h3 class="text-white font-bold text-lg mb-2">Unsaved Changes</h3>
-        <p class="text-zinc-400 text-sm mb-6">You have modified the code. Would you like to save your changes before exiting?</p>
+        <h3 class="text-white font-bold text-lg mb-2">Unsaved Progress</h3>
+        <p class="text-zinc-400 text-sm mb-6">There are unsaved changes in the current buffer. Would you like to commit these changes before exiting?</p>
         <div class="flex flex-col gap-2">
             <button onclick="saveAndExit()" class="w-full bg-brand py-2 text-white text-sm font-bold rounded hover:bg-opacity-90">Save and Exit</button>
-            <button onclick="window.location.href='/admin'" class="w-full bg-zinc-800 py-2 text-zinc-300 text-sm font-bold rounded hover:bg-zinc-700">Don't Save</button>
+            <button onclick="window.location.href='/admin'" class="w-full bg-zinc-800 py-2 text-zinc-300 text-sm font-bold rounded hover:bg-zinc-700">Discard Changes</button>
             <button onclick="toggleExitModal()" class="w-full py-2 text-zinc-500 text-sm font-medium hover:text-zinc-300">Cancel</button>
-        </div>
-    </div>
-</div>
-<div id="redirect-modal" class="hidden fixed inset-0 z-[700] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-[#252526] border border-zinc-800 w-full max-w-md p-6 rounded-lg shadow-2xl">
-        <div class="w-10 h-10 bg-brand/10 border border-brand/20 rounded flex items-center justify-center mb-4">
-            <i class="fa-solid fa-link text-brand text-lg"></i>
-        </div>
-        <h3 class="text-white font-bold text-lg mb-2">Redirect Detected</h3>
-        <p class="text-zinc-400 text-sm mb-6">This link points to <span id="redirect-url" class="text-brand font-mono"></span>. How would you like to proceed?</p>
-        <div class="flex flex-col gap-2">
-            <button id="btn-preview-redirect" class="w-full bg-brand py-2 text-white text-[11px] font-bold uppercase tracking-widest rounded hover:bg-opacity-90">Open in Preview</button>
-            <button id="btn-tab-redirect" class="w-full bg-zinc-800 py-2 text-zinc-300 text-[11px] font-bold uppercase tracking-widest rounded hover:bg-zinc-700">Open in New Tab</button>
-            <button onclick="closeRedirectModal()" class="w-full py-2 text-zinc-500 text-[11px] font-bold uppercase tracking-widest hover:text-zinc-300">Cancel</button>
         </div>
     </div>
 </div>
@@ -56,82 +44,74 @@
         <div class="p-2 text-zinc-100 border-l-2 border-brand cursor-pointer">
             <i class="fa-regular fa-folder-open text-[18px]"></i>
         </div>
-        <div onclick="togglePreview()" class="p-2 text-zinc-500 hover:text-zinc-100 transition-colors cursor-pointer" title="Live Preview">
-            <i class="fa-solid fa-eye" style="color: rgb(255, 255, 255);"></i>
+        <div onclick="togglePreview()" class="p-2 text-zinc-500 hover:text-zinc-100 transition-colors cursor-pointer" title="Preview Changes">
+            <i class="fa-solid fa-eye"></i>
         </div>
         
         <div class="mt-auto flex flex-col items-center gap-4 mb-2">
-            <button onclick="handleSave()" class="p-2 text-emerald-500 hover:text-emerald-400 transition-colors" title="Save Changes">
+            <button onclick="handleSave()" class="p-2 text-emerald-500 hover:text-emerald-400 transition-colors" title="Save (Ctrl+S)">
                 <i class="fa-solid fa-floppy-disk text-[20px]"></i>
             </button>
-            <button onclick="handleExit()" class="p-2 text-zinc-500 hover:text-red-400 transition-colors" title="Exit Editor">
+            <button onclick="handleExit()" class="p-2 text-zinc-500 hover:text-red-400 transition-colors" title="Close Editor">
                 <i class="fa-solid fa-arrow-right-from-bracket text-[18px]"></i>
             </button>
         </div>
     </div>
 
     <div class="w-full lg:w-64 bg-[#252526] flex flex-col border-r border-[#1e1e1e] shrink-0">
-        <div class="px-4 py-3 flex items-center justify-between">
-            <span class="text-[11px] font-sans text-zinc-400 uppercase tracking-wider font-bold">Explorer</span>
+        <div class="px-4 py-3 border-b border-[#1e1e1e]">
+            <span class="text-[10px] font-sans text-zinc-500 uppercase tracking-widest font-bold">Explorer</span>
         </div>
         
         <div class="flex-grow overflow-y-auto custom-scrollbar">
-            <div class="bg-[#37373d]/50 px-2 py-1.5 flex items-center gap-2 text-[11px] font-bold text-zinc-200 uppercase cursor-default">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
-                Current_Node
+            <div class="bg-[#37373d]/50 px-2 py-1.5 flex items-center gap-2 text-[10px] font-bold text-zinc-300 uppercase cursor-default">
+                <i class="fa-solid fa-chevron-down text-[8px]"></i>
+                Files
             </div>
             
             <div class="flex flex-col py-1">
                 <button type="button" onclick="switchTab('py')" class="sidebar-file active" id="side-tab-py">
-                    <i class="fa-brands fa-python text-[14px]" style="color: #3776AB;"></i>
-                    {{ slug }}.py
+                    <i class="fa-brands fa-python text-[14px]" style="color: #3776AB;"></i> {{ slug }}.py
                 </button>
                 <button type="button" onclick="switchTab('html')" class="sidebar-file" id="side-tab-html">
-                    <i class="fa-brands fa-html5 text-[14px]" style="color: #E44D26;"></i>
-                    {{ slug }}.html
+                    <i class="fa-brands fa-html5 text-[14px]" style="color: #E44D26;"></i> {{ slug }}.html
                 </button>
                 <button type="button" onclick="switchTab('css')" class="sidebar-file" id="side-tab-css">
-                    <i class="fa-brands fa-css3-alt text-[14px]" style="color: #264DE4;"></i>
-                    {{ slug }}.css
+                    <i class="fa-brands fa-css3-alt text-[14px]" style="color: #264DE4;"></i> {{ slug }}.css
                 </button>
                 <button type="button" onclick="switchTab('js')" class="sidebar-file" id="side-tab-js">
-                    <i class="fa-brands fa-js text-[14px]" style="color: #F7DF1E;"></i>
-                    {{ slug }}.js
+                    <i class="fa-brands fa-js text-[14px]" style="color: #F7DF1E;"></i> {{ slug }}.js
                 </button>
             </div>
+
             <div class="mt-4 border-t border-[#1e1e1e]">
-                <div class="bg-[#37373d]/50 px-2 py-2 flex items-center gap-2 text-[11px] font-bold text-zinc-200 uppercase cursor-default tracking-wider">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
-                    Properties
+                <div class="bg-[#37373d]/50 px-2 py-2 flex items-center gap-2 text-[10px] font-bold text-zinc-300 uppercase cursor-default tracking-wider">
+                    <i class="fa-solid fa-sliders text-[10px]"></i>
+                    Configuration
                 </div>
-                <div class="p-4 space-y-6">
+                <div class="p-4 space-y-5">
                     <form id="cms-form" method="POST" class="space-y-4">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Display Name</label>
-                            <input type="text" name="title" value="{{ page.title if page else '' }}" required class="sidebar-field" placeholder="Node Title">
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Page Title</label>
+                            <input type="text" name="title" value="{{ page.title if page else '' }}" required class="sidebar-field" placeholder="Untitled Page">
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest">Route Slug</label>
-                            <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono text-brand/80" placeholder="Slug">
-                        </div>
-                        <div class="pt-2">
-                            <label class="flex items-center justify-between cursor-pointer group p-2 bg-[#1e1e1e] border border-zinc-800/40 rounded hover:border-zinc-700 transition-all">
-                                <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-tighter group-hover:text-zinc-200">Maintenance Mode</span>
-                                <input type="checkbox" name="maintenance" value="true" {% if page.maintenance %}checked{% endif %} class="w-3.5 h-3.5 accent-brand bg-zinc-900 border-zinc-800">
-                            </label>
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-widest">URL Segment</label>
+                            <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono text-brand/90" placeholder="index">
                         </div>
                     </form>
                 </div>
             </div>
-            <div class="mt-4 border-t border-[#1e1e1e]">
-                <div class="bg-red-950/20 px-2 py-2 flex items-center gap-2 text-[11px] font-bold text-red-500 uppercase cursor-default tracking-wider">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    Dangerous Area
+
+            <div class="mt-auto border-t border-[#1e1e1e]">
+                <div class="bg-zinc-900/50 px-2 py-2 flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase cursor-default tracking-wider">
+                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+                    System Actions
                 </div>
                 <div class="p-4">
-                    <button type="button" id="delete-btn" onclick="confirmDeletion()" class="w-full flex items-center justify-center gap-2 py-2 bg-red-950/30 border border-red-900/50 text-red-500 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-red-600 hover:text-white transition-all duration-200">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        <span id="delete-text">Delete Node</span>
+                    <button type="button" id="delete-btn" onclick="confirmDeletion()" class="w-full flex items-center justify-center gap-2 py-2 bg-zinc-800/50 border border-zinc-700 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-red-600/20 hover:text-red-500 hover:border-red-500/30 transition-all duration-200">
+                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                        <span id="delete-text">Delete Page</span>
                     </button>
                 </div>
             </div>
@@ -141,26 +121,21 @@
     <div class="flex-grow flex flex-col bg-[#1e1e1e] min-w-0 h-full">
         <div class="flex bg-[#2d2d2d] shrink-0 overflow-x-auto no-scrollbar border-b border-[#191919]">
             <button type="button" onclick="switchTab('py')" id="tab-py" class="editor-tab active">
-                <i class="fa-brands fa-python mr-2 text-[13px]" style="color: #3776AB;"></i>
-                {{ slug }}.py
+                <i class="fa-brands fa-python mr-2 text-[13px]" style="color: #3776AB;"></i> {{ slug }}.py
             </button>
             <button type="button" onclick="switchTab('html')" id="tab-html" class="editor-tab">
-                <i class="fa-brands fa-html5 mr-2 text-[13px]" style="color: #E44D26;"></i>
-                {{ slug }}.html
+                <i class="fa-brands fa-html5 mr-2 text-[13px]" style="color: #E44D26;"></i> {{ slug }}.html
             </button>
             <button type="button" onclick="switchTab('css')" id="tab-css" class="editor-tab">
-                <i class="fa-brands fa-css3-alt mr-2 text-[13px]" style="color: #264DE4;"></i>
-                {{ slug }}.css
+                <i class="fa-brands fa-css3-alt mr-2 text-[13px]" style="color: #264DE4;"></i> {{ slug }}.css
             </button>
             <button type="button" onclick="switchTab('js')" id="tab-js" class="editor-tab">
-                <i class="fa-brands fa-js mr-2 text-[13px]" style="color: #F7DF1E;"></i>
-                {{ slug }}.js
+                <i class="fa-brands fa-js mr-2 text-[13px]" style="color: #F7DF1E;"></i> {{ slug }}.js
             </button>
         </div>
 
         <div class="flex-grow flex relative overflow-hidden">
-            <div id="line-numbers" class="w-12 bg-[#1e1e1e] flex flex-col items-end pr-3 pt-4 select-none shrink-0 border-r border-[#2d2d2d] z-10 custom-scrollbar overflow-hidden">
-                </div>
+            <div id="line-numbers" class="w-12 bg-[#1e1e1e] flex flex-col items-end pr-3 pt-4 select-none shrink-0 border-r border-[#2d2d2d] z-10 custom-scrollbar overflow-hidden"></div>
 
             <div class="flex-grow relative h-full bg-[#1e1e1e] overflow-hidden">
                 <div id="highlight-layer" class="absolute inset-0 p-4 pointer-events-none font-mono text-[14px] leading-6 whitespace-pre overflow-hidden bg-transparent z-0"></div>
@@ -181,13 +156,12 @@
             </div>
         </div>
 
-        <div class="h-6 bg-brand flex items-center px-3 justify-between text-[11px] font-sans text-white shrink-0 z-20">
+        <div class="h-6 bg-zinc-800 flex items-center px-3 justify-between text-[10px] font-sans text-zinc-400 shrink-0 z-20">
             <div class="flex items-center gap-4">
-                <span class="font-bold tracking-tight flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-white opacity-60"></div> main*</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-code-branch text-[9px]"></i> main*</span>
                 <span id="pos-indicator">Ln 1, Col 1</span>
             </div>
-            <div class="flex items-center gap-4 opacity-90">
-                <span>Spaces: 4</span>
+            <div class="flex items-center gap-4">
                 <span>UTF-8</span>
                 <span id="lang-label">Python</span>
             </div>
@@ -199,29 +173,27 @@
     <div class="w-full max-w-6xl flex justify-between items-center mb-3 px-4 py-2 bg-[#252526] border border-zinc-800 rounded-t-lg shadow-2xl">
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <h3 class="text-[11px] font-mono text-zinc-300 uppercase tracking-widest">Preview_Engine</h3>
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                <h3 class="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">Development Preview</h3>
             </div>
             <div class="flex bg-zinc-900 rounded p-1 border border-zinc-800">
                 <button onclick="setViewport('desktop')" id="view-desktop" class="px-3 py-1 rounded bg-zinc-800 text-white transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <i class="fa-solid fa-desktop text-[12px]"></i>
                 </button>
                 <button onclick="setViewport('mobile')" id="view-mobile" class="px-3 py-1 rounded text-zinc-500 hover:text-zinc-300 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <i class="fa-solid fa-mobile-screen text-[12px]"></i>
                 </button>
             </div>
         </div>
         <div class="flex items-center gap-4">
-            <button onclick="toggleConsole()" class="text-[10px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest">Terminal</button>
-            <button onclick="togglePreview()" class="text-zinc-500 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg></button>
+            <button onclick="toggleConsole()" class="text-[9px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest">Runtime Log</button>
+            <button onclick="togglePreview()" class="text-zinc-500 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-[16px]"></i></button>
         </div>
     </div>
-    
     <div id="preview-container" class="w-full max-w-6xl mx-auto flex-grow flex flex-col transition-all duration-500">
         <iframe id="preview-frame" class="w-full h-full bg-white rounded-b-lg shadow-2xl border-none"></iframe>
-        
-        <div id="logic-console" class="hidden h-32 bg-black border-t border-zinc-800 p-4 font-mono text-xs overflow-y-auto custom-scrollbar">
-            <p class="text-zinc-600 mb-1">--- Python Runtime Handshake ---</p>
+        <div id="logic-console" class="hidden h-32 bg-black border-t border-zinc-800 p-4 font-mono text-[11px] overflow-y-auto custom-scrollbar">
+            <p class="text-zinc-600 mb-2 border-b border-zinc-900 pb-1">Server Terminal Output</p>
             <div id="console-output"></div>
         </div>
     </div>
@@ -232,18 +204,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
-    /* VS Code Style Scrollbar */
     .custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { 
-        background: rgba(121, 121, 121, 0.2); 
-        border-radius: 0px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
-        background: rgba(121, 121, 121, 0.4); 
-    }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(121, 121, 121, 0.2); border-radius: 0px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(121, 121, 121, 0.4); }
 
     .sidebar-file { width: 100%; text-align: left; padding: 6px 20px; font-size: 13px; color: #a1a1aa; transition: all 0.2s; display: flex; align-items: center; gap: 8px; background: transparent; border: none; }
     .sidebar-file:hover { background-color: #2a2d2e; color: #f4f4f5; }
@@ -259,7 +228,6 @@
     .code-textarea { display: block; width: 100%; height: 100% !important; background: transparent !important; padding: 1rem !important; outline: none !important; border: none !important; font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.5rem; resize: none; color: transparent !important; caret-color: #ffffff !important; white-space: pre; position: relative; overflow: auto; z-index: 20; }
     #highlight-layer { padding: 1rem !important; pointer-events: none; color: #d4d4d4; z-index: 10; }
 
-    /* Line numbers style */
     .line-number { font-size: 11px; font-mono; color: #858585; line-height: 1.5rem; width: 100%; text-align: right; }
     .line-number.active-line { color: #c6c6c6; background: rgba(255, 255, 255, 0.05); }
 
@@ -269,9 +237,61 @@
     .token.function { color: #dcdcaa; }
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    .ease-expo {
-        transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    .ease-expo { transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+.code-textarea { 
+        display: block; 
+        width: 100%; 
+        height: 100% !important; 
+        background: transparent !important; 
+        padding: 1.5rem !important; 
+        outline: none !important; 
+        border: none !important; 
+        /* Updated Font Stack */
+        font-family: 'JetBrains Mono', 'Fira Code', monospace; 
+        font-size: 13px; 
+        line-height: 1.6; 
+        letter-spacing: -0.01em;
+        resize: none; 
+        color: transparent !important; 
+        caret-color: #6366f1 !important; 
+        white-space: pre; 
+        position: relative; 
+        overflow: auto; 
+        z-index: 20; 
+        font-variant-ligatures: contextual;
     }
+
+    #highlight-layer { 
+        padding: 1.5rem !important; 
+        pointer-events: none; 
+        color: #d4d4d4; 
+        z-index: 10; 
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        letter-spacing: -0.01em;
+    }
+
+    /* Updated Line numbers to match new height */
+    .line-number { 
+        font-size: 11px; 
+        font-family: 'JetBrains Mono', monospace; 
+        color: #4b4b4b; 
+        line-height: 1.6; 
+        width: 100%; 
+        text-align: right; 
+        padding-right: 4px;
+    }
+
+    .line-number.active-line { 
+        color: #a1a1aa; 
+        background: rgba(255, 255, 255, 0.03); 
+    }
+
+    /* Subtle improvement to Prism token colors for JetBrains Mono */
+    .token.keyword { color: #569cd6; font-weight: 600; }
+    .token.string { color: #ce9178; }
+    .token.comment { color: #6a9955; font-style: italic; }
 </style>
 
 <script>
@@ -280,19 +300,13 @@
     let pendingUrl = "";
     let pendingPath = "";
 
-    function closeRedirectModal() {
-        document.getElementById('redirect-modal').classList.add('hidden');
-    }
+    function closeRedirectModal() { document.getElementById('redirect-modal').classList.add('hidden'); }
 
     async function handleRedirectChoice(choice) {
         const frame = document.getElementById('preview-frame');
-        
         if (choice === 'preview') {
-            // Normalize the path: remove leading slash for the slug
             let targetSlug = pendingPath.split('?')[0].replace(/^\//, '');
             if (targetSlug === "") targetSlug = "home";
-
-            // Shift the preview window to the new node
             await executeNewPathPreview(targetSlug);
         } else if (choice === 'tab') {
             window.open(pendingUrl, '_blank');
@@ -303,19 +317,12 @@
     async function executeNewPathPreview(slug) {
         const consoleOut = document.getElementById('console-output');
         const frame = document.getElementById('preview-frame');
-        
         consoleOut.innerHTML = `<span class="text-zinc-500">Shifting preview context to Node: ${slug}...</span>`;
-        
         try {
-            // We call your preview route but pass the slug as a parameter
-            // This tells the backend: "Don't use the editor text, fetch the saved code for this slug instead"
             const res = await fetch(`/_preview?target_slug=${slug}`);
-            
             if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
-            
             const text = await res.text();
             frame.srcdoc = text;
-            
             consoleOut.innerHTML = `<span class="text-emerald-500">STATUS: Context shifted. Now previewing ${slug}.</span>`;
         } catch (e) {
             consoleOut.innerHTML = `<span class="text-red-500">STATUS: Failed to resolve Node ${slug}. ${e.message}</span>`;
@@ -325,70 +332,35 @@
     document.getElementById('btn-preview-redirect').onclick = () => handleRedirectChoice('preview');
     document.getElementById('btn-tab-redirect').onclick = () => handleRedirectChoice('tab');
 
-    // Intercept iframe clicks
     document.getElementById('preview-frame').onload = function() {
         const frame = this;
         try {
             const frameDoc = frame.contentDocument || frame.contentWindow.document;
-
             frameDoc.addEventListener('click', function(e) {
                 const anchor = e.target.closest('a');
                 if (anchor) {
                     const href = anchor.getAttribute('href');
-                    
-                    // 1. Ignore UI controls or hash links
                     if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-
                     e.preventDefault();
-                    pendingUrl = anchor.href; // Absolute URL (https://...)
-                    pendingPath = href;       // Relative path (/projects)
-                    
+                    pendingUrl = anchor.href;
+                    pendingPath = href;
                     document.getElementById('redirect-url').textContent = pendingPath;
                     document.getElementById('redirect-modal').classList.remove('hidden');
                 }
             });
-        } catch (err) {
-            // This triggers if the iframe navigated to an external site (cross-origin)
-            console.warn("Navigation intercepted by browser security policy.");
-        }
+        } catch (err) { console.warn("Navigation intercepted."); }
     };
 
-    function updateLineNumbers(textarea) {
-        const lineContainer = document.getElementById('line-numbers');
-        const lines = textarea.value.split('\n');
-        const lineCount = lines.length;
-        
-        // Find current line based on cursor position
-        const cursorPosition = textarea.selectionStart;
-        const textBeforeCursor = textarea.value.substring(0, cursorPosition);
-        const currentLineIndex = textBeforeCursor.split('\n').length;
-
-        let html = '';
-        for (let i = 1; i <= lineCount; i++) {
-            const isActive = i === currentLineIndex;
-            html += `<span class="line-number ${isActive ? 'active-line' : ''}">${i}</span>`;
-        }
-        lineContainer.innerHTML = html;
-        
-        // Sync scroll of line numbers with textarea1
-        lineContainer.scrollTop = textarea.scrollTop;
-    }
-
-    // Function to update both Line Numbers and the Bottom Status Bar
     function updateCursorMetadata(textarea) {
         const textLines = textarea.value.split('\n');
         const cursorPosition = textarea.selectionStart;
-        
-        // Calculate current Line and Column
         const textBeforeCursor = textarea.value.substring(0, cursorPosition);
         const linesBeforeCursor = textBeforeCursor.split('\n');
         const currentLineIndex = linesBeforeCursor.length;
         const currentColIndex = linesBeforeCursor[linesBeforeCursor.length - 1].length + 1;
 
-        // 1. Update the Bottom Status Bar
         document.getElementById('pos-indicator').textContent = `Ln ${currentLineIndex}, Col ${currentColIndex}`;
 
-        // 2. Update the Line Number sidebar
         const lineContainer = document.getElementById('line-numbers');
         let html = '';
         for (let i = 1; i <= textLines.length; i++) {
@@ -396,45 +368,9 @@
             html += `<span class="line-number ${isActive ? 'active-line' : ''}">${i}</span>`;
         }
         lineContainer.innerHTML = html;
-        
-        // Sync line number scroll
         lineContainer.scrollTop = textarea.scrollTop;
     }
 
-    // Update the event listeners for all code textareas
-    document.querySelectorAll('.code-textarea').forEach(el => {
-        // Standard inputs (typing, deleting)
-        el.addEventListener('input', () => {
-            isDirty = true;
-            syncHighlight();
-            updateCursorMetadata(el);
-        });
-
-        // Cursor movement (clicking, arrow keys)
-        el.addEventListener('click', () => updateCursorMetadata(el));
-        el.addEventListener('keyup', (e) => {
-            // Specifically listen for navigation keys and typing
-            updateCursorMetadata(e.target);
-        });
-
-        // Ensure scrolling stays in sync
-        el.addEventListener('scroll', () => syncScroll(el));
-
-        // Handle Tab key
-        el.addEventListener('keydown', function(e) {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                const start = this.selectionStart;
-                const end = this.selectionEnd;
-                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-                this.selectionStart = this.selectionEnd = start + 4;
-                syncHighlight();
-                updateCursorMetadata(this);
-            }
-        });
-    });
-
-    // Update switchTab to initialize the metadata for the new tab
     function switchTab(type) {
         currentMode = type;
         document.querySelectorAll('.editor-panel').forEach(p => p.classList.add('hidden'));
@@ -447,7 +383,7 @@
         
         const activeTextarea = document.querySelector(`.editor-panel:not(.hidden) textarea`);
         syncHighlight();
-        updateCursorMetadata(activeTextarea); // Update Ln/Col immediately on tab switch
+        updateCursorMetadata(activeTextarea);
     }
 
     function syncHighlight() {
@@ -467,7 +403,6 @@
         lineContainer.scrollTop = el.scrollTop;
     }
 
-    // Save, Exit, and Preview Logic remains same...
     async function handleSave() {
         const form = document.getElementById('cms-form');
         const formData = new FormData(form);
@@ -484,14 +419,8 @@
 
     function showToast() {
         const toast = document.getElementById('save-toast');
-        
-        // Slide Down
         toast.style.top = '24px';
-        
-        setTimeout(() => {
-            // Slide Up
-            toast.style.top = '-100px';
-        }, 3000);
+        setTimeout(() => { toast.style.top = '-100px'; }, 3000);
     }
 
     function handleExit() {
@@ -500,7 +429,6 @@
     }
 
     function toggleExitModal() { document.getElementById('exit-modal').classList.toggle('hidden'); }
-
     async function saveAndExit() { await handleSave(); window.location.href = '/admin'; }
 
     async function togglePreview() {
@@ -526,13 +454,11 @@
         const container = document.getElementById('preview-container');
         const btnD = document.getElementById('view-desktop');
         const btnM = document.getElementById('view-mobile');
-        
         if(mode === 'mobile') {
             container.style.maxWidth = '375px';
             btnM.classList.add('bg-zinc-800', 'text-white');
             btnD.classList.remove('bg-zinc-800', 'text-white');
         } else {
-            // Reset to the original max-width of your UI (1152px is the standard for max-w-6xl)
             container.style.maxWidth = '1152px'; 
             btnD.classList.add('bg-zinc-800', 'text-white');
             btnM.classList.remove('bg-zinc-800', 'text-white');
@@ -541,25 +467,19 @@
 
     function toggleConsole() { document.getElementById('logic-console').classList.toggle('hidden'); }
 
-    // Event Listeners for Code Inputs
-    document.querySelectorAll('.code-textarea, .sidebar-field, input[type="checkbox"]').forEach(el => {
+    document.querySelectorAll('.code-textarea, .sidebar-field').forEach(el => {
         el.addEventListener('input', () => {
             isDirty = true;
             if(el.tagName === 'TEXTAREA') {
                 syncHighlight();
-                updateLineNumbers(el);
+                updateCursorMetadata(el);
             }
         });
         
         if(el.tagName === 'TEXTAREA') {
             el.addEventListener('scroll', () => syncScroll(el));
-            el.addEventListener('click', () => updateLineNumbers(el));
-            el.addEventListener('keyup', (e) => {
-                const text = e.target.value.substring(0, e.target.selectionStart);
-                const lines = text.split('\n');
-                document.getElementById('pos-indicator').textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
-                updateLineNumbers(e.target);
-            });
+            el.addEventListener('click', () => updateCursorMetadata(el));
+            el.addEventListener('keyup', (e) => updateCursorMetadata(e.target));
             el.addEventListener('keydown', function(e) {
                 if (e.key === 'Tab') {
                     e.preventDefault();
@@ -568,7 +488,7 @@
                     this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
                     this.selectionStart = this.selectionEnd = start + 4;
                     syncHighlight();
-                    updateLineNumbers(this);
+                    updateCursorMetadata(this);
                 }
             });
         }
