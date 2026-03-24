@@ -261,14 +261,71 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="border-t border-zinc-900 bg-zinc-950 pt-20 pb-12 reveal">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-mono text-zinc-700 uppercase tracking-widest">
-                <p>&copy; {{ now.year if now else '2026' }} Kurtis-Lee Hopewell</p>
-                <p>Logic: Flask // Architecture: MongoDB</p>
+<footer class="border-t border-zinc-900 bg-zinc-950 pt-24 pb-12 reveal">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                        <span class="text-zinc-100 font-bold text-xs tracking-tighter">{{ settings.site_name_first[0] }}{{ settings.site_name_last[0] }}</span>
+                    </div>
+                    <span class="text-zinc-100 font-bold text-sm tracking-tight">{{ settings.site_name_first }} {{ settings.site_name_last }}</span>
+                </div>
+                <p class="text-xs leading-relaxed text-zinc-500 max-w-[260px]">
+                    Professional IT Portfolio showcasing expertise in systems architecture, full-stack development, and database management.
+                </p>
+            </div>
+
+            <div class="space-y-6 lg:col-span-3">
+                <h4 class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-600">Connect & Resources</h4>
+                <div class="flex flex-wrap gap-3">
+                    <a href="https://github.com/Kalmai221" target="_blank" rel="noopener noreferrer" 
+                       class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
+                        <i class="fa-brands fa-github text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
+                        <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">GitHub</span>
+                    </a>
+
+                    <a href="https://www.linkedin.com/in/kurtishopewell/" target="_blank" rel="noopener noreferrer" 
+                       class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
+                        <i class="fa-brands fa-linkedin-in text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
+                        <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">LinkedIn</span>
+                    </a>
+
+                    <a href="mailto:hkurtislee@outlook.com" 
+                       class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
+                        <i class="fa-solid fa-envelope text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
+                        <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">Email</span>
+                    </a>
+
+                    <a href="https://github.com/Kalmai221/portfolio" target="_blank" rel="noopener noreferrer" 
+                       class="group flex items-center gap-3 px-4 py-2.5 bg-brand/5 border border-brand/20 rounded-lg hover:border-brand/40 hover:bg-brand/10 transition-all duration-300">
+                        <i class="fa-solid fa-code text-brand/60 group-hover:text-brand transition-colors text-base"></i>
+                        <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">Source Code</span>
+                    </a>
+                </div>
             </div>
         </div>
-    </footer>
+
+        <div class="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-4 text-[10px] font-medium text-zinc-600 uppercase tracking-widest">
+                <span>&copy; {{ now.year if now else '2026' }} {{ settings.site_name_first }} {{ settings.site_name_last }}</span>
+                <span class="w-1 h-1 rounded-full bg-zinc-800"></span>
+                <span class="lowercase text-zinc-700 font-mono">v2.0.26</span>
+            </div>
+            
+            <div class="flex items-center gap-6 text-[9px] font-mono uppercase tracking-widest">
+                <div class="flex items-center gap-2">
+                    <span class="text-zinc-800">Backend:</span>
+                    <span class="text-zinc-500">Flask Framework</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-zinc-800">Database:</span>
+                    <span class="text-zinc-500">MongoDB Atlas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
