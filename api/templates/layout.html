@@ -297,15 +297,22 @@
                 if (show) {
                     mobileMenu.classList.remove('closed');
                     mobileOverlay.classList.remove('hidden');
+                    // Add this line to trigger the animation/visibility of the links
+                    mobileMenu.classList.add('stagger-active'); 
+                    
                     setTimeout(() => mobileOverlay.classList.add('opacity-100'), 50);
                     document.body.style.overflow = 'hidden';
                 } else {
                     mobileMenu.classList.add('closed');
+                    // Remove this line to reset the state for the next time it opens
+                    mobileMenu.classList.remove('stagger-active'); 
+                    
                     mobileOverlay.classList.remove('opacity-100');
                     setTimeout(() => mobileOverlay.classList.add('hidden'), 300);
                     document.body.style.overflow = '';
                 }
             }
+
             openBtn?.addEventListener('click', () => toggleMobileMenu(true));
             closeBtn?.addEventListener('click', () => toggleMobileMenu(false));
             mobileOverlay?.addEventListener('click', () => toggleMobileMenu(false));
