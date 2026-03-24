@@ -7,8 +7,11 @@
     <title>{{ settings.site_name_first }} {{ settings.site_name_last }} | IT Portfolio</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Google+Sans:opsz,wght@17..18,400..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -16,7 +19,7 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
+                        mono: ['"Google Sans"', 'sans-serif'],
                     },
                     colors: {
                         zinc: {
@@ -28,7 +31,6 @@
                         },
                         brand: '#6366f1'
                     },
-                    /* Purposeful engineering easing */
                     transitionTimingFunction: {
                         'expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
                     }
@@ -48,18 +50,19 @@
         @layer components {
             .btn { @apply inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 min-h-[40px]; }
             .btn-primary { @apply bg-zinc-100 text-zinc-950 hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]; }
-            
-            .nav-link { @apply text-[11px] font-mono uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-100 transition-colors py-2; }
-            
+
+            /* Increased tracking slightly for Roboto Mono's wider characters */
+            .nav-link { 
+                @apply text-[12px] font-mono font-medium uppercase tracking-wide text-zinc-400 hover:text-zinc-100 transition-colors py-2; 
+            }
+
             .brand-frame { 
-                @apply relative w-12 h-12 flex items-center justify-center border border-zinc-800 bg-zinc-900/50 rounded-lg overflow-hidden transition-all duration-300 ease-expo;
+                @apply relative w-11 h-11 flex items-center justify-center border border-zinc-800 bg-zinc-900/50 rounded-lg overflow-hidden transition-all duration-500 ease-expo;
             }
-            .brand-frame::after {
-                content: '';
-                @apply absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-brand rounded-tl-sm opacity-0 transition-all duration-300 scale-150;
+
+            .group:hover .brand-frame { 
+                @apply border-zinc-600 bg-zinc-800 shadow-[0_0_15px_rgba(99,102,241,0.1)]; 
             }
-            .group:hover .brand-frame::after { @apply opacity-100 scale-100; }
-            .group:hover .brand-frame { @apply border-zinc-600 bg-zinc-800 shadow-[0_0_15px_rgba(99,102,241,0.1)]; }
 
             .reveal { @apply opacity-0 translate-y-4 transition-all duration-700 ease-expo; }
             .reveal.active { @apply opacity-100 translate-y-0; }
@@ -76,7 +79,6 @@
         .stagger-item { opacity: 0; transform: translateX(-10px); transition: all 0.4s ease-expo; }
         .stagger-active .stagger-item { opacity: 1; transform: translateX(0); }
 
-        /* Enhanced Offline Popup UI */
         #offline-banner {
             @apply fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 px-5 py-3 
                    bg-zinc-900/80 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)];
@@ -90,92 +92,56 @@
             pointer-events: auto;
             transform: translate(-50%, 0);
         }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        
     </style>
     <style>
-.ns-wrapper {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background-color: #09090b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        .ns-wrapper {
+            position: fixed; inset: 0; z-index: 9999; background-color: #09090b;
+            display: flex; align-items: center; justify-content: center; padding: 2rem;
+            font-family: 'Inter', sans-serif;
         }
-        .ns-card {
-            max-width: 420px;
-            width: 100%;
-            text-align: center;
-        }
+        .ns-card { max-width: 420px; width: 100%; text-align: center; }
         .ns-icon {
-            width: 56px;
-            height: 56px;
-            background: #18181b;
-            border: 1px solid #27272a;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem auto;
-            color: #ef4444;
+            width: 56px; height: 56px; background: #18181b; border: 1px solid #27272a;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem auto; color: #ef4444;
         }
-        .ns-title {
-            color: #f4f4f5;
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            letter-spacing: -0.02em;
-        }
-        .ns-text {
-            color: #a1a1aa;
-            font-size: 0.935rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
+        .ns-title { color: #f4f4f5; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; letter-spacing: -0.02em; }
+        .ns-text { color: #a1a1aa; font-size: 0.935rem; line-height: 1.6; margin-bottom: 2rem; }
         .ns-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: rgba(239, 68, 68, 0.05);
-            border: 1px solid rgba(239, 68, 68, 0.1);
-            border-radius: 6px;
-            color: #ef4444;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+            background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1);
+            border-radius: 6px; color: #ef4444; font-family: 'Roboto Mono', monospace;
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden bg-grid">
     <noscript>
-<div class="ns-wrapper">
-        <div class="ns-card">
-            <div class="ns-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-            </div>
-            
-            <h2 class="ns-title">Enable JavaScript to continue</h2>
-            
-            <p class="ns-text">
-                This portfolio uses modern web technologies to provide an interactive experience. Please enable JavaScript in your browser settings to view the full site.
-            </p>
-
-            <div class="ns-badge">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="12" r="12"/>
-                </svg>
-                Execution Halted
+        <div class="ns-wrapper">
+            <div class="ns-card">
+                <div class="ns-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <h2 class="ns-title">Enable JavaScript to continue</h2>
+                <p class="ns-text">Please enable JavaScript to view the full site.</p>
+                <div class="ns-badge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="12"/></svg>
+                    Execution Halted
+                </div>
             </div>
         </div>
-    </div>
     </noscript>
+
     <div id="offline-banner">
         <div class="relative flex items-center justify-center">
             <div class="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-20"></div>
@@ -185,16 +151,13 @@
         </div>
         <div class="flex flex-col">
             <span class="text-xs font-bold text-zinc-100 uppercase tracking-wider">Connection Lost</span>
-            <span class="text-[10px] font-mono text-zinc-500">Unable to connect to database...</span>
+            <span class="text-[10px] font-mono text-zinc-500">Database link severed...</span>
         </div>
-        <button onclick="window.location.reload()" class="ml-2 px-3 py-1.5 bg-zinc-100 text-zinc-950 text-[10px] font-bold uppercase tracking-tighter rounded hover:bg-white transition-colors">
-            Check Link
-        </button>
+        <button onclick="window.location.reload()" class="ml-2 px-3 py-1.5 bg-zinc-100 text-zinc-950 text-[10px] font-bold uppercase rounded hover:bg-white transition-colors">Reconnect</button>
     </div>
 
     <div id="mobile-menu-overlay" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
     <div id="mobile-menu" class="fixed top-0 right-0 bottom-0 w-[85%] max-w-[320px] bg-zinc-950 z-[70] flex flex-col closed border-l border-zinc-800 shadow-2xl">
-        
         <div class="p-6 border-b border-zinc-900 flex items-center justify-between bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
             <div class="flex items-center gap-3">
                 <span class="font-mono text-[10px] text-zinc-300 uppercase tracking-widest">Navigation</span>
@@ -205,7 +168,6 @@
         </div>
 
         <div id="mobile-nav-links" class="flex-grow overflow-y-auto custom-scrollbar p-8">
-            
             <div class="space-y-1 mb-10">
                 <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.3em] mb-4 block">Menu</span>
                 {% if settings and settings.nav_links %}
@@ -217,24 +179,6 @@
                     {% endfor %}
                 {% endif %}
             </div>
-
-            <div class="space-y-4">
-                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.3em] mb-4 block">Connect</span>
-                <div class="grid grid-cols-1 gap-3">
-                    <a href="https://github.com/Kalmai221" target="_blank" class="stagger-item flex items-center gap-3 p-4 bg-zinc-900 border border-zinc-800 rounded-lg group hover:border-zinc-600 transition-all">
-                        <svg class="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                        </svg>
-                        <span class="text-sm font-medium text-zinc-300 group-hover:text-white">GitHub</span>
-                    </a>
-                    <a href="https://www.linkedin.com/in/kurtishopewell" target="_blank" class="stagger-item flex items-center gap-3 p-4 bg-zinc-900 border border-zinc-800 rounded-lg group hover:border-zinc-600 transition-all">
-                        <svg class="w-5 h-5 text-[#0A66C2] transition-opacity group-hover:opacity-80" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                        </svg>
-                        <span class="text-sm font-medium text-zinc-300 group-hover:text-white">LinkedIn</span>
-                    </a>
-                </div>
-            </div>
         </div>
 
         <div id="mobile-auth-footer" class="p-8 border-t border-zinc-900 bg-zinc-950/80 backdrop-blur-md mt-auto">
@@ -244,40 +188,46 @@
                         <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
                         <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Active Session</span>
                     </div>
-                    
                     <div class="space-y-3">
-                        <a href="/admin" class="flex items-center justify-center bg-brand w-full py-3 text-white text-[11px] font-bold uppercase tracking-widest rounded hover:bg-opacity-90 transition-all">
-                            Admin Dashboard
-                        </a>
-                        <a href="/logout" class="block text-center text-[10px] font-mono text-zinc-600 hover:text-red-400 py-1 transition-colors">
-                            Sign Out
-                        </a>
+                        <a href="/admin" class="flex items-center justify-center bg-brand w-full py-3 text-white text-[11px] font-bold uppercase tracking-widest rounded hover:bg-opacity-90 transition-all">Admin Dashboard</a>
+                        <a href="/logout" class="block text-center text-[10px] font-mono text-zinc-600 hover:text-red-400 py-1 transition-colors">Sign Out</a>
                     </div>
                 </div>
             {% else %}
                 <div class="space-y-4">
                     <p class="text-[10px] font-mono text-zinc-600 text-center uppercase tracking-widest">Guest Mode</p>
-                    <a href="/login" class="flex items-center justify-center bg-zinc-100 w-full text-zinc-950 py-3 text-[11px] font-bold uppercase tracking-widest rounded hover:bg-white transition-all">
-                        Sign In
-                    </a>
+                    <a href="/login" class="flex items-center justify-center bg-zinc-100 w-full text-zinc-950 py-3 text-[11px] font-bold uppercase tracking-widest rounded hover:bg-white transition-all">Sign In</a>
                 </div>
             {% endif %}
         </div>
     </div>
 
     <nav class="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <a href="/" class="flex items-center gap-4 group outline-none">
-                <div class="brand-frame">
-                    <span class="text-zinc-100 font-bold text-lg tracking-tighter">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3 group outline-none">
+                <div class="brand-frame w-11 h-11 group-hover:border-brand/50 group-hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]">
+                    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-brand/10 to-transparent -translate-y-full group-hover:animate-[scan_2s_ease-in-out_infinite] pointer-events-none"></div>
+                    <span class="relative z-10 text-zinc-100 font-bold text-base tracking-tighter transition-all duration-500 group-hover:scale-110 group-hover:text-white">
                         {{ settings.site_name_first[0] }}{{ settings.site_name_last[0] }}
                     </span>
                 </div>
-                <div class="flex flex-col justify-center">
-                    <span class="text-zinc-100 font-bold text-base tracking-tight leading-none mb-1.5 group-hover:text-brand transition-colors duration-300">
-                        {{ settings.site_name_first }} {{ settings.site_name_last }}
-                    </span>
-                    <span class="text-zinc-500 font-mono text-[9px] uppercase tracking-[0.3em] leading-none">Information Technology Student</span>
+
+                <div class="flex flex-col justify-center border-l border-zinc-800 pl-3 py-1 transition-colors duration-500 group-hover:border-brand/30">
+                    <div class="flex items-baseline">
+                        <span class="text-zinc-100 font-bold text-[15px] tracking-tight leading-none transition-colors duration-300 group-hover:text-white">
+                            {{ settings.site_name_first }}<span class="text-brand">.</span>{{ settings.site_name_last }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2 mt-1.5">
+                        <span class="text-zinc-300 font-mono text-[10px] font-medium uppercase tracking-wider leading-none whitespace-nowrap">
+                            IT Portfolio
+                        </span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                        <span class="text-zinc-500 font-mono text-[9px] font-medium uppercase tracking-wide leading-none">
+                            v2.0.26
+                        </span>
+                    </div>
                 </div>
             </a>
 
@@ -293,7 +243,7 @@
                     {% if session.get('user') %}
                         <div class="flex items-center gap-3">
                             <a href="/admin" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Admin</a>
-                            <a href="/logout" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Sign out</a>
+                            <a href="/logout" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest !bg-zinc-800 !text-zinc-100 hover:!bg-red-500 hover:!text-white transition-colors">Sign out</a>
                         </div>
                     {% else %}
                         <a href="/login" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Sign In</a>
@@ -313,25 +263,6 @@
 
     <footer class="border-t border-zinc-900 bg-zinc-950 pt-20 pb-12 reveal">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-500">System_Status: Operational</span>
-                    </div>
-                    <p class="text-zinc-300 max-w-sm text-sm leading-relaxed">
-                        Created with care. Tested to precision. Built for the modern web.
-                    </p>
-                </div>
-                <div class="flex md:justify-end gap-12">
-                    <div class="flex flex-col gap-2">
-                        <h4 class="text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-600 mb-2">Protocol</h4>
-                        <a href="https://github.com/Kalmai221" target="_blank" class="text-xs text-zinc-400 hover:text-brand transition-colors">Source_Code</a>
-                        <a href="https://www.linkedin.com/in/kurtishopewell" target="_blank" class="text-xs text-zinc-400 hover:text-brand transition-colors">Network</a>
-                    </div>
-                </div>
-            </div>
-
             <div class="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-mono text-zinc-700 uppercase tracking-widest">
                 <p>&copy; {{ now.year if now else '2026' }} Kurtis-Lee Hopewell</p>
                 <p>Logic: Flask // Architecture: MongoDB</p>
@@ -342,66 +273,42 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const offlineBanner = document.getElementById('offline-banner');
-
-            // Robust Network Detection
             function updateOnlineStatus() {
-                // If navigator.onLine is true, we verify with a tiny fetch
-                if (navigator.onLine) {
-                    offlineBanner.classList.remove('visible');
-                } else {
-                    offlineBanner.classList.add('visible');
-                }
+                if (navigator.onLine) offlineBanner.classList.remove('visible');
+                else offlineBanner.classList.add('visible');
             }
-
-            // Listen for changes
             window.addEventListener('online', updateOnlineStatus);
             window.addEventListener('offline', updateOnlineStatus);
-            
-            // Run on load
             updateOnlineStatus();
 
-            // Intersection Observer for Reveal
             const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) entry.target.classList.add('active');
                 });
             }, { threshold: 0.1 });
-
             document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-            // Mobile Menu
             const mobileMenu = document.getElementById('mobile-menu');
             const mobileOverlay = document.getElementById('mobile-menu-overlay');
             const openBtn = document.getElementById('open-menu');
             const closeBtn = document.getElementById('close-menu');
-            const mobileNavLinks = document.getElementById('mobile-nav-links');
-
+            
             function toggleMobileMenu(show) {
                 if (show) {
                     mobileMenu.classList.remove('closed');
                     mobileOverlay.classList.remove('hidden');
-                    setTimeout(() => {
-                        mobileOverlay.classList.add('opacity-100');
-                        mobileNavLinks.classList.add('stagger-active');
-                    }, 50);
+                    setTimeout(() => mobileOverlay.classList.add('opacity-100'), 50);
                     document.body.style.overflow = 'hidden';
                 } else {
                     mobileMenu.classList.add('closed');
-                    mobileNavLinks.classList.remove('stagger-active');
                     mobileOverlay.classList.remove('opacity-100');
                     setTimeout(() => mobileOverlay.classList.add('hidden'), 300);
                     document.body.style.overflow = '';
                 }
             }
-
             openBtn?.addEventListener('click', () => toggleMobileMenu(true));
             closeBtn?.addEventListener('click', () => toggleMobileMenu(false));
             mobileOverlay?.addEventListener('click', () => toggleMobileMenu(false));
-
-            const links = document.querySelectorAll('.stagger-item');
-            links.forEach((link, i) => {
-                link.style.transitionDelay = `${i * 50}ms`;
-            });
         });
     </script>
 </body>
