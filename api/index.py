@@ -200,17 +200,39 @@ def update_settings():
 @app.route('/admin/add-nav', methods=['POST'])
 @login_required
 def add_nav_link():
-    """Injects a dynamic link into the navbar manager."""
+    """Injects a dynamic link into the navbar manager with validation."""
+    label = request.form.get("label", "").strip()
+    url = request.form.get("url", "").strip()
+
+    # 1. Block blank values and spaces
+    if not label or not url or " " in url:
+        # You might want to use flash() here to notify the user
+        return redirect(url_for('admin_dashboard'))
+
+    # 2. TLD Check: If it contains a dot and isn't an internal path or already an absolute URL
+    # Registers as external by prepending https://
+    if "." in url and not url.startswith(('/', 'http://', 'https://')):
+        url = f"https://{url}"
+
+    # 3. Duplicate Check: Ensure the route doesn't already exist in global_config
+    config = settings_collection.find_one({"name": "global_config"})
+    if config and "nav_links" in config:
+        # Check if URL already exists (case-insensitive)
+        if any(link.get('url', '').lower() == url.lower() for link in config["nav_links"]):
+            return redirect(url_for('admin_dashboard'))
+
+    # 4. Final Injection
     new_link = {
-        "label": request.form.get("label", ""),
-        "url": request.form.get("url", "")
+        "label": label,
+        "url": url
     }
-    if new_link["label"] and new_link["url"]:
-        settings_collection.update_one({"name": "global_config"},
-                                       {"$push": {
-                                           "nav_links": new_link
-                                       }},
-                                       upsert=True)
+
+    settings_collection.update_one(
+        {"name": "global_config"},
+        {"$push": {"nav_links": new_link}},
+        upsert=True
+    )
+
     return redirect(url_for('admin_dashboard'))
 
 

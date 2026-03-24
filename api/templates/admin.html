@@ -1,54 +1,48 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-6 py-12 space-y-12 reveal">
-    
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-8 border-b border-zinc-900">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight text-zinc-100 uppercase font-mono">System_Dashboard</h1>
-            <p class="text-zinc-500 text-sm mt-1">Configure site architecture and monitor deployment metrics.</p>
+            <h1 class="text-3xl font-bold tracking-tight text-zinc-100 uppercase font-mono">Administration_Panel</h1>
+            <p class="text-zinc-500 text-sm mt-1">Manage site content, navigation structure, and system availability.</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
             <button onclick="toggleSettingsModal(true)" class="btn btn-secondary !px-5 !text-[11px] font-bold uppercase tracking-widest flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Site Settings
+                System Settings
             </button>
-
             <div class="flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-md focus-within:border-zinc-600 transition-colors shadow-sm flex-grow md:flex-grow-0">
-                <input type="text" id="new_slug" placeholder="Entry route..." class="bg-transparent px-4 py-2 text-sm text-zinc-300 focus:outline-none w-full md:w-48 placeholder:text-zinc-700 font-mono">
-                <button onclick="handleSlugRedirect()" class="btn btn-primary !min-h-[36px] !px-5 !text-[11px] font-bold uppercase tracking-widest">
-                    Create
-                </button>
+                <input type="text" id="new_slug" placeholder="Enter page slug..." class="bg-transparent px-4 py-2 text-sm text-zinc-300 focus:outline-none w-full md:w-48 placeholder:text-zinc-700 font-mono">
+                <button onclick="handleSlugRedirect()" class="btn btn-primary !min-h-[36px] !px-5 !text-[11px] font-bold uppercase tracking-widest">Add Page</button>
             </div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-zinc-900 border border-zinc-800 p-8 rounded shadow-sm">
-            <p class="text-[11px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Active Nodes</p>
+            <p class="text-[11px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Total Pages</p>
             <div class="flex items-baseline gap-2 mt-4 text-zinc-100 font-bold">
                 <p class="text-4xl tabular-nums">{{ pages|length }}</p>
-                <p class="text-xs text-zinc-700 uppercase font-mono tracking-tighter">Verified</p>
+                <p class="text-xs text-zinc-700 uppercase font-mono tracking-tighter">Published</p>
             </div>
         </div>
-
         <div class="bg-zinc-900 border border-zinc-800 p-8 rounded shadow-sm">
             <div class="flex justify-between items-start">
-                <p class="text-[11px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Global Telemetry</p>
-                <a href="/admin/analytics" class="text-brand text-[10px] font-mono font-bold hover:underline uppercase tracking-widest">Logs →</a>
+                <p class="text-[11px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Traffic Overview</p>
+                <a href="/admin/analytics" class="text-brand text-[10px] font-mono font-bold hover:underline uppercase tracking-widest">View Analytics →</a>
             </div>
             <div class="flex items-baseline gap-2 mt-4 text-zinc-100 font-bold">
                 <p class="text-4xl tabular-nums">{{ total_hits }}</p>
-                <p class="text-xs text-zinc-700 uppercase font-mono tracking-tighter">Requests</p>
+                <p class="text-xs text-zinc-700 uppercase font-mono tracking-tighter">Total Visits</p>
             </div>
         </div>
-
         <div class="bg-zinc-900 border border-zinc-800 p-8 rounded shadow-sm">
-            <p class="text-[11px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Runtime Status</p>
+            <p class="text-[11px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Site Status</p>
             <div class="flex items-center gap-3 mt-4">
                 <div class="w-2 h-2 rounded-full {{ 'bg-red-500 animate-pulse' if maintenance_active else 'bg-emerald-500' }}"></div>
                 <p class="text-xl font-bold {{ 'text-red-500' if maintenance_active else 'text-emerald-500' }} uppercase font-mono">
-                    {{ "Maintenance" if maintenance_active else "Operational" }}
+                    {{ "Maintenance" if maintenance_active else "Online" }}
                 </p>
             </div>
         </div>
@@ -56,14 +50,14 @@
 
     <div class="bg-zinc-900 border border-zinc-800 rounded shadow-sm overflow-hidden">
         <div class="px-8 py-5 border-b border-zinc-800 bg-zinc-950/50 flex justify-between items-center">
-            <h2 class="font-mono text-[11px] text-zinc-400 uppercase tracking-[0.2em]">Node Inventory</h2>
+            <h2 class="font-mono text-[11px] text-zinc-400 uppercase tracking-[0.2em]">Page Directory</h2>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-zinc-950/30">
-                        <th class="px-8 py-4 text-[11px] font-mono text-zinc-600 uppercase tracking-widest">Resource</th>
-                        <th class="px-8 py-4 text-[11px] font-mono text-zinc-600 uppercase tracking-widest hidden md:table-cell">Timestamp</th>
+                        <th class="px-8 py-4 text-[11px] font-mono text-zinc-600 uppercase tracking-widest">Page Title</th>
+                        <th class="px-8 py-4 text-[11px] font-mono text-zinc-600 uppercase tracking-widest hidden md:table-cell">Last Modified</th>
                         <th class="px-8 py-4 text-[11px] font-mono text-zinc-600 uppercase tracking-widest text-right">Actions</th>
                     </tr>
                 </thead>
@@ -75,7 +69,7 @@
                             <div class="text-zinc-600 text-[11px] font-mono mt-1">/{{ p.slug if p.slug != 'home' else '' }}</div>
                         </td>
                         <td class="px-8 py-6 text-zinc-700 text-xs font-mono hidden md:table-cell">
-                            {{ p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '0000-00-00' }}
+                            {{ p.updated_at.strftime('%Y-%m-%d') if p.updated_at else 'N/A' }}
                         </td>
                         <td class="px-8 py-6 text-right flex justify-end gap-3">
                             <a href="/{{ p.slug if p.slug != 'home' else '' }}" target="_blank" class="w-9 h-9 flex items-center justify-center bg-zinc-950 border border-zinc-800 hover:border-zinc-600 rounded text-zinc-500 hover:text-zinc-100 transition-all">
@@ -93,121 +87,132 @@
     </div>
 </div>
 
-<div id="maintenance-modal" class="hidden fixed inset-0 z-[600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-[#252526] border border-zinc-800 w-full max-w-md p-8 rounded-lg shadow-2xl">
-        <div class="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded flex items-center justify-center mb-6">
-            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-        </div>
-        <h3 class="text-white font-bold text-xl mb-2 uppercase tracking-tight" id="m-modal-title">Confirm Action</h3>
-        <p class="text-zinc-400 text-sm mb-8 leading-relaxed" id="m-modal-desc">
-            This will modify public access to all site nodes. Are you sure you want to continue?
-        </p>
-        <div class="flex flex-col gap-3">
-            <a id="m-confirm-btn" href="/admin/toggle-maintenance" class="w-full bg-red-600 py-3 text-white text-[11px] font-bold uppercase tracking-widest rounded hover:bg-red-500 text-center transition-colors">
-                Confirm Change
-            </a>
-            <button onclick="toggleMaintenanceUI(false)" class="w-full py-3 text-zinc-500 text-[11px] font-bold uppercase tracking-widest hover:text-zinc-200 transition-colors">
-                Cancel
-            </button>
-        </div>
-    </div>
-</div>
-
-<div id="settings-modal" class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-zinc-900 max-w-4xl w-full border border-zinc-800 shadow-2xl rounded-sm flex flex-col max-h-[90vh]">
+<div id="settings-modal" class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-zinc-950/95 backdrop-blur-xl hidden opacity-0 transition-all duration-300">
+    <div class="bg-zinc-900 max-w-5xl w-full border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-lg flex flex-col max-h-[85vh] overflow-hidden">
         
-        <div class="px-8 py-5 border-b border-zinc-800 bg-zinc-950/50 flex items-center justify-between">
-            <div class="flex flex-col">
-                <h2 class="font-mono text-[11px] text-zinc-100 uppercase tracking-[0.2em]">Global Configuration</h2>
-                <span class="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mt-1">v3.2.0-stable</span>
+        <div class="px-8 py-6 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-brand/10 border border-brand/20 rounded flex items-center justify-center text-brand">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-zinc-100 text-lg leading-tight">System Settings</h2>
+                    <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Administrative Access: Authorized</span>
+                </div>
             </div>
-            <button onclick="toggleSettingsModal(false)" class="text-zinc-500 hover:text-white transition-colors p-2">
+            <button onclick="toggleSettingsModal(false)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-white transition-all">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
-        <div class="overflow-y-auto flex-grow p-8 custom-scrollbar">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div class="flex flex-grow overflow-hidden">
+            <div class="w-64 border-r border-zinc-800 bg-zinc-950/30 p-4 hidden md:flex flex-col gap-1">
+                <div class="px-4 py-2 text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">Categories</div>
                 
-                <div class="space-y-8">
-                    <div class="p-6 bg-zinc-950 border border-zinc-800 rounded">
-                        <h3 class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest mb-4">Runtime_control</h3>
+                <button onclick="switchTab('nav-tab', this)" class="tab-btn flex items-center gap-3 px-4 py-2.5 rounded text-sm font-medium transition-all bg-brand/10 text-brand border border-brand/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                    Navigation Menu
+                </button>
+
+                <button onclick="switchTab('maintenance-tab', this)" class="tab-btn flex items-center gap-3 px-4 py-2.5 rounded text-sm font-medium transition-all text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Maintenance Mode
+                </button>
+
+                <div class="mt-auto p-4 border-t border-zinc-800/50">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <span class="text-[10px] font-mono text-zinc-400 uppercase">Server_Online</span>
+                    </div>
+                    <span class="text-[9px] font-mono text-zinc-600 uppercase">Build 3.2.0</span>
+                </div>
+            </div>
+
+            <div class="flex-grow overflow-y-auto p-8 custom-scrollbar bg-zinc-900/50">
+                <div class="max-w-3xl mx-auto">
+                    
+                    <div id="nav-tab" class="tab-content space-y-8">
                         <div class="flex items-center justify-between">
-                            <div class="space-y-1">
-                                <p class="text-xs font-bold text-zinc-100 uppercase font-mono">{{ "MAINTENANCE" if maintenance_active else "OPERATIONAL" }}</p>
-                                <p class="text-[10px] text-zinc-600 font-mono tracking-tight">Access Control Status</p>
+                            <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Navigation Links</h3>
+                            <span class="text-[10px] text-zinc-700 font-mono">{{ settings.nav_links|length }} / 8 Slots Used</span>
+                        </div>
+
+                        <div class="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden shadow-inner">
+                            <table class="w-full text-left table-fixed">
+                                <tbody class="divide-y divide-zinc-900">
+                                    {% for link in settings.nav_links %}
+                                    <tr class="hover:bg-zinc-900/30 transition-all group">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col gap-0.5">
+                                                <span class="font-bold text-zinc-200 text-sm group-hover:text-brand transition-colors">{{ link.label }}</span>
+                                                <span class="text-zinc-600 font-mono text-[10px] truncate">{{ link.url }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <a href="{{ url_for('delete_nav_link', index=loop.index0) }}" class="inline-flex w-8 h-8 items-center justify-center rounded bg-zinc-900 border border-zinc-800 text-zinc-600 hover:text-red-500 hover:border-red-500/50 transition-all">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <form action="/admin/add-nav" method="POST" class="p-6 bg-zinc-900/30 border border-zinc-800 border-dashed rounded-lg flex flex-col gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-mono text-zinc-600 uppercase px-1">Display Label</label>
+                                    <input type="text" name="label" placeholder="e.g. Projects" maxlength="20" required pattern="^\S.*$" class="w-full bg-zinc-950 border border-zinc-800 rounded-md px-4 py-2 text-xs text-zinc-200 focus:border-brand/50 outline-none">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-mono text-zinc-600 uppercase px-1">Target URL</label>
+                                    <input type="text" name="url" placeholder="/projects or external link" required pattern="^\S+$" class="w-full bg-zinc-950 border border-zinc-800 rounded-md px-4 py-2 text-xs text-zinc-200 focus:border-brand/50 outline-none">
+                                </div>
                             </div>
-                            <button onclick="toggleMaintenanceUI(true, {{ 'true' if maintenance_active else 'false' }})" class="btn {{ 'bg-red-600 text-white hover:bg-red-500' if not maintenance_active else 'btn-secondary' }} !py-2 !px-4 !text-[10px] uppercase font-bold tracking-widest">
-                                Toggle State
+                            <button type="submit" class="w-full py-2.5 bg-zinc-100 hover:bg-white text-zinc-950 text-[10px] font-bold uppercase tracking-widest rounded transition-all">Add Navigation Item</button>
+                        </form>
+                    </div>
+
+                    <div id="maintenance-tab" class="tab-content hidden space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Availability Control</h3>
+                        </div>
+                        <div class="p-8 bg-zinc-950 border border-zinc-800 rounded-lg flex flex-col items-center text-center gap-6 shadow-inner">
+                            <div class="w-16 h-16 rounded-full flex items-center justify-center {{ 'bg-red-500/10 text-red-500' if maintenance_active else 'bg-emerald-500/10 text-emerald-500' }}">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <div class="space-y-2">
+                                <h4 class="text-lg font-bold text-zinc-100 uppercase tracking-tight">
+                                    Current Mode: {{ "Maintenance" if maintenance_active else "Public" }}
+                                </h4>
+                                <p class="text-sm text-zinc-500 max-w-sm mx-auto">Enabling maintenance mode will restrict site access to administrative users only.</p>
+                            </div>
+                            <button onclick="toggleMaintenanceUI(true, {{ 'true' if maintenance_active else 'false' }})" 
+                                class="btn {{ 'bg-red-600 text-white hover:bg-red-500' if not maintenance_active else 'btn-secondary' }} !py-3 !px-10 !text-[11px] uppercase font-bold tracking-widest transition-all">
+                                Toggle Maintenance
                             </button>
                         </div>
                     </div>
 
-                    <form action="/admin/update-settings" method="POST" class="space-y-8">
-                        <div>
-                            <h3 class="text-[10px] font-mono font-bold text-brand uppercase tracking-widest mb-6 border-l-2 border-brand pl-4">Identity</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-mono text-zinc-500 uppercase">First Name</label>
-                                    <input type="text" name="site_name_first" value="{{ settings.site_name_first }}" class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:border-zinc-600 outline-none transition-colors">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-mono text-zinc-500 uppercase">Last Name</label>
-                                    <input type="text" name="site_name_last" value="{{ settings.site_name_last }}" class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:border-zinc-600 outline-none transition-colors">
-                                </div>
-                            </div>
-                        </div>
-
-                        <label class="flex items-center justify-between group cursor-pointer p-4 bg-zinc-950 border border-zinc-800 rounded hover:border-zinc-700 transition-colors">
-                            <div class="flex flex-col">
-                                <span class="text-xs text-zinc-300 font-medium font-mono uppercase">Header Visibility</span>
-                                <span class="text-[10px] text-zinc-600 font-mono">Render global navigation</span>
-                            </div>
-                            <input type="checkbox" name="show_navbar" value="true" {% if settings.show_navbar %}checked{% endif %} class="w-4 h-4 accent-brand bg-zinc-950 border-zinc-800">
-                        </label>
-
-                        <button type="submit" class="btn btn-primary w-full py-4 font-bold uppercase tracking-widest text-[11px]">Commit Core Changes</button>
-                    </form>
                 </div>
-
-                <div class="space-y-8">
-                    <h3 class="text-[10px] font-mono font-bold text-brand uppercase tracking-widest mb-6 border-l-2 border-brand pl-4">Navigation_Structure</h3>
-                    
-                    <div class="bg-zinc-950 border border-zinc-800 rounded overflow-hidden">
-                        <table class="w-full text-left">
-                            <tbody class="divide-y divide-zinc-800/50">
-                                {% for link in settings.nav_links %}
-                                <tr class="hover:bg-zinc-950/40 transition-colors group">
-                                    <td class="px-8 py-6">
-                                        <div class="font-bold text-zinc-200 group-hover:text-white transition-colors">{{ link.label }}</div>
-                                        <div class="text-zinc-500 text-[11px] font-mono mt-1">{{ link.url }}</div>
-                                    </td>
-                                    <td class="px-8 py-6 text-right">
-                                        <a href="{{ url_for('delete_nav_link', index=loop.index0) }}" class="w-10 h-10 flex items-center justify-center bg-zinc-950 border border-zinc-800 hover:border-red-500 rounded text-zinc-700 hover:text-red-500 transition-all shadow-sm ml-auto">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="2" class="px-8 py-10 text-center text-zinc-600 text-xs font-mono italic">No navigation links configured</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <form action="/admin/add-nav" method="POST" class="p-4 bg-zinc-950 border border-zinc-800 border-dashed space-y-3">
-                        <p class="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Append Link</p>
-                        <input type="text" name="label" placeholder="Label" class="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-[10px] text-zinc-300 font-mono outline-none">
-                        <input type="text" name="url" placeholder="URL Target" class="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-[10px] text-zinc-300 font-mono outline-none">
-                        <button type="submit" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-[9px] text-zinc-300 font-bold uppercase tracking-widest rounded transition-all">Register Link</button>
-                    </form>
-                </div>
-
             </div>
+        </div>
+    </div>
+</div>
+
+<div id="maintenance-modal" class="hidden fixed inset-0 z-[600] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 w-full max-w-md p-8 rounded-lg shadow-2xl">
+        <div class="w-12 h-12 bg-red-500/10 border border-red-500/20 rounded flex items-center justify-center mb-6">
+            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 class="text-white font-bold text-xl mb-2 uppercase tracking-tight" id="m-modal-title">Confirm Access Change</h3>
+        <p class="text-zinc-500 text-sm mb-8 leading-relaxed" id="m-modal-desc">
+            This action will modify public visibility. Please confirm you wish to proceed.
+        </p>
+        <div class="flex flex-col gap-3">
+            <a id="m-confirm-btn" href="/admin/toggle-maintenance" class="w-full bg-red-600 py-3 text-white text-[11px] font-bold uppercase tracking-widest rounded hover:bg-red-500 text-center transition-colors">Confirm</a>
+            <button onclick="toggleMaintenanceUI(false)" class="w-full py-3 text-zinc-600 text-[11px] font-bold uppercase tracking-widest hover:text-zinc-200 transition-colors">Cancel</button>
         </div>
     </div>
 </div>
@@ -220,7 +225,6 @@
         window.location.href = '/admin/edit/' + slug;
     }
 
-// New Function for Custom Maintenance UI
     function toggleMaintenanceUI(show, isActive = false) {
         const modal = document.getElementById('maintenance-modal');
         const title = document.getElementById('m-modal-title');
@@ -228,12 +232,11 @@
         const btn = document.getElementById('m-confirm-btn');
 
         if (show) {
-            title.textContent = isActive ? "Deactivate Maintenance?" : "Activate Maintenance?";
+            title.textContent = isActive ? "Disable Maintenance?" : "Enable Maintenance?";
             desc.textContent = isActive 
-                ? "This will restore public access to all nodes and resume normal site operations." 
-                : "This will block public access to all nodes. Only authenticated administrators will be able to view content.";
+                ? "Restoring public access. Site will be visible to all users." 
+                : "Restricting site access. Only administrators will be able to view pages.";
             
-            // Toggle button color based on action
             if(isActive) {
                 btn.classList.replace('bg-red-600', 'bg-emerald-600');
                 btn.classList.replace('hover:bg-red-500', 'hover:bg-emerald-500');
@@ -241,7 +244,6 @@
                 btn.classList.replace('bg-emerald-600', 'bg-red-600');
                 btn.classList.replace('hover:bg-emerald-500', 'hover:bg-red-500');
             }
-
             modal.classList.remove('hidden');
         } else {
             modal.classList.add('hidden');
@@ -252,11 +254,26 @@
         const modal = document.getElementById('settings-modal');
         if (show) {
             modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.add('opacity-100'), 10);
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+            }, 10);
         } else {
             modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
+    }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('bg-brand/10', 'text-brand', 'border-brand/20');
+            b.classList.add('text-zinc-500', 'hover:text-zinc-200', 'hover:bg-zinc-800/50');
+        });
+        btn.classList.add('bg-brand/10', 'text-brand', 'border-brand/20');
+        btn.classList.remove('text-zinc-500', 'hover:text-zinc-200', 'hover:bg-zinc-800/50');
     }
 </script>
 {% endblock %}
