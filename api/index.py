@@ -14,6 +14,7 @@ import traceback
 import hmac
 import random
 import sys
+import hashlib
 
 load_dotenv()
 
@@ -87,47 +88,49 @@ def is_maintenance_mode():
         return False
 
 
+def generate_visitor_hash():
+    """Creates a unique, anonymous identifier for a device."""
+    remote_addr = request.remote_addr or "127.0.0.1"
+    user_agent = request.headers.get('User-Agent', 'unknown')
+
+    # Combine IP and User-Agent to create a fingerprint
+    fingerprint = f"{remote_addr}{user_agent}"
+
+    # Hash the fingerprint so we don't store plain-text PII (Personally Identifiable Information)
+    return hashlib.sha256(fingerprint.encode()).hexdigest()
+
 def log_visit(path, status_code=200):
-    if path.startswith('admin') or path.startswith(
-            'static') or path == 'favicon.ico':
+    if any(path.startswith(x) for x in ['admin', 'static', '_preview']) or path == 'favicon.ico':
         return
 
-    # 1. Detect Source
+    # Generate the hashed ID
+    visitor_id = generate_visitor_hash()
+
+    # Clean Referrer Logic
     custom_ref = request.args.get('redirectfrom')
     raw_referrer = request.referrer or ""
-    current_host = request.host  # e.g., klhportfolio.vercel.app
+    current_host = request.host
 
-    # 2. Filter out internal redirects
     if current_host in raw_referrer and not custom_ref:
         final_source = "Direct / Internal"
-        full_url = raw_referrer
     else:
-        # 3. Clean Naming Logic
         ref_low = raw_referrer.lower()
-        if custom_ref:
-            final_source = f"Campaign: {custom_ref}"
-        elif "google" in ref_low:
-            final_source = "Google Search"
-        elif "linkedin" in ref_low:
-            final_source = "LinkedIn"
-        elif "github" in ref_low:
-            final_source = "GitHub"
-        elif not raw_referrer:
-            final_source = "Direct Entry"
-        else:
-            final_source = raw_referrer.split('//')[-1].split('/')[
-                0]  # Get domain only
-
-        full_url = raw_referrer
+        if custom_ref: final_source = f"Campaign: {custom_ref}"
+        elif "google" in ref_low: final_source = "Google Search"
+        elif "linkedin" in ref_low: final_source = "LinkedIn"
+        elif "github" in ref_low: final_source = "GitHub"
+        elif not raw_referrer: final_source = "Direct Entry"
+        else: final_source = raw_referrer.split('//')[-1].split('/')[0]
 
     analytics_collection.insert_one({
         "path": path,
         "status_code": status_code,
         "timestamp": datetime.now(),
-        "ip": request.remote_addr,
-        "agent": request.headers.get('User-Agent'),
+        "visitor_hash": visitor_id, # Replaces IP with a secure hash
         "referrer": final_source,
-        "full_referrer_url": full_url
+        # We store the Agent once but hashed if you want full privacy, 
+        # or plain text if you still want to see 'Chrome' vs 'Firefox' stats.
+        "agent": request.headers.get('User-Agent') 
     })
 
 
@@ -707,9 +710,8 @@ def admin_analytics():
         chart_labels.append(label)
         chart_values.append(raw_graph_data.get(key, 0))
 
-    # 7. AGGREGATE SIDEBAR STATS
-    unique_visitors = len(analytics_collection.distinct("ip", base_filter))
-    online_count = len(analytics_collection.distinct("ip", {"timestamp": {"$gt": now - timedelta(minutes=5)}}))
+    unique_visitors = len(analytics_collection.distinct("visitor_hash", base_filter))
+    online_count = len(analytics_collection.distinct("visitor_hash", {"timestamp": {"$gt": now - timedelta(minutes=5)}}))
     
     stats = {"browsers": {}, "os": {}, "devices": {}, "referrers": {}, "referrers_detailed": {}}
     logs = list(analytics_collection.find(base_filter))
