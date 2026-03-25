@@ -100,13 +100,32 @@ def generate_visitor_hash():
     return hashlib.sha256(fingerprint.encode()).hexdigest()
 
 def log_visit(path, status_code=200):
+    # Ignore internal system paths
     if any(path.startswith(x) for x in ['admin', 'static', '_preview']) or path == 'favicon.ico':
         return
 
-    # Generate the hashed ID
+    # --- ENHANCED BOT DETECTION ---
+    ua_string = request.headers.get('User-Agent', '')
+    user_agent = parse(ua_string)
+
+    # list of specific bot identifiers for Google, Discord, LinkedIn, Bing, and Vercel
+    bot_keywords = [
+        'bot', 'crawler', 'spider', 'slurp', 'lighthouse', # General
+        'googlebot', 'google-keyword-suggestion',         # Google
+        'discordbot',                                     # Discord
+        'linkedinbot',                                    # LinkedIn
+        'bingbot', 'bingpreview', 'msnbot',               # Microsoft/Bing
+        'vercel', 'vercel-screenshot', 'vercel-bot'       # Vercel
+    ]
+
+    # 1. Check if the library identifies it as a bot
+    # 2. Check for the specific keywords defined above
+    is_bot = user_agent.is_bot or any(x in ua_string.lower() for x in bot_keywords)
+
+    # --- PRIVACY & HASHING ---
     visitor_id = generate_visitor_hash()
 
-    # Clean Referrer Logic
+    # --- REFERRER LOGIC ---
     custom_ref = request.args.get('redirectfrom')
     raw_referrer = request.referrer or ""
     current_host = request.host
@@ -122,15 +141,15 @@ def log_visit(path, status_code=200):
         elif not raw_referrer: final_source = "Direct Entry"
         else: final_source = raw_referrer.split('//')[-1].split('/')[0]
 
+    # --- COMMIT TO DB ---
     analytics_collection.insert_one({
         "path": path,
         "status_code": status_code,
         "timestamp": datetime.now(),
-        "visitor_hash": visitor_id, # Replaces IP with a secure hash
+        "visitor_hash": visitor_id,
         "referrer": final_source,
-        # We store the Agent once but hashed if you want full privacy, 
-        # or plain text if you still want to see 'Chrome' vs 'Firefox' stats.
-        "agent": request.headers.get('User-Agent') 
+        "agent": ua_string,
+        "is_bot": is_bot 
     })
 
 
@@ -599,20 +618,18 @@ def preview_node():
 @login_required
 def admin_analytics():
     now = datetime.now()
-    
+
     # 1. CAPTURE INPUTS
     time_range = request.args.get('range', '7d')
     target_date = request.args.get('date') 
-    
+    show_bots = request.args.get('bots') == 'true' # Bot Preference
+
     # 2. HANDLE TIME RANGE & DRILL-DOWN
     if target_date:
         try:
             parsed_date = datetime.strptime(f"{target_date} {now.year}", "%b %d %Y")
-            start_date = parsed_date
-            end_date = parsed_date + timedelta(days=1)
-            display_range = f"Drill-down: {target_date}"
-            date_format = "%Y-%m-%d %H:00"
-            steps, delta_unit = 23, "hours"
+            start_date, end_date = parsed_date, parsed_date + timedelta(days=1)
+            display_range, date_format, steps, delta_unit = f"Drill-down: {target_date}", "%Y-%m-%d %H:00", 23, "hours"
         except ValueError:
             start_date, end_date = now - timedelta(days=7), now
             display_range, date_format, steps, delta_unit = "7d", "%Y-%m-%d", 7, "days"
@@ -625,12 +642,7 @@ def admin_analytics():
     elif time_range == 'all':
         first_log = analytics_collection.find_one({"status_code": 200}, sort=[("timestamp", 1)])
         start_date = first_log['timestamp'] if first_log else now - timedelta(days=365)
-        end_date = now
-        display_range = "All Time"
-        # KEY CHANGE: Keep daily granularity for the data points
-        date_format = "%Y-%m-%d" 
-        
-        # Calculate total days between start and now
+        end_date, display_range, date_format = now, "All Time", "%Y-%m-%d"
         delta = end_date - start_date
         steps, delta_unit = delta.days, "days"
     else:
@@ -641,81 +653,71 @@ def admin_analytics():
     valid_filters = ['path', 'referrer', 'browser', 'os', 'device']
     active_filters = {k: request.args.get(k) for k in valid_filters if request.args.get(k)}
 
-    # 4. BUILD BASE DB FILTER (Affects Stats and Chart)
+    # 4. BUILD BASE DB FILTER
     base_filter = {
         "status_code": 200, 
         "timestamp": {"$gte": start_date, "$lt": end_date}
     }
-    
-    # --- CHART SYNC LOGIC ---
-    # Apply category filters directly to the DB query so the chart reflects them
+
+    # Apply Bot Filter
+    if not show_bots:
+        base_filter["is_bot"] = {"$ne": True}
+
     if 'path' in active_filters: base_filter['path'] = active_filters['path']
     if 'referrer' in active_filters: base_filter['referrer'] = active_filters['referrer']
-    
-    # Note: browser/os/device are parsed from User-Agent string via Python.
-    # To filter the CHART by these, we must filter the logs BEFORE aggregating, 
-    # or use a regex/keyword search if stored in DB. 
-    # Since we parse UA in Python, we'll filter the chart data manually for these.
 
     # 5. DYNAMIC CHART PIPELINE
     graph_pipeline = [
         {"$match": base_filter},
         {"$group": {
             "_id": {"$dateToString": {"format": date_format, "date": "$timestamp"}},
-            "logs": {"$push": "$agent"}, # Push agents to filter UA-based stats in Python
+            "logs": {"$push": "$agent"},
             "count": {"$sum": 1}
         }},
         {"$sort": {"_id": 1}}
     ]
     raw_results = list(analytics_collection.aggregate(graph_pipeline))
-    
-    # Process results to respect UA filters (Browser, OS, Device)
+
     raw_graph_data = {}
     for entry in raw_results:
         key = entry['_id']
         valid_count = 0
         for agent in entry['logs']:
             ua = parse(agent or '')
-            browser = ua.browser.family
-            os_family = ua.os.family
+            browser, os_family = ua.browser.family, ua.os.family
             device = "Mobile" if ua.is_mobile else "Tablet" if ua.is_tablet else "Desktop"
-            
-            # Check if this log matches our UA filters
+
             if 'browser' in active_filters and active_filters['browser'] != browser: continue
             if 'os' in active_filters and active_filters['os'] != os_family: continue
             if 'device' in active_filters and active_filters['device'] != device: continue
-            
             valid_count += 1
         raw_graph_data[key] = valid_count
 
     # 6. GENERATE LABELS & VALUES
     chart_labels, chart_values = [], []
     for i in range(steps, -1, -1):
-        if delta_unit == "months":
-            # Calculate the specific month/year for this step
-            dt = now - timedelta(days=i*30) # Rough estimate for key lookup
-            # Better: specifically calculate the month start
-            month_idx = (now.month - 1) - i
-            year_val = now.year + (month_idx // 12)
-            month_val = (month_idx % 12) + 1
-            dt = datetime(year_val, month_val, 1)
-            
-            key = dt.strftime(date_format)
-            label = dt.strftime("%b") # Just "Jan", "Feb", etc.
+        dt = end_date - timedelta(hours=i) if delta_unit == "hours" else end_date - timedelta(days=i)
+
+        # This is the unique key used to match the DB results
+        key = dt.strftime(date_format)
+
+        # CHANGE THIS: If we are in hours mode, include the date in the label
+        if delta_unit == "hours":
+            # Sending "Mar 25 00:00" allows JS to split and check both parts
+            label = dt.strftime("%b %d %H:00") 
         else:
-            dt = end_date - timedelta(hours=i) if delta_unit == "hours" else end_date - timedelta(days=i)
-            key = dt.strftime(date_format)
-            label = dt.strftime("%H:00" if delta_unit == "hours" else "%b %d")
-        
+            label = dt.strftime("%b %d")
+
         chart_labels.append(label)
         chart_values.append(raw_graph_data.get(key, 0))
 
+    # 7. AGGREGATE SIDEBAR STATS
     unique_visitors = len(analytics_collection.distinct("visitor_hash", base_filter))
     online_count = len(analytics_collection.distinct("visitor_hash", {"timestamp": {"$gt": now - timedelta(minutes=5)}}))
-    
+
     stats = {"browsers": {}, "os": {}, "devices": {}, "referrers": {}, "referrers_detailed": {}}
     logs = list(analytics_collection.find(base_filter))
-    
+
     filtered_logs_count = 0
     for log in logs:
         ua = parse(log.get('agent') or '')
@@ -730,7 +732,7 @@ def admin_analytics():
         stats["browsers"][browser] = stats["browsers"].get(browser, 0) + 1
         stats["os"][os_family] = stats["os"].get(os_family, 0) + 1
         stats["devices"][device] = stats["devices"].get(device, 0) + 1
-        
+
         ref_name = log.get('referrer', 'Direct Entry')
         stats["referrers"][ref_name] = stats["referrers"].get(ref_name, 0) + 1
         if ref_name not in stats["referrers_detailed"]:
@@ -743,23 +745,28 @@ def admin_analytics():
         {"$group": {"_id": "$path", "count": {"$sum": 1}}}, 
         {"$sort": {"count": -1}}, {"$limit": 8}
     ]))
-    
+
     error_logs = list(analytics_collection.find({
         "status_code": {"$gte": 400}, 
         "timestamp": {"$gte": start_date, "$lt": end_date}
     }).sort("timestamp", -1).limit(15))
 
-    # 9. HELPERS
+    # 9. HELPERS (Updated to preserve Bot state)
     def add_filter(new_type, new_val):
         params = active_filters.copy()
-        params[new_type], params['range'] = new_val, time_range
+        params.pop('bots', None) # CRITICAL: prevent duplicate key error
+        params[new_type] = new_val
+        params['range'] = time_range
+        params['bots'] = 'true' if show_bots else 'false'
         if target_date: params['date'] = target_date
         return params
 
     def remove_filter(type_to_remove):
         params = active_filters.copy()
+        params.pop('bots', None) # CRITICAL: prevent duplicate key error
         params.pop(type_to_remove, None)
         params['range'] = time_range
+        params['bots'] = 'true' if show_bots else 'false'
         if target_date: params['date'] = target_date
         return params
 

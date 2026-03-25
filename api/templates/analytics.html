@@ -51,17 +51,21 @@
                     {% if target_date %}
                     <div class="filter-tag flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-emerald-500 tracking-[0.2em]">
                         Timeline::{{ target_date }}
-                        <a href="{{ url_for('admin_analytics', range='7d', **active_filters) }}" class="filter-x hover:text-white ml-2 text-zinc-600 transition-colors font-bold">✕</a>
+                        <a href="{{ url_for('admin_analytics', range='7d', bots=request.args.get('bots', 'false'), **active_filters) }}" class="filter-x hover:text-white ml-2 text-zinc-600 transition-colors font-bold">✕</a>
                     </div>
                     {% endif %}
 
                     {% for type, val in active_filters.items() %}
-                    <div class="filter-tag flex items-center gap-2 bg-brand/5 border border-brand/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-brand tracking-[0.2em]">
-                        {{ type }}::{{ val }}
-                        <a href="{{ url_for('admin_analytics', **remove_filter(type)) }}" class="filter-x hover:text-white ml-2 text-zinc-600 transition-colors font-bold">✕</a>
-                    </div>
+                        {% if type != 'bots' %}
+                        <div class="filter-tag flex items-center gap-2 bg-brand/5 border border-brand/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-brand tracking-[0.2em]">
+                            {{ type }}::{{ val }}
+                            <a href="{{ url_for('admin_analytics', **remove_filter(type)) }}" class="filter-x hover:text-white ml-2 text-zinc-600 transition-colors font-bold">✕</a>
+                        </div>
+                        {% endif %}
                     {% endfor %}
-                    <a href="/admin/analytics" class="text-[9px] font-mono text-zinc-600 hover:text-white underline uppercase tracking-widest">Clear_All</a>
+                    
+                    {# Clear All now preserves bot setting #}
+                    <a href="{{ url_for('admin_analytics', bots=request.args.get('bots', 'false')) }}" class="text-[9px] font-mono text-zinc-600 hover:text-white underline uppercase tracking-widest">Clear_All</a>
                 {% endif %}
             </div>
         </div>
@@ -107,21 +111,33 @@
                 <p class="text-[9px] font-mono text-zinc-600 uppercase">Input: HTTPS_Requests // Span: {{ active_range }}</p>
             </div>
             
-            <div class="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm">
-                {% for r in ['24h', '7d', '4w', 'all'] %}
-                    {% if target_date %}
-                        <div class="range-locked px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
-                        {{ 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' if r == '24h' else 'text-zinc-800' }}">
-                            {{ r if r != 'all' else 'ALL' }}
-                        </div>
-                    {% else %}
-                        <a href="{{ url_for('admin_analytics', range=r, **active_filters) }}" 
-                        class="px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
-                        {{ 'bg-brand text-white' if active_range == r or (active_range == 'All Time' and r == 'all') else 'text-zinc-500 hover:text-zinc-300' }}">
-                            {{ r if r != 'all' else 'ALL' }}
-                        </a>
-                    {% endif %}
-                {% endfor %}
+            <div class="flex items-center gap-4">
+                <div class="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm">
+                    {% set bots_active = request.args.get('bots') == 'true' %}
+                    {% set toggle_val = 'false' if bots_active else 'true' %}
+                    <a href="{{ url_for('admin_analytics', range=request.args.get('range', '7d'), bots=toggle_val, **active_filters) }}" 
+                       class="px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-all
+                       {{ 'bg-red-500/10 text-red-500 border border-red-500/20' if bots_active else 'text-zinc-600 hover:text-zinc-300' }}">
+                        <i class="fa-solid fa-robot mr-1.5"></i> {{ 'Hide Bots' if bots_active else 'Show Bots' }}
+                    </a>
+                </div>
+
+                <div class="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm">
+                    {% for r in ['24h', '7d', '4w', 'all'] %}
+                        {% if target_date %}
+                            <div class="range-locked px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
+                            {{ 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' if r == '24h' else 'text-zinc-800' }}">
+                                {{ r if r != 'all' else 'ALL' }}
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('admin_analytics', range=r, bots=request.args.get('bots', 'false'), **active_filters) }}" 
+                            class="px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
+                            {{ 'bg-brand text-white' if active_range == r or (active_range == 'All Time' and r == 'all') else 'text-zinc-500 hover:text-zinc-300' }}">
+                                {{ r if r != 'all' else 'ALL' }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
         <div class="h-[350px] w-full">
@@ -336,35 +352,32 @@
                         autoSkip: false,
                         maxRotation: 0,
                         callback: function(val, index) {
-                            const label = this.getLabelForValue(val); // This is "Feb 01", "Feb 02", etc.
-                            
-                            {% if active_range == 'All Time' %}
-                                // Look for labels that represent the start of a month
-                                // Depending on your date format, we check if it's the 1st
-                                // We'll parse the label to check the day
-                                const date = new Date(label + ', {{ now.year }}');
-                                
-                                // Only show the label if it's the 1st day of the month
-                                if (date.getDate() === 1) {
-                                    return date.toLocaleString('default', { month: 'short' });
+                            const label = this.getLabelForValue(val);
+
+                            {% if active_range == '24h' or delta_unit == 'hours' %}
+                                // label format: "Mar 25 14:00"
+                                const parts = label.split(' ');
+                                const datePart = parts[0] + ' ' + parts[1]; // "Mar 25"
+                                const timePart = parts[2]; // "14:00"
+
+                                // 1. If it's midnight, show the Date instead of 00:00
+                                if (timePart === "00:00") {
+                                    return datePart;
                                 }
-                                
-                                // Optional: Always show the very first and very last point labels
-                                if (index === 0 || index === {{ chart_labels|length - 1 }}) {
-                                    return date.toLocaleString('default', { month: 'short' });
+
+                                // 2. Otherwise, show the hour every 4 hours
+                                // (But skip if it's the very first/last to avoid overlap)
+                                if (index % 4 === 0 && index !== 0) {
+                                    return timePart;
                                 }
-                                
-                                return ''; 
+
+                                return '';
                             {% elif active_range == '4w' %}
-                                // ... your existing 4w logic ...
                                 const date = new Date(label + ', {{ now.year }}');
-                                if (index === 0 || index === {{ chart_labels|length - 1 }} || date.getDay() === 1) {
-                                    return label;
-                                }
+                                if (index === 0 || index === {{ chart_labels|length - 1 }} || date.getDay() === 1) return label;
                                 return '';
                             {% else %}
-                                const skipInterval = {{ '4' if active_range == '24h' or delta_unit == 'hours' else '1' }};
-                                return (index % skipInterval === 0) ? label : '';
+                                return label;
                             {% endif %}
                         }
                     } 
