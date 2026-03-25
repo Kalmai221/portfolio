@@ -261,118 +261,194 @@
         {% block content %}{% endblock %}
     </main>
 
-<footer class="border-t border-zinc-900 bg-zinc-950 pt-24 pb-12 reveal">
-    <div class="max-w-7xl mx-auto px-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-            <div class="space-y-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                        <span class="text-zinc-100 font-bold text-xs tracking-tighter">KH</span>
+    <footer class="border-t border-zinc-900 bg-zinc-950 pt-24 pb-12 reveal">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                            <span class="text-zinc-100 font-bold text-xs tracking-tighter">KH</span>
+                        </div>
+                        <span class="text-zinc-100 font-bold text-sm tracking-tight">Kurtis-Lee Hopewell</span>
                     </div>
-                    <span class="text-zinc-100 font-bold text-sm tracking-tight">Kurtis-Lee Hopewell</span>
+                    <p class="text-xs leading-relaxed text-zinc-500 max-w-[260px]">
+                        Professional IT Portfolio showcasing expertise in systems architecture, full-stack development, and database management.
+                    </p>
                 </div>
-                <p class="text-xs leading-relaxed text-zinc-500 max-w-[260px]">
-                    Professional IT Portfolio showcasing expertise in systems architecture, full-stack development, and database management.
-                </p>
+
+                <div class="space-y-6 lg:col-span-3">
+                    <h4 class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-600">Connect & Resources</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://github.com/Kalmai221" target="_blank" rel="noopener noreferrer" 
+                           class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
+                            <i class="fa-brands fa-github text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
+                            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">GitHub</span>
+                        </a>
+
+                        <a href="https://www.linkedin.com/in/kurtishopewell/" target="_blank" rel="noopener noreferrer" 
+                           class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
+                            <i class="fa-brands fa-linkedin-in text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
+                            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">LinkedIn</span>
+                        </a>
+
+                        <a href="mailto:hkurtislee@outlook.com" 
+                           class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
+                            <i class="fa-solid fa-envelope text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
+                            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">Email</span>
+                        </a>
+
+                        <a href="https://github.com/Kalmai221/portfolio" target="_blank" rel="noopener noreferrer" 
+                           class="group flex items-center gap-3 px-4 py-2.5 bg-brand/5 border border-brand/20 rounded-lg hover:border-brand/40 hover:bg-brand/10 transition-all duration-300">
+                            <i class="fa-solid fa-code text-brand/60 group-hover:text-brand transition-colors text-base"></i>
+                            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">Source Code</span>
+                        </a>
+                    </div>
+                </div>
             </div>
 
-            <div class="space-y-6 lg:col-span-3">
-                <h4 class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-600">Connect & Resources</h4>
-                <div class="flex flex-wrap gap-3">
-                    <a href="https://github.com/Kalmai221" target="_blank" rel="noopener noreferrer" 
-                       class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
-                        <i class="fa-brands fa-github text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
-                        <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">GitHub</span>
-                    </a>
+            <div class="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex flex-col md:flex-row items-center gap-4">
+                    <div class="flex items-center gap-4 text-[10px] font-medium text-zinc-600 uppercase tracking-widest">
+                        <span>&copy; {{ now.year if now else '2026' }} Kurtis-Lee Hopewell</span>
+                        <span class="w-1 h-1 rounded-full bg-zinc-800"></span>
+                        <span class="lowercase text-zinc-700 font-mono">v2.0.26</span>
+                    </div>
 
-                    <a href="https://www.linkedin.com/in/kurtishopewell/" target="_blank" rel="noopener noreferrer" 
-                       class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
-                        <i class="fa-brands fa-linkedin-in text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
-                        <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">LinkedIn</span>
-                    </a>
+                    <button onclick="localStorage.removeItem('data-notice-accepted'); window.location.reload();" 
+                            class="text-[9px] font-mono text-zinc-500 hover:text-brand transition-colors uppercase tracking-widest underline decoration-zinc-800 underline-offset-4">
+                        Privacy Policy
+                    </button>
+                </div>
 
-                    <a href="mailto:hkurtislee@outlook.com" 
-                       class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
-                        <i class="fa-solid fa-envelope text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
-                        <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">Email</span>
-                    </a>
+                <div class="flex items-center gap-8 text-[9px] font-mono uppercase tracking-widest">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-zinc-800">Backend:</span>
+                            <span class="text-zinc-500">Flask</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-zinc-800">Database:</span>
+                            <span class="text-zinc-500">MongoDB</span>
+                        </div>
+                    </div>
 
-                    <a href="https://github.com/Kalmai221/portfolio" target="_blank" rel="noopener noreferrer" 
-                       class="group flex items-center gap-3 px-4 py-2.5 bg-brand/5 border border-brand/20 rounded-lg hover:border-brand/40 hover:bg-brand/10 transition-all duration-300">
-                        <i class="fa-solid fa-code text-brand/60 group-hover:text-brand transition-colors text-base"></i>
-                        <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">Source Code</span>
-                    </a>
+                    <div class="flex items-center gap-2 px-3 py-1 bg-emerald-500/5 border border-emerald-500/10 rounded-full">
+                        <span class="relative flex h-1.5 w-1.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-emerald-500/80 font-bold">System Online</span>
+                    </div>
                 </div>
             </div>
         </div>
+    </footer>
 
-        <div class="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-4 text-[10px] font-medium text-zinc-600 uppercase tracking-widest">
-                <span>&copy; {{ now.year if now else '2026' }} Kurtis-Lee Hopewell</span>
-                <span class="w-1 h-1 rounded-full bg-zinc-800"></span>
-                <span class="lowercase text-zinc-700 font-mono">v2.0.26</span>
+    <div id="data-modal" class="fixed inset-0 z-[200] flex items-end lg:items-center justify-center bg-zinc-950/90 backdrop-blur-md hidden opacity-0 transition-all duration-500">
+        <div id="data-modal-container" class="bg-zinc-900 border-t lg:border border-zinc-800 w-full max-w-lg rounded-t-2xl lg:rounded-xl shadow-[0_-20px_50px_rgba(0,0,0,0.5)] lg:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transform translate-y-full lg:translate-y-0 transition-transform duration-500">
+
+            <div class="lg:hidden w-full flex justify-center pt-3 pb-1">
+                <div class="w-10 h-1 bg-zinc-800 rounded-full"></div>
             </div>
-            
-            <div class="flex items-center gap-6 text-[9px] font-mono uppercase tracking-widest">
-                <div class="flex items-center gap-2">
-                    <span class="text-zinc-800">Backend:</span>
-                    <span class="text-zinc-500">Flask Framework</span>
+
+            <div class="px-6 py-4 bg-zinc-950/50 border-b border-zinc-800 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-2 h-2 rounded-full bg-brand shadow-[0_0_10px_rgba(99,102,241,0.6)]"></div>
+                    <h3 class="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-zinc-400">Data Transparency & Privacy</h3>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-zinc-800">Database:</span>
-                    <span class="text-zinc-500">MongoDB Atlas</span>
+            </div>
+
+            <div class="p-6 lg:p-8 space-y-6">
+                <div class="space-y-2">
+                    <h4 class="text-white font-bold text-sm lg:text-base tracking-tight">Your privacy is prioritized.</h4>
+                    <p class="text-zinc-500 text-xs leading-relaxed font-sans">
+                        This portfolio uses a custom analytics engine to improve performance and user experience. We utilize server-side processing to ensure no third-party tracking scripts are ever loaded.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="flex items-start gap-4 p-4 bg-zinc-950/30 border border-zinc-800/50 rounded-lg group">
+                        <div class="text-brand shrink-0 mt-1 opacity-70 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div>
+                            <p class="text-zinc-200 text-[11px] font-bold uppercase tracking-wider">Secure Anonymization</p>
+                            <p class="text-zinc-500 text-[10px] leading-relaxed mt-1">Network identifiers are transformed into a SHA-256 encrypted hash. This provides accurate visitor counts without storing identifiable personal data.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4 p-4 bg-zinc-950/30 border border-zinc-800/50 rounded-lg group">
+                        <div class="text-brand shrink-0 mt-1 opacity-70 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-chart-simple"></i></div>
+                        <div>
+                            <p class="text-zinc-200 text-[11px] font-bold uppercase tracking-wider">Service Optimization</p>
+                            <p class="text-zinc-500 text-[10px] leading-relaxed mt-1">We record page navigation paths and application performance metrics to identify and resolve potential technical faults.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2 space-y-4">
+                    <button onclick="acceptDataNotice()" class="w-full py-4 lg:py-3 bg-zinc-100 text-zinc-950 text-[11px] font-bold uppercase tracking-widest rounded hover:bg-white transition-all shadow-xl active:scale-[0.98]">
+                        Accept and Continue
+                    </button>
+                    <p class="text-[9px] font-sans text-zinc-600 uppercase tracking-widest text-center">No data is shared with or sold to third-party entities.</p>
                 </div>
             </div>
         </div>
     </div>
-</footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // 1. Offline & UI Logic
             const offlineBanner = document.getElementById('offline-banner');
-            function updateOnlineStatus() {
-                if (navigator.onLine) offlineBanner.classList.remove('visible');
-                else offlineBanner.classList.add('visible');
-            }
-            window.addEventListener('online', updateOnlineStatus);
-            window.addEventListener('offline', updateOnlineStatus);
-            updateOnlineStatus();
-
             const revealObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) entry.target.classList.add('active');
-                });
+                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
             }, { threshold: 0.1 });
             document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
+            // 2. Mobile Menu
             const mobileMenu = document.getElementById('mobile-menu');
             const mobileOverlay = document.getElementById('mobile-menu-overlay');
-            const openBtn = document.getElementById('open-menu');
-            const closeBtn = document.getElementById('close-menu');
-            
-            function toggleMobileMenu(show) {
+            window.toggleMobileMenu = function(show) {
                 if (show) {
                     mobileMenu.classList.remove('closed');
                     mobileOverlay.classList.remove('hidden');
-                    // Add this line to trigger the animation/visibility of the links
-                    mobileMenu.classList.add('stagger-active'); 
-                    
                     setTimeout(() => mobileOverlay.classList.add('opacity-100'), 50);
                     document.body.style.overflow = 'hidden';
                 } else {
                     mobileMenu.classList.add('closed');
-                    // Remove this line to reset the state for the next time it opens
-                    mobileMenu.classList.remove('stagger-active'); 
-                    
                     mobileOverlay.classList.remove('opacity-100');
                     setTimeout(() => mobileOverlay.classList.add('hidden'), 300);
                     document.body.style.overflow = '';
                 }
-            }
+            };
+            document.getElementById('open-menu').onclick = () => toggleMobileMenu(true);
+            document.getElementById('close-menu').onclick = () => toggleMobileMenu(false);
+            mobileOverlay.onclick = () => toggleMobileMenu(false);
 
-            openBtn?.addEventListener('click', () => toggleMobileMenu(true));
-            closeBtn?.addEventListener('click', () => toggleMobileMenu(false));
-            mobileOverlay?.addEventListener('click', () => toggleMobileMenu(false));
+            // 3. Privacy Modal Logic
+            const dataModal = document.getElementById('data-modal');
+            const modalContainer = document.getElementById('data-modal-container');
+
+            window.acceptDataNotice = function() {
+                localStorage.setItem('data-notice-accepted', 'true');
+                modalContainer.classList.add('translate-y-full');
+                dataModal.classList.remove('opacity-100');
+                setTimeout(() => {
+                    dataModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }, 500);
+            };
+
+            const hasAccepted = localStorage.getItem('data-notice-accepted');
+            if (!hasAccepted) {
+                setTimeout(() => {
+                    dataModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        dataModal.classList.add('opacity-100');
+                        modalContainer.classList.remove('translate-y-full');
+                        modalContainer.classList.add('translate-y-0');
+                    }, 10);
+                    document.body.style.overflow = 'hidden';
+                }, 600);
+            }
         });
     </script>
 </body>
