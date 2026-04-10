@@ -915,34 +915,39 @@ def cms_router(path):
 
 @app.route('/og-image.png')
 def dynamic_og_image():
-    # 1. Target your live homepage
-    target_url = "https://klhportfolio.vercel.app"
+    # 1. Target your live homepage with a 'bot' flag to skip modals/animations
+    # We add a cache-buster (timestamp) to ensure we get a fresh shot if needed
+    target_url = "https://klhportfolio.vercel.app?isBot=true"
+    
     settings = get_site_settings()
     first_name = settings.get('site_name_first', 'Kurtis-Lee')
     last_name = settings.get('site_name_last', 'Hopewell')
-
-    # 2. Construct a professional branding string
     site_title = f"{first_name} {last_name}"
 
-    # 2. Thum.io Keyless URL (Width 1200, Crop to 630 for OG standard)
-    # This service allows a certain amount of free keyless requests per IP
-    api_url = f"https://image.thum.io/get/width/1200/crop/630/noanimate/{target_url}"
+    # 2. Thum.io URL - Adding 'delay/3' gives your Tailwind/Fonts time to render
+    api_url = f"https://image.thum.io/get/width/1200/crop/630/delay/3/noanimate/{target_url}"
+    
     from urllib.parse import quote
     clean_title = quote(f"{site_title} | Portfolio")
 
     try:
-        # 3. Fetch the image from the provider
-        response = requests.get(api_url, timeout=15)
+        # 3. Fetch with a real Browser User-Agent to avoid being blocked as a bot yourself
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        response = requests.get(api_url, timeout=20, headers=headers)
 
         if response.status_code == 200:
-            # 4. Serve the actual image bytes to the crawler
-            return send_file(io.BytesIO(response.content),
-                             mimetype='image/png',
-                             download_name='og-image.png')
+            return send_file(
+                io.BytesIO(response.content),
+                mimetype='image/png',
+                download_name='og-image.png',
+                as_attachment=False # Changed to False so browsers/crawlers view it inline
+            )
     except Exception as e:
         print(f"Screenshot Error: {e}")
 
-    # Fallback to a solid color placeholder if the service is down
+    # Fallback to placeholder
     return redirect(
         f"https://placehold.co/1200x630/020617/ffffff/png?text={clean_title}&font=playfair-display"
     )
