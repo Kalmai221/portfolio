@@ -965,7 +965,8 @@ def sitemap():
         '/add_nav_link', '/delete_nav_link', '/toggle_maintenance',
         '/admin_analytics', '/edit_page', '/delete_page', '/sitemap',
         '/dynamic_og_image', '/robots_dot_txt', "/trial", "/_preview", 
-        "/trial/analytics", "/trial/toggle-maintenance"
+        "/trial/analytics", "/trial/toggle-maintenance",
+        "/og-image.png", "/robots.txt", "/sitemap.xml"
     ]
 
     # 1. Static Routes (Python logic)
