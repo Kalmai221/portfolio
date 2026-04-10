@@ -406,15 +406,23 @@
             // 2. Mobile Menu
             const mobileMenu = document.getElementById('mobile-menu');
             const mobileOverlay = document.getElementById('mobile-menu-overlay');
+            const mobileNavLinks = document.getElementById('mobile-nav-links'); // Get the container
+
             window.toggleMobileMenu = function(show) {
                 if (show) {
                     mobileMenu.classList.remove('closed');
                     mobileOverlay.classList.remove('hidden');
-                    setTimeout(() => mobileOverlay.classList.add('opacity-100'), 50);
+                    // Add stagger-active to trigger the visibility of the links
+                    setTimeout(() => {
+                        mobileOverlay.classList.add('opacity-100');
+                        mobileNavLinks.classList.add('stagger-active');
+                    }, 50);
                     document.body.style.overflow = 'hidden';
                 } else {
                     mobileMenu.classList.add('closed');
                     mobileOverlay.classList.remove('opacity-100');
+                    // Remove stagger-active so they reset for the next time it opens
+                    mobileNavLinks.classList.remove('stagger-active');
                     setTimeout(() => mobileOverlay.classList.add('hidden'), 300);
                     document.body.style.overflow = '';
                 }
