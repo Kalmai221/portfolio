@@ -1,106 +1,169 @@
 {% extends "layout.html" %}
 {% block content %}
+
+<!-- Mobile gate -->
 <div class="fixed inset-0 z-[1000] bg-zinc-950 flex flex-col items-center justify-center p-8 text-center lg:hidden">
-    <div class="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
+    <div class="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center mb-6">
         <i class="fa-solid fa-desktop text-brand text-2xl"></i>
     </div>
-    <h2 class="text-white font-bold text-xl mb-2 uppercase tracking-tight">Desktop Environment Required</h2>
-    <p class="text-zinc-500 text-sm max-w-xs leading-relaxed mb-8">
-        The Node Editor is optimized for large displays to support precise code editing and configuration.
-        Please switch to a desktop browser to continue.
-    </p>
-    <a href="/admin" class="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded hover:text-white transition-all">
-        Return to Dashboard
-    </a>
+    <h2 class="text-white font-bold text-xl mb-2 uppercase tracking-tight">Desktop Required</h2>
+    <p class="text-zinc-500 text-sm max-w-xs leading-relaxed mb-8">The Node Editor is optimised for large displays. Please switch to a desktop browser.</p>
+    <a href="/admin" class="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded hover:text-white transition-all">Return to Dashboard</a>
 </div>
 
-<div id="save-toast" class="fixed left-1/2 -translate-x-1/2 top-[-100px] z-[500] transition-all duration-500 ease-expo bg-zinc-900/90 backdrop-blur-md border border-emerald-500/30 px-6 py-3 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center gap-3">
-    <div class="flex items-center justify-center w-6 h-6 bg-emerald-500 rounded-full">
-        <svg class="w-4 h-4 text-zinc-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-        </svg>
-    </div>
-    <div class="flex flex-col">
-        <span class="text-[11px] font-bold text-white uppercase tracking-wider">Changes Saved</span>
-        <span class="text-[9px] font-mono text-emerald-500/80 uppercase">Node synchronized with database</span>
+<!-- Save toast -->
+<div id="save-toast" class="fixed left-1/2 -translate-x-1/2 z-[500] transition-all duration-500" style="top:-80px">
+    <div class="bg-[#252526] border border-emerald-500/40 px-5 py-2.5 rounded-full flex items-center gap-3 shadow-2xl">
+        <div class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+            <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <span class="text-[11px] font-bold text-white uppercase tracking-wider">Saved</span>
+        <span class="text-[9px] font-mono text-emerald-400/80">Node synced</span>
     </div>
 </div>
 
-<div id="exit-modal" class="hidden fixed inset-0 z-[600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-[#252526] border border-zinc-700 w-full max-w-md p-6 rounded-lg shadow-2xl">
-        <h3 class="text-white font-bold text-lg mb-2">Unsaved Progress</h3>
-        <p class="text-zinc-400 text-sm mb-6">There are unsaved changes in the current buffer. Would you like to commit these changes before exiting?</p>
+<!-- Exit modal -->
+<div id="exit-modal" class="hidden fixed inset-0 z-[600] bg-black/70 flex items-center justify-center p-4">
+    <div class="bg-[#252526] border border-zinc-700 w-full max-w-sm p-6 rounded-lg shadow-2xl">
+        <h3 class="text-white font-bold mb-1">Unsaved Changes</h3>
+        <p class="text-zinc-400 text-sm mb-5">Save before exiting?</p>
         <div class="flex flex-col gap-2">
-            <button onclick="saveAndExit()" class="w-full bg-brand py-2 text-white text-sm font-bold rounded hover:bg-opacity-90">Save and Exit</button>
-            <button onclick="window.location.href='/admin'" class="w-full bg-zinc-800 py-2 text-zinc-300 text-sm font-bold rounded hover:bg-zinc-700">Discard Changes</button>
-            <button onclick="toggleExitModal()" class="w-full py-2 text-zinc-500 text-sm font-medium hover:text-zinc-300">Cancel</button>
+            <button onclick="saveAndExit()" class="w-full bg-[#007acc] py-2 text-white text-sm font-bold rounded hover:bg-[#0069b0]">Save & Exit</button>
+            <button onclick="window.location.href='/admin'" class="w-full bg-zinc-800 py-2 text-zinc-300 text-sm font-bold rounded hover:bg-zinc-700">Discard</button>
+            <button onclick="toggleExitModal()" class="py-2 text-zinc-500 text-sm hover:text-zinc-300">Cancel</button>
         </div>
     </div>
 </div>
 
-<div class="fixed inset-0 z-[200] bg-[#1e1e1e] flex flex-col lg:flex-row overflow-hidden font-sans selection:bg-[#264f78]">
+<!-- Find/Replace panel -->
+<div id="find-panel" class="hidden fixed z-[400] bg-[#252526] border border-zinc-600 rounded shadow-2xl" style="right:20px;top:60px;width:380px">
+    <div class="flex items-center justify-between px-3 py-2 border-b border-zinc-700">
+        <span class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Find & Replace</span>
+        <button onclick="closeFindPanel()" class="text-zinc-500 hover:text-white text-lg leading-none">×</button>
+    </div>
+    <div class="p-3 space-y-2">
+        <div class="flex gap-2 items-center">
+            <input id="find-input" type="text" placeholder="Find…" class="find-field flex-1" oninput="doFind()">
+            <span id="find-count" class="text-[10px] text-zinc-500 min-w-[40px] text-right"></span>
+            <button onclick="findPrev()" class="find-btn" title="Previous (Shift+Enter)">↑</button>
+            <button onclick="findNext()" class="find-btn" title="Next (Enter)">↓</button>
+        </div>
+        <div class="flex gap-2 items-center">
+            <input id="replace-input" type="text" placeholder="Replace…" class="find-field flex-1">
+            <button onclick="doReplaceOne()" class="find-btn px-2 text-[10px]">Replace</button>
+            <button onclick="doReplaceAll()" class="find-btn px-2 text-[10px]">All</button>
+        </div>
+        <div class="flex gap-3 pt-1">
+            <label class="flex items-center gap-1.5 text-[11px] text-zinc-400 cursor-pointer">
+                <input type="checkbox" id="find-case" onchange="doFind()" class="accent-[#007acc]"> Aa
+            </label>
+            <label class="flex items-center gap-1.5 text-[11px] text-zinc-400 cursor-pointer">
+                <input type="checkbox" id="find-word" onchange="doFind()" class="accent-[#007acc]"> \b Word
+            </label>
+            <label class="flex items-center gap-1.5 text-[11px] text-zinc-400 cursor-pointer">
+                <input type="checkbox" id="find-regex" onchange="doFind()" class="accent-[#007acc]"> .* Regex
+            </label>
+        </div>
+    </div>
+</div>
 
-    <!-- Activity Bar -->
-    <div class="w-12 bg-[#333333] flex-col items-center py-2 gap-1 border-r border-[#191919] hidden lg:flex shrink-0">
-        <div class="w-10 h-10 flex items-center justify-center text-white border-l-2 border-[#007acc] cursor-pointer" title="Explorer">
-            <i class="fa-regular fa-folder-open text-[18px]"></i>
+<!-- Command palette -->
+<div id="cmd-palette" class="hidden fixed inset-0 z-[700] flex items-start justify-center pt-24">
+    <div class="bg-[#1f1f1f] border border-zinc-600 rounded-lg shadow-2xl w-full max-w-lg overflow-hidden" onclick.stop>
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-zinc-700">
+            <span class="text-zinc-500 text-sm">›</span>
+            <input id="cmd-input" type="text" placeholder="Type a command…" class="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500" oninput="filterCommands()" onkeydown="cmdKeydown(event)">
         </div>
-        <div onclick="togglePreview()" class="w-10 h-10 flex items-center justify-center text-[#858585] hover:text-white transition-colors cursor-pointer" title="Preview">
-            <i class="fa-solid fa-eye text-[16px]"></i>
-        </div>
-        <div class="mt-auto flex flex-col items-center gap-1 mb-2">
-            <button onclick="handleSave()" class="w-10 h-10 flex items-center justify-center text-[#858585] hover:text-emerald-400 transition-colors" title="Save (Ctrl+S)">
-                <i class="fa-solid fa-floppy-disk text-[18px]"></i>
-            </button>
-            <button onclick="handleExit()" class="w-10 h-10 flex items-center justify-center text-[#858585] hover:text-red-400 transition-colors" title="Close Editor">
-                <i class="fa-solid fa-arrow-right-from-bracket text-[16px]"></i>
-            </button>
-        </div>
+        <div id="cmd-list" class="max-h-72 overflow-y-auto"></div>
+    </div>
+    <div class="absolute inset-0 -z-10" onclick="closeCmdPalette()"></div>
+</div>
+
+<!-- Shortcuts panel -->
+<div id="shortcuts-panel" class="hidden fixed z-[400] bg-[#1f1f1f] border border-zinc-700 rounded-lg shadow-2xl overflow-hidden" style="right:20px;bottom:40px;width:320px">
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-700 bg-[#252526]">
+        <span class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Keyboard Shortcuts</span>
+        <button onclick="document.getElementById('shortcuts-panel').classList.add('hidden')" class="text-zinc-500 hover:text-white text-lg">×</button>
+    </div>
+    <div class="p-3 space-y-1 text-[12px]">
+        <div class="shortcut-row"><span class="text-zinc-400">Save</span><kbd>Ctrl S</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Find & Replace</span><kbd>Ctrl F</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Command Palette</span><kbd>Ctrl P</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Preview</span><kbd>Ctrl Shift P</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Toggle Comment</span><kbd>Ctrl /</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Duplicate Line</span><kbd>Shift Alt D</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Delete Line</span><kbd>Ctrl Shift K</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Move Line Up</span><kbd>Alt ↑</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Move Line Down</span><kbd>Alt ↓</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Indent</span><kbd>Tab</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Outdent</span><kbd>Shift Tab</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Increase Font</span><kbd>Ctrl +</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Decrease Font</span><kbd>Ctrl -</kbd></div>
+        <div class="shortcut-row"><span class="text-zinc-400">Close Panel</span><kbd>Esc</kbd></div>
+    </div>
+</div>
+
+<!-- Main editor shell -->
+<div class="fixed inset-0 z-[200] bg-[#1e1e1e] flex flex-col lg:flex-row overflow-hidden" style="font-family:'Segoe UI',system-ui,sans-serif">
+
+    <!-- Activity bar -->
+    <div class="w-12 bg-[#333333] flex-col items-center py-2 gap-0.5 border-r border-[#191919] hidden lg:flex shrink-0">
+        <button class="act-btn active" id="act-explorer" onclick="togglePanel('explorer')" title="Explorer (Ctrl+B)">
+            <i class="fa-regular fa-folder-open text-[17px]"></i>
+        </button>
+        <button class="act-btn" onclick="openFind()" title="Find (Ctrl+F)">
+            <i class="fa-solid fa-magnifying-glass text-[15px]"></i>
+        </button>
+        <button class="act-btn" onclick="togglePreview()" title="Preview (Ctrl+Shift+P)">
+            <i class="fa-solid fa-eye text-[15px]"></i>
+        </button>
+        <button class="act-btn" onclick="openCmdPalette()" title="Command Palette (Ctrl+P)">
+            <i class="fa-solid fa-terminal text-[14px]"></i>
+        </button>
+        <div class="flex-1"></div>
+        <button class="act-btn" onclick="document.getElementById('shortcuts-panel').classList.toggle('hidden')" title="Keyboard Shortcuts">
+            <i class="fa-regular fa-keyboard text-[15px]"></i>
+        </button>
+        <button onclick="handleSave()" class="act-btn text-emerald-400 hover:text-emerald-300" title="Save (Ctrl+S)">
+            <i class="fa-solid fa-floppy-disk text-[17px]"></i>
+        </button>
+        <button onclick="handleExit()" class="act-btn hover:text-red-400" title="Exit">
+            <i class="fa-solid fa-arrow-right-from-bracket text-[15px]"></i>
+        </button>
     </div>
 
     <!-- Sidebar -->
-    <div class="w-full lg:w-60 bg-[#252526] flex flex-col border-r border-[#1e1e1e] shrink-0">
-        <div class="px-3 py-2 border-b border-[#1e1e1e]">
+    <div id="sidebar" class="w-full lg:w-60 bg-[#252526] flex flex-col border-r border-[#1e1e1e] shrink-0 transition-all duration-200">
+        <div class="px-3 py-2 border-b border-[#1e1e1e] flex items-center justify-between">
             <span class="text-[11px] font-bold text-[#bbbbbe] uppercase tracking-widest">Explorer</span>
         </div>
-
         <div class="flex-grow overflow-y-auto custom-scrollbar">
-            <!-- Files section -->
-            <div class="px-2 py-1.5 flex items-center gap-1.5 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider cursor-default select-none">
-                <i class="fa-solid fa-chevron-down text-[8px]"></i>
-                MY-PROJECT
-            </div>
 
-            <div class="flex flex-col">
-                <button type="button" onclick="switchTab('py')" class="sidebar-file active" id="side-tab-py">
-                    <i class="fa-brands fa-python text-[13px]" style="color:#3794ff"></i>
-                    <span>{{ slug }}.py</span>
-                    <span class="dirty-dot ml-auto w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
+            <!-- Files -->
+            <div class="px-2 py-1.5 flex items-center gap-1 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider cursor-default select-none">
+                <span class="text-[9px]">▼</span> MY-PROJECT
+            </div>
+            <div class="flex flex-col" id="file-list">
+                <button type="button" onclick="switchTab('py')"   class="sidebar-file active" id="side-tab-py">
+                    <i class="fa-brands fa-python" style="color:#3794ff;font-size:13px"></i><span>{{ slug }}.py</span><span class="dirty-dot"></span>
                 </button>
                 <button type="button" onclick="switchTab('html')" class="sidebar-file" id="side-tab-html">
-                    <i class="fa-brands fa-html5 text-[13px]" style="color:#e34c26"></i>
-                    <span>{{ slug }}.html</span>
-                    <span class="dirty-dot ml-auto w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
+                    <i class="fa-brands fa-html5" style="color:#e34c26;font-size:13px"></i><span>{{ slug }}.html</span><span class="dirty-dot"></span>
                 </button>
-                <button type="button" onclick="switchTab('css')" class="sidebar-file" id="side-tab-css">
-                    <i class="fa-brands fa-css3-alt text-[13px]" style="color:#264de4"></i>
-                    <span>{{ slug }}.css</span>
-                    <span class="dirty-dot ml-auto w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
+                <button type="button" onclick="switchTab('css')"  class="sidebar-file" id="side-tab-css">
+                    <i class="fa-brands fa-css3-alt" style="color:#264de4;font-size:13px"></i><span>{{ slug }}.css</span><span class="dirty-dot"></span>
                 </button>
-                <button type="button" onclick="switchTab('js')" class="sidebar-file" id="side-tab-js">
-                    <i class="fa-brands fa-js text-[13px]" style="color:#f7df1e"></i>
-                    <span>{{ slug }}.js</span>
-                    <span class="dirty-dot ml-auto w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
+                <button type="button" onclick="switchTab('js')"   class="sidebar-file" id="side-tab-js">
+                    <i class="fa-brands fa-js" style="color:#f7df1e;font-size:13px"></i><span>{{ slug }}.js</span><span class="dirty-dot"></span>
                 </button>
             </div>
 
-            <!-- Configuration section -->
-            <div class="mt-4 border-t border-[#1e1e1e]">
-                <div class="px-3 py-2 flex items-center gap-2 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider cursor-default select-none">
-                    <i class="fa-solid fa-sliders text-[10px]"></i>
-                    Configuration
+            <!-- Config -->
+            <div class="mt-3 border-t border-[#1e1e1e]">
+                <div class="px-3 py-2 flex items-center gap-2 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider select-none cursor-default">
+                    <i class="fa-solid fa-sliders text-[10px]"></i> Configuration
                 </div>
-                <div class="p-3 space-y-4">
+                <div class="px-3 pb-3 space-y-3">
                     <form id="cms-form" method="POST" class="space-y-3">
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest">Page Title</label>
@@ -111,17 +174,46 @@
                             <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono" style="color:#9cdcfe" placeholder="index">
                         </div>
                     </form>
+                    <!-- Font size control -->
+                    <div class="space-y-1 pt-1 border-t border-[#1e1e1e]">
+                        <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest">Editor Font Size</label>
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeFontSize(-1)" class="w-6 h-6 flex items-center justify-center bg-[#3c3c3c] text-zinc-300 rounded text-sm hover:bg-[#4a4a4a]">−</button>
+                            <span id="font-size-label" class="text-[12px] text-zinc-300 flex-1 text-center">13px</span>
+                            <button onclick="changeFontSize(1)"  class="w-6 h-6 flex items-center justify-center bg-[#3c3c3c] text-zinc-300 rounded text-sm hover:bg-[#4a4a4a]">+</button>
+                        </div>
+                    </div>
+                    <!-- Word wrap toggle -->
+                    <div class="flex items-center justify-between pt-1">
+                        <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest cursor-pointer" onclick="toggleWordWrap()">Word Wrap</label>
+                        <div id="wrap-toggle" onclick="toggleWordWrap()" class="w-8 h-4 rounded-full bg-[#3c3c3c] relative cursor-pointer transition-colors">
+                            <div id="wrap-knob" class="absolute left-0.5 top-0.5 w-3 h-3 rounded-full bg-[#858585] transition-all"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- System Actions -->
-            <div class="mt-auto border-t border-[#1e1e1e]">
-                <div class="px-3 py-2 flex items-center gap-2 text-[10px] font-bold text-[#858585] uppercase tracking-wider cursor-default select-none">
-                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-                    System Actions
+            <!-- Stats -->
+            <div class="border-t border-[#1e1e1e]">
+                <div class="px-3 py-2 flex items-center gap-2 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider select-none cursor-default">
+                    <i class="fa-solid fa-chart-simple text-[10px]"></i> File Stats
                 </div>
-                <div class="p-3">
-                    <button type="button" id="delete-btn" onclick="confirmDeletion()" class="w-full flex items-center justify-center gap-2 py-2 bg-transparent border border-[#3c3c3c] text-[#858585] text-[10px] font-bold uppercase tracking-widest rounded hover:bg-red-600/20 hover:text-red-400 hover:border-red-500/40 transition-all duration-200">
+                <div class="px-3 pb-3 grid grid-cols-2 gap-2">
+                    <div class="stat-card"><div class="stat-val" id="stat-lines">0</div><div class="stat-lbl">Lines</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-chars">0</div><div class="stat-lbl">Chars</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-words">0</div><div class="stat-lbl">Words</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-size">0B</div><div class="stat-lbl">Size</div></div>
+                </div>
+            </div>
+
+            <!-- System -->
+            <div class="border-t border-[#1e1e1e]">
+                <div class="px-3 py-2 flex items-center gap-2 text-[10px] font-bold text-[#858585] uppercase tracking-wider select-none cursor-default">
+                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i> System
+                </div>
+                <div class="px-3 pb-3">
+                    <button type="button" id="delete-btn" onclick="confirmDeletion()"
+                        class="w-full flex items-center justify-center gap-2 py-2 bg-transparent border border-[#3c3c3c] text-[#858585] text-[10px] font-bold uppercase tracking-widest rounded hover:bg-red-600/20 hover:text-red-400 hover:border-red-500/40 transition-all">
                         <i class="fa-solid fa-trash-can text-[10px]"></i>
                         <span id="delete-text">Delete Page</span>
                     </button>
@@ -130,114 +222,103 @@
         </div>
     </div>
 
-    <!-- Main Editor Area -->
+    <!-- Editor area -->
     <div class="flex-grow flex flex-col bg-[#1e1e1e] min-w-0 h-full">
 
         <!-- Tabs -->
         <div class="flex bg-[#2d2d2d] shrink-0 overflow-x-auto no-scrollbar" style="border-bottom:1px solid #252526">
-            <button type="button" onclick="switchTab('py')" id="tab-py" class="editor-tab active">
-                <i class="fa-brands fa-python mr-2 text-[12px]" style="color:#3794ff"></i>{{ slug }}.py
-                <span class="tab-dirty ml-2 w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
+            <button type="button" onclick="switchTab('py')"   id="tab-py"   class="editor-tab active">
+                <i class="fa-brands fa-python mr-1.5 text-[12px]" style="color:#3794ff"></i>{{ slug }}.py
+                <span class="tab-dirty ml-2"></span>
             </button>
             <button type="button" onclick="switchTab('html')" id="tab-html" class="editor-tab">
-                <i class="fa-brands fa-html5 mr-2 text-[12px]" style="color:#e34c26"></i>{{ slug }}.html
-                <span class="tab-dirty ml-2 w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
+                <i class="fa-brands fa-html5 mr-1.5 text-[12px]" style="color:#e34c26"></i>{{ slug }}.html
+                <span class="tab-dirty ml-2"></span>
             </button>
-            <button type="button" onclick="switchTab('css')" id="tab-css" class="editor-tab">
-                <i class="fa-brands fa-css3-alt mr-2 text-[12px]" style="color:#264de4"></i>{{ slug }}.css
-                <span class="tab-dirty ml-2 w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
+            <button type="button" onclick="switchTab('css')"  id="tab-css"  class="editor-tab">
+                <i class="fa-brands fa-css3-alt mr-1.5 text-[12px]" style="color:#264de4"></i>{{ slug }}.css
+                <span class="tab-dirty ml-2"></span>
             </button>
-            <button type="button" onclick="switchTab('js')" id="tab-js" class="editor-tab">
-                <i class="fa-brands fa-js mr-2 text-[12px]" style="color:#f7df1e"></i>{{ slug }}.js
-                <span class="tab-dirty ml-2 w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
+            <button type="button" onclick="switchTab('js')"   id="tab-js"   class="editor-tab">
+                <i class="fa-brands fa-js mr-1.5 text-[12px]" style="color:#f7df1e"></i>{{ slug }}.js
+                <span class="tab-dirty ml-2"></span>
             </button>
         </div>
 
         <!-- Breadcrumb -->
-        <div class="flex items-center gap-1.5 px-4 py-1 bg-[#1e1e1e] border-b border-[#2d2d2d] shrink-0 select-none">
+        <div class="flex items-center gap-1.5 px-4 h-7 bg-[#1e1e1e] border-b border-[#2d2d2d] shrink-0 select-none">
             <span class="text-[12px] text-[#858585]">MY-PROJECT</span>
             <span class="text-[12px] text-[#858585]">›</span>
             <span class="text-[12px] text-[#cccccc]" id="breadcrumb-file">{{ slug }}.py</span>
         </div>
 
-        <!-- Editor Body -->
-        <div class="flex-grow flex relative overflow-hidden">
-            <!-- Line Numbers -->
-            <div id="line-numbers" class="bg-[#1e1e1e] flex flex-col items-end pr-4 pt-[14px] select-none shrink-0 border-r border-[#2d2d2d] z-10 overflow-hidden" style="min-width:50px"></div>
+        <!-- Editor body -->
+        <div class="flex-grow flex overflow-hidden relative">
+            <!-- Line numbers -->
+            <div id="line-numbers" class="bg-[#1e1e1e] flex flex-col items-end shrink-0 border-r border-[#2d2d2d] z-10 overflow-hidden select-none" style="min-width:52px;padding-top:14px;padding-right:10px"></div>
 
-            <!-- Code Area -->
-            <div class="flex-grow relative h-full bg-[#1e1e1e] overflow-hidden">
-                <div id="highlight-layer" class="absolute inset-0 pointer-events-none font-mono whitespace-pre overflow-hidden bg-transparent z-0"></div>
+            <!-- Code -->
+            <div class="flex-grow relative h-full overflow-hidden">
+                <div id="highlight-layer" class="absolute inset-0 pointer-events-none font-mono whitespace-pre overflow-hidden z-0"></div>
                 <div class="absolute inset-0 z-10 overflow-hidden">
-                    <div id="panel-py" class="editor-panel block h-full w-full">
-                        <textarea name="python_logic" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false" onscroll="syncScroll(this)">{{ page.python_logic if page else '' }}</textarea>
-                    </div>
-                    <div id="panel-html" class="editor-panel hidden h-full w-full">
-                        <textarea name="content" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false" onscroll="syncScroll(this)">{{ page.content if page else '' }}</textarea>
-                    </div>
-                    <div id="panel-css" class="editor-panel hidden h-full w-full">
-                        <textarea name="css_content" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false" onscroll="syncScroll(this)">{{ page.css if page else '' }}</textarea>
-                    </div>
-                    <div id="panel-js" class="editor-panel hidden h-full w-full">
-                        <textarea name="js_content" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false" onscroll="syncScroll(this)">{{ page.js if page else '' }}</textarea>
-                    </div>
+                    <div id="panel-py"   class="editor-panel block  h-full w-full"><textarea name="python_logic" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.python_logic if page else '' }}</textarea></div>
+                    <div id="panel-html" class="editor-panel hidden h-full w-full"><textarea name="content"       form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.content if page else '' }}</textarea></div>
+                    <div id="panel-css"  class="editor-panel hidden h-full w-full"><textarea name="css_content"   form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.css if page else '' }}</textarea></div>
+                    <div id="panel-js"   class="editor-panel hidden h-full w-full"><textarea name="js_content"    form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.js if page else '' }}</textarea></div>
                 </div>
             </div>
         </div>
 
-        <!-- VS Code-style Status Bar -->
-        <div class="h-[22px] flex items-center px-2 justify-between shrink-0 z-20 text-[11px] select-none" style="background:#007acc;color:rgba(255,255,255,0.9)">
-            <div class="flex items-center gap-1">
-                <span class="flex items-center gap-1 px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">
-                    <i class="fa-solid fa-code-branch text-[9px]"></i> main
-                </span>
-                <span class="flex items-center gap-1 px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">
-                    <i class="fa-solid fa-circle-check text-[9px]"></i> 0
-                </span>
+        <!-- Status bar -->
+        <div class="h-[22px] flex items-center px-2 shrink-0 z-20 text-[11px] select-none" style="background:#007acc;color:rgba(255,255,255,0.9)">
+            <div class="flex items-center gap-0.5">
+                <span class="status-pill"><i class="fa-solid fa-code-branch text-[9px]"></i> main</span>
+                <span class="status-pill"><i class="fa-solid fa-circle-check text-[9px]"></i> 0</span>
             </div>
-            <div class="flex items-center gap-1">
-                <span id="pos-indicator" class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">Ln 1, Col 1</span>
-                <span class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">Spaces: 4</span>
-                <span class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">UTF-8</span>
-                <span class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">LF</span>
-                <span id="lang-label" class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">Python</span>
+            <div class="flex items-center gap-0.5 ml-auto">
+                <span id="pos-indicator"  class="status-pill">Ln 1, Col 1</span>
+                <span id="sel-indicator"  class="status-pill hidden">0 sel</span>
+                <span class="status-pill">Spaces: 4</span>
+                <span class="status-pill">UTF-8</span>
+                <span class="status-pill">LF</span>
+                <span id="lang-label"     class="status-pill">Python</span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Preview Modal -->
-<div id="preview-modal" class="hidden fixed inset-0 z-[300] bg-[#0c0c0c]/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-6xl flex justify-between items-center mb-3 px-4 py-2 bg-[#252526] border border-zinc-800 rounded-t-lg shadow-2xl">
-        <div class="flex items-center gap-6">
+<!-- Preview modal -->
+<div id="preview-modal" class="hidden fixed inset-0 z-[300] bg-[#0c0c0c]/95 flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-6xl flex justify-between items-center mb-2 px-4 py-2 bg-[#252526] border border-zinc-800 rounded-t-lg">
+        <div class="flex items-center gap-5">
             <div class="flex items-center gap-2">
                 <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                <h3 class="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">Development Preview</h3>
+                <span class="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">Live Preview</span>
             </div>
-            <div class="flex bg-zinc-900 rounded p-1 border border-zinc-800">
-                <button onclick="setViewport('desktop')" id="view-desktop" class="px-3 py-1 rounded bg-zinc-800 text-white transition-all">
-                    <i class="fa-solid fa-desktop text-[12px]"></i>
-                </button>
-                <button onclick="setViewport('mobile')" id="view-mobile" class="px-3 py-1 rounded text-zinc-500 hover:text-zinc-300 transition-all">
-                    <i class="fa-solid fa-mobile-screen text-[12px]"></i>
-                </button>
+            <div class="flex bg-zinc-900 rounded p-0.5 border border-zinc-800">
+                <button onclick="setViewport('desktop')" id="view-desktop" class="px-3 py-1 rounded bg-zinc-800 text-white text-[12px]"><i class="fa-solid fa-desktop"></i></button>
+                <button onclick="setViewport('tablet')"  id="view-tablet"  class="px-3 py-1 rounded text-zinc-500 hover:text-zinc-300 text-[12px]"><i class="fa-solid fa-tablet-screen-button"></i></button>
+                <button onclick="setViewport('mobile')"  id="view-mobile"  class="px-3 py-1 rounded text-zinc-500 hover:text-zinc-300 text-[12px]"><i class="fa-solid fa-mobile-screen"></i></button>
             </div>
         </div>
         <div class="flex items-center gap-4">
-            <button onclick="toggleConsole()" class="text-[9px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest">Runtime Log</button>
-            <button onclick="togglePreview()" class="text-zinc-500 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-[16px]"></i></button>
+            <button onclick="toggleConsole()" class="text-[9px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest">Terminal</button>
+            <button onclick="togglePreview()" class="text-zinc-500 hover:text-white text-lg">×</button>
         </div>
     </div>
-    <div id="preview-container" class="w-full max-w-6xl mx-auto flex-grow flex flex-col transition-all duration-500">
-        <iframe id="preview-frame" class="w-full h-full bg-white rounded-b-lg shadow-2xl border-none"></iframe>
-        <div id="logic-console" class="hidden h-32 bg-black border-t border-zinc-800 p-4 font-mono text-[11px] overflow-y-auto custom-scrollbar">
-            <p class="text-zinc-600 mb-2 border-b border-zinc-900 pb-1">Server Terminal Output</p>
-            <div id="console-output"></div>
+    <div id="preview-container" class="w-full max-w-6xl flex-grow flex flex-col transition-all duration-300">
+        <iframe id="preview-frame" class="w-full h-full bg-white rounded-b-lg border-none"></iframe>
+        <div id="logic-console" class="hidden h-36 bg-[#0c0c0c] border border-zinc-800 rounded-b-lg mt-1 overflow-y-auto custom-scrollbar">
+            <div class="px-4 py-2 border-b border-zinc-800 flex items-center justify-between">
+                <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Terminal</span>
+                <button onclick="document.getElementById('console-output').innerHTML=''" class="text-[9px] text-zinc-600 hover:text-zinc-400">Clear</button>
+            </div>
+            <div id="console-output" class="p-3 font-mono text-[11px] space-y-0.5"></div>
         </div>
     </div>
 </div>
 
-<!-- Prism.js (load BEFORE our script) -->
+<!-- Prism -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -249,385 +330,610 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
-    /* ── Scrollbars ── */
-    .custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(121,121,121,0.2); border-radius: 0; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(121,121,121,0.4); }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    /* Scrollbars */
+    .custom-scrollbar::-webkit-scrollbar{width:10px;height:10px}
+    .custom-scrollbar::-webkit-scrollbar-track{background:transparent}
+    .custom-scrollbar::-webkit-scrollbar-thumb{background:rgba(121,121,121,.2);border-radius:0}
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:rgba(121,121,121,.4)}
+    .no-scrollbar::-webkit-scrollbar{display:none}
 
-    /* ── Sidebar files ── */
-    .sidebar-file {
-        width: 100%; text-align: left; padding: 4px 12px 4px 22px;
-        font-size: 13px; color: #cccccc; display: flex; align-items: center;
-        gap: 8px; background: transparent; border: none; cursor: pointer; transition: background .1s;
-    }
-    .sidebar-file:hover { background: #2a2d2e; }
-    .sidebar-file.active { background: #37373d; color: #ffffff; }
+    /* Activity bar */
+    .act-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#858585;background:none;border:none;cursor:pointer;transition:color .15s;border-left:2px solid transparent}
+    .act-btn:hover{color:#cccccc}
+    .act-btn.active{color:#ffffff;border-left-color:#007acc}
 
-    /* ── Sidebar inputs ── */
-    .sidebar-field {
-        width: 100%; background: #3c3c3c; border: 1px solid #555; border-radius: 2px;
-        padding: 5px 8px; font-size: 12px; color: #cccccc; outline: none; transition: border-color .15s;
-        font-family: inherit;
-    }
-    .sidebar-field:focus { border-color: #007acc; }
+    /* Sidebar file items */
+    .sidebar-file{width:100%;text-align:left;padding:4px 12px 4px 22px;font-size:13px;color:#cccccc;display:flex;align-items:center;gap:8px;background:transparent;border:none;cursor:pointer;transition:background .1s}
+    .sidebar-file:hover{background:#2a2d2e}
+    .sidebar-file.active{background:#37373d;color:#fff}
+    .dirty-dot{width:7px;height:7px;border-radius:50%;background:#e8a838;margin-left:auto;display:none;flex-shrink:0}
 
-    /* ── Editor tabs ── */
-    .editor-tab {
-        padding: 0 16px; height: 35px; font-size: 13px; color: #969696;
-        border-right: 1px solid #252526; background: #2d2d2d;
-        min-width: 130px; text-align: left; display: flex; align-items: center;
-        white-space: nowrap; cursor: pointer; border-top: 2px solid transparent;
-        transition: color .15s, background .15s; border-bottom: none;
-    }
-    .editor-tab:hover { color: #cccccc; background: #2a2a2a; }
-    .editor-tab.active { background: #1e1e1e; color: #ffffff; border-top-color: #007acc; }
+    /* Sidebar inputs */
+    .sidebar-field{width:100%;background:#3c3c3c;border:1px solid #555;border-radius:2px;padding:5px 8px;font-size:12px;color:#cccccc;outline:none;transition:border-color .15s;font-family:inherit}
+    .sidebar-field:focus{border-color:#007acc}
 
-    /* ── Code textarea (transparent, caret only) ── */
-    .code-textarea {
-        display: block; width: 100%; height: 100% !important;
-        background: transparent !important; padding: 14px 16px !important;
-        outline: none !important; border: none !important;
-        font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-        font-size: 13px; line-height: 1.6; letter-spacing: -0.01em;
-        resize: none; color: transparent !important;
-        caret-color: #aeafad !important;
-        white-space: pre; overflow: auto; z-index: 20; position: relative;
-        tab-size: 4;
-    }
+    /* Tabs */
+    .editor-tab{padding:0 14px;height:35px;font-size:13px;color:#969696;border-right:1px solid #252526;background:#2d2d2d;min-width:120px;text-align:left;display:flex;align-items:center;white-space:nowrap;cursor:pointer;border-top:2px solid transparent;transition:color .15s,background .15s;border-bottom:none}
+    .editor-tab:hover{color:#cccccc;background:#2a2a2a}
+    .editor-tab.active{background:#1e1e1e;color:#fff;border-top-color:#007acc}
+    .tab-dirty{width:7px;height:7px;border-radius:50%;background:#e8a838;display:none;flex-shrink:0}
 
-    /* ── Highlight overlay ── */
-    #highlight-layer {
-        padding: 14px 16px !important; pointer-events: none;
-        font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-        font-size: 13px; line-height: 1.6; letter-spacing: -0.01em;
-        color: #d4d4d4; z-index: 10;
-    }
+    /* Code area */
+    .code-textarea{display:block;width:100%;height:100%!important;background:transparent!important;padding:14px 16px!important;outline:none!important;border:none!important;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;letter-spacing:-.01em;resize:none;color:transparent!important;caret-color:#aeafad!important;white-space:pre;overflow:auto;z-index:20;position:relative;tab-size:4}
+    #highlight-layer{padding:14px 16px!important;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;letter-spacing:-.01em;color:#d4d4d4;z-index:10}
+    .line-number{display:block;font-size:12px;font-family:'JetBrains Mono',monospace;color:#4b4b4b;line-height:1.6;text-align:right;padding-right:2px}
+    .line-number.active-line{color:#c6c6c6}
 
-    /* ── Line numbers ── */
-    .line-number {
-        display: block; font-size: 12px;
-        font-family: 'JetBrains Mono', monospace;
-        color: #4b4b4b; line-height: 1.6;
-        text-align: right; padding-right: 2px;
-    }
-    .line-number.active-line { color: #c6c6c6; }
+    /* Prism VS Code Dark+ */
+    .token.keyword{color:#569cd6;font-weight:600}
+    .token.string{color:#ce9178}
+    .token.comment{color:#6a9955;font-style:italic}
+    .token.function{color:#dcdcaa}
+    .token.number{color:#b5cea8}
+    .token.class-name{color:#4ec9b0}
+    .token.operator,.token.punctuation{color:#d4d4d4}
+    .token.builtin{color:#569cd6}
+    .token.tag .token.tag{color:#4ec9b0}
+    .token.tag .token.attr-name{color:#9cdcfe}
+    .token.attr-value{color:#ce9178}
+    .token.property{color:#9cdcfe}
+    .token.selector{color:#d7ba7d}
 
-    /* ── Prism token overrides (VS Code Dark+) ── */
-    .token.keyword    { color: #569cd6; font-weight: 600; }
-    .token.string     { color: #ce9178; }
-    .token.comment    { color: #6a9955; font-style: italic; }
-    .token.function   { color: #dcdcaa; }
-    .token.number     { color: #b5cea8; }
-    .token.class-name { color: #4ec9b0; }
-    .token.operator   { color: #d4d4d4; }
-    .token.punctuation{ color: #d4d4d4; }
-    .token.builtin    { color: #569cd6; }
-    /* HTML/CSS extras */
-    .token.tag .token.tag        { color: #4ec9b0; }
-    .token.tag .token.attr-name  { color: #9cdcfe; }
-    .token.attr-value            { color: #ce9178; }
-    .token.property              { color: #9cdcfe; }
-    .token.selector              { color: #d7ba7d; }
+    /* Find panel inputs */
+    .find-field{background:#3c3c3c;border:1px solid #555;border-radius:2px;padding:4px 8px;font-size:12px;color:#cccccc;outline:none;font-family:inherit}
+    .find-field:focus{border-color:#007acc}
+    .find-btn{background:#3c3c3c;border:1px solid #555;color:#cccccc;border-radius:2px;padding:4px 8px;font-size:12px;cursor:pointer;transition:background .1s}
+    .find-btn:hover{background:#4a4a4a}
 
-    /* ── Misc ── */
-    .ease-expo { transition-timing-function: cubic-bezier(0.16,1,0.3,1); }
+    /* Find highlights */
+    mark.find-highlight{background:#623315;color:inherit;border-radius:2px}
+    mark.find-current{background:#9e6a03;color:inherit;outline:1px solid #f0a818;border-radius:2px}
 
-    /* Current-line highlight (subtle) */
-    .active-line-bg {
-        position: absolute; left: 0; right: 0;
-        background: rgba(255,255,255,0.04); pointer-events: none;
-    }
+    /* Status bar pills */
+    .status-pill{padding:0 6px;height:22px;display:inline-flex;align-items:center;gap:3px;cursor:pointer;border-radius:2px;transition:background .1s}
+    .status-pill:hover{background:rgba(255,255,255,.15)}
+
+    /* Stat cards */
+    .stat-card{background:#1e1e1e;border-radius:3px;padding:6px 8px;text-align:center}
+    .stat-val{font-size:15px;font-weight:700;color:#cccccc;font-family:'JetBrains Mono',monospace}
+    .stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#858585;margin-top:1px}
+
+    /* Shortcuts panel */
+    .shortcut-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2a2a2a}
+    .shortcut-row:last-child{border-bottom:none}
+    kbd{background:#3c3c3c;border:1px solid #555;border-radius:3px;padding:2px 6px;font-size:10px;font-family:'JetBrains Mono',monospace;color:#cccccc}
+
+    /* Command palette */
+    .cmd-item{padding:8px 16px;font-size:13px;color:#cccccc;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a2a}
+    .cmd-item:hover,.cmd-item.selected{background:#04395e;color:#fff}
+    .cmd-item i{width:16px;text-align:center;color:#858585;font-size:13px;flex-shrink:0}
+    .cmd-kbd{margin-left:auto;font-size:10px;color:#858585;font-family:'JetBrains Mono',monospace}
 </style>
 
 <script>
-    /* ─────────────────────────────────────────
-       State
-    ───────────────────────────────────────── */
-    let currentMode = 'py';
-    let isDirty     = false;
-    let pendingUrl  = '';
-    let pendingPath = '';
+/* ═══════════════════════════════════
+   STATE
+═══════════════════════════════════ */
+let currentMode = 'py';
+let isDirty      = false;
+let fontSize     = 13;
+let wordWrap     = false;
+let findMatches  = [];
+let findIndex    = 0;
 
-    /* Lang maps */
-    const LANG_MAP  = { py:'python', html:'markup', css:'css', js:'javascript' };
-    const LANG_LABEL = { py:'Python', html:'HTML',   css:'CSS', js:'JavaScript' };
-    const FILE_NAME  = {
-        py:   '{{ slug }}.py',
-        html: '{{ slug }}.html',
-        css:  '{{ slug }}.css',
-        js:   '{{ slug }}.js'
-    };
+const LANG_MAP   = {py:'python',html:'markup',css:'css',js:'javascript'};
+const LANG_LABEL = {py:'Python',html:'HTML',css:'CSS',js:'JavaScript'};
+const FILE_NAME  = {py:'{{ slug }}.py',html:'{{ slug }}.html',css:'{{ slug }}.css',js:'{{ slug }}.js'};
 
-    /* ─────────────────────────────────────────
-       Core helpers
-    ───────────────────────────────────────── */
+const COMMANDS = [
+    {label:'Save file',           icon:'fa-floppy-disk',       kbd:'Ctrl+S',        fn:()=>handleSave()},
+    {label:'Toggle preview',      icon:'fa-eye',               kbd:'Ctrl+Shift+P',  fn:()=>togglePreview()},
+    {label:'Find & replace',      icon:'fa-magnifying-glass',  kbd:'Ctrl+F',        fn:()=>openFind()},
+    {label:'Toggle sidebar',      icon:'fa-sidebar',           kbd:'Ctrl+B',        fn:()=>togglePanel('explorer')},
+    {label:'Switch to Python',    icon:'fa-python',            kbd:'',              fn:()=>switchTab('py')},
+    {label:'Switch to HTML',      icon:'fa-html5',             kbd:'',              fn:()=>switchTab('html')},
+    {label:'Switch to CSS',       icon:'fa-css3-alt',          kbd:'',              fn:()=>switchTab('css')},
+    {label:'Switch to JavaScript',icon:'fa-js',                kbd:'',              fn:()=>switchTab('js')},
+    {label:'Increase font size',  icon:'fa-text-height',       kbd:'Ctrl++',        fn:()=>changeFontSize(1)},
+    {label:'Decrease font size',  icon:'fa-text-height',       kbd:'Ctrl+-',        fn:()=>changeFontSize(-1)},
+    {label:'Toggle word wrap',    icon:'fa-text-width',        kbd:'',              fn:()=>toggleWordWrap()},
+    {label:'Show shortcuts',      icon:'fa-keyboard',          kbd:'',              fn:()=>document.getElementById('shortcuts-panel').classList.toggle('hidden')},
+    {label:'Delete page',         icon:'fa-trash-can',         kbd:'',              fn:()=>confirmDeletion()},
+    {label:'Exit editor',         icon:'fa-arrow-right-from-bracket',kbd:'',       fn:()=>handleExit()},
+];
 
-    /** Get the textarea that is currently visible */
-    function activeTextarea() {
-        return document.querySelector('.editor-panel:not(.hidden) textarea');
+/* ═══════════════════════════════════
+   CORE HELPERS
+═══════════════════════════════════ */
+function activeTextarea(){
+    return document.querySelector('.editor-panel:not(.hidden) textarea');
+}
+
+function syncHighlight(){
+    const ta = activeTextarea();
+    const hl = document.getElementById('highlight-layer');
+    if(!ta||!hl) return;
+    const grammar = Prism.languages[LANG_MAP[currentMode]];
+    hl.innerHTML = (grammar
+        ? Prism.highlight(ta.value, grammar, LANG_MAP[currentMode])
+        : ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    ) + '\n';
+    syncScroll(ta);
+    updateLineNumbers(ta);
+    updateStats(ta);
+}
+
+function syncScroll(el){
+    const hl = document.getElementById('highlight-layer');
+    const ln = document.getElementById('line-numbers');
+    if(hl){hl.scrollTop=el.scrollTop;hl.scrollLeft=el.scrollLeft;}
+    if(ln) ln.scrollTop = el.scrollTop;
+}
+
+function updateLineNumbers(ta){
+    const lines = (ta.value+'\n').split('\n');
+    const before = ta.value.substring(0,ta.selectionStart);
+    const activeLine = before.split('\n').length;
+    const container = document.getElementById('line-numbers');
+    if(!container) return;
+    let html='';
+    for(let i=1;i<lines.length;i++){
+        html+=`<span class="line-number${i===activeLine?' active-line':''}">${i}</span>`;
     }
+    container.innerHTML=html;
+    container.scrollTop=ta.scrollTop;
+}
 
-    /**
-     * FIX 2 — Re-highlight using Prism every time content changes.
-     * Uses 'markup' (not 'html') which is what Prism actually registers.
-     */
-    function syncHighlight() {
-        const ta  = activeTextarea();
-        const hl  = document.getElementById('highlight-layer');
-        if (!ta || !hl) return;
+function updateCursorMetadata(ta){
+    const before = ta.value.substring(0,ta.selectionStart);
+    const lines  = before.split('\n');
+    document.getElementById('pos-indicator').textContent=`Ln ${lines.length}, Col ${lines[lines.length-1].length+1}`;
+    // Selection indicator
+    const selLen = ta.selectionEnd - ta.selectionStart;
+    const selEl  = document.getElementById('sel-indicator');
+    if(selLen>0){ selEl.textContent=`${selLen} sel`; selEl.classList.remove('hidden'); }
+    else selEl.classList.add('hidden');
+    updateLineNumbers(ta);
+}
 
-        const lang = LANG_MAP[currentMode];
-        const grammar = Prism.languages[lang];
+function updateStats(ta){
+    const val = ta.value;
+    const lines = val.split('\n').length;
+    const chars = val.length;
+    const words = val.trim()==='' ? 0 : val.trim().split(/\s+/).length;
+    const size  = new Blob([val]).size;
+    const sizeStr = size<1024 ? size+'B' : size<1048576 ? (size/1024).toFixed(1)+'K' : (size/1048576).toFixed(1)+'M';
+    document.getElementById('stat-lines').textContent = lines;
+    document.getElementById('stat-chars').textContent = chars;
+    document.getElementById('stat-words').textContent = words;
+    document.getElementById('stat-size').textContent  = sizeStr;
+}
 
-        if (grammar) {
-            hl.innerHTML = Prism.highlight(ta.value, grammar, lang) + '\n';
-        } else {
-            /* Fallback: escape HTML so content is at least visible */
-            hl.innerHTML = ta.value
-                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '\n';
-        }
-
-        syncScroll(ta);
-        updateLineNumbers(ta);
-    }
-
-    function syncScroll(el) {
-        const hl  = document.getElementById('highlight-layer');
-        const ln  = document.getElementById('line-numbers');
-        if (hl) { hl.scrollTop = el.scrollTop; hl.scrollLeft = el.scrollLeft; }
-        if (ln) { ln.scrollTop = el.scrollTop; }
-    }
-
-    function updateLineNumbers(ta) {
-        const lines = (ta.value + '\n').split('\n');
-        const container = document.getElementById('line-numbers');
-        if (!container) return;
-
-        /* Detect active line */
-        const before = ta.value.substring(0, ta.selectionStart);
-        const activeLine = before.split('\n').length;
-
-        let html = '';
-        for (let i = 1; i < lines.length; i++) {
-            html += `<span class="line-number${i === activeLine ? ' active-line' : ''}">${i}</span>`;
-        }
-        container.innerHTML = html;
-        container.scrollTop = ta.scrollTop;
-    }
-
-    function updateCursorMetadata(ta) {
-        const before = ta.value.substring(0, ta.selectionStart);
-        const lines  = before.split('\n');
-        const ln     = lines.length;
-        const col    = lines[lines.length - 1].length + 1;
-        document.getElementById('pos-indicator').textContent = `Ln ${ln}, Col ${col}`;
-        updateLineNumbers(ta);
-    }
-
-    /* ─────────────────────────────────────────
-       Tab switching
-    ───────────────────────────────────────── */
-    function switchTab(type) {
-        currentMode = type;
-
-        document.querySelectorAll('.editor-panel').forEach(p => p.classList.add('hidden'));
-        document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.sidebar-file').forEach(f => f.classList.remove('active'));
-
-        document.getElementById(`panel-${type}`).classList.remove('hidden');
-        document.getElementById(`tab-${type}`).classList.add('active');
-        document.getElementById(`side-tab-${type}`).classList.add('active');
-
-        document.getElementById('lang-label').textContent   = LANG_LABEL[type];
-        document.getElementById('breadcrumb-file').textContent = FILE_NAME[type];
-
-        /* FIX 1 — always re-highlight after switching, giving browser a tick
-           to ensure the panel is visible before we read its textarea */
-        requestAnimationFrame(() => {
-            syncHighlight();
-            const ta = activeTextarea();
-            if (ta) { updateCursorMetadata(ta); ta.focus(); }
-        });
-    }
-
-    /* ─────────────────────────────────────────
-       Save / Exit
-    ───────────────────────────────────────── */
-    async function handleSave() {
-        const form     = document.getElementById('cms-form');
-        const formData = new FormData(form);
-
-        /* Ensure all textarea values are included (FormData only picks
-           textareas that are inside the form element; ours use form="cms-form") */
-        formData.set('python_logic', document.querySelector('textarea[name="python_logic"]').value);
-        formData.set('content',      document.querySelector('textarea[name="content"]').value);
-        formData.set('css_content',  document.querySelector('textarea[name="css_content"]').value);
-        formData.set('js_content',   document.querySelector('textarea[name="js_content"]').value);
-
-        try {
-            const response = await fetch(window.location.pathname, { method:'POST', body: formData });
-            if (response.ok) {
-                showToast();
-                isDirty = false;
-                /* Clear dirty dots */
-                document.querySelectorAll('.dirty-dot, .tab-dirty').forEach(d => d.classList.add('hidden'));
-            }
-        } catch (err) { console.error('Save failed:', err); }
-    }
-
-    function showToast() {
-        const toast = document.getElementById('save-toast');
-        toast.style.top = '24px';
-        setTimeout(() => { toast.style.top = '-100px'; }, 3000);
-    }
-
-    function handleExit()    { if (isDirty) toggleExitModal(); else window.location.href = '/admin'; }
-    function toggleExitModal(){ document.getElementById('exit-modal').classList.toggle('hidden'); }
-    async function saveAndExit() { await handleSave(); window.location.href = '/admin'; }
-
-    /* ─────────────────────────────────────────
-       Preview
-    ───────────────────────────────────────── */
-    async function togglePreview() {
-        const modal      = document.getElementById('preview-modal');
-        const frame      = document.getElementById('preview-frame');
-        const consoleOut = document.getElementById('console-output');
-
-        if (!modal.classList.contains('hidden')) { modal.classList.add('hidden'); return; }
-
-        consoleOut.innerHTML = '<span style="color:#858585">Executing server-side logic...</span>';
-
-        const form = new URLSearchParams();
-        form.append('content',      document.querySelector('textarea[name="content"]').value);
-        form.append('css',          document.querySelector('textarea[name="css_content"]').value);
-        form.append('js',           document.querySelector('textarea[name="js_content"]').value);
-        form.append('python_logic', document.querySelector('textarea[name="python_logic"]').value);
-
-        try {
-            const res  = await fetch('/_preview', { method:'POST', body: form });
-            const text = await res.text();
-            frame.srcdoc = text;
-            modal.classList.remove('hidden');
-        } catch (e) {
-            consoleOut.innerHTML = `<span style="color:#f48771">STATUS: Fetch Error. ${e}</span>`;
-        }
-    }
-
-    function setViewport(mode) {
-        const container = document.getElementById('preview-container');
-        const btnD = document.getElementById('view-desktop');
-        const btnM = document.getElementById('view-mobile');
-        if (mode === 'mobile') {
-            container.style.maxWidth = '375px';
-            btnM.classList.add('bg-zinc-800','text-white');
-            btnD.classList.remove('bg-zinc-800','text-white');
-        } else {
-            container.style.maxWidth = '1152px';
-            btnD.classList.add('bg-zinc-800','text-white');
-            btnM.classList.remove('bg-zinc-800','text-white');
-        }
-    }
-
-    function toggleConsole() { document.getElementById('logic-console').classList.toggle('hidden'); }
-
-    /* ─────────────────────────────────────────
-       Preview nav interception
-    ───────────────────────────────────────── */
-    document.getElementById('preview-frame').onload = function() {
-        try {
-            const frameDoc = this.contentDocument || this.contentWindow.document;
-            frameDoc.addEventListener('click', function(e) {
-                const anchor = e.target.closest('a');
-                if (!anchor) return;
-                const href = anchor.getAttribute('href');
-                if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-                e.preventDefault();
-                pendingUrl  = anchor.href;
-                pendingPath = href;
-            });
-        } catch (err) { /* cross-origin — ignore */ }
-    };
-
-    /* ─────────────────────────────────────────
-       Textarea event wiring
-    ───────────────────────────────────────── */
-    document.querySelectorAll('.code-textarea').forEach(ta => {
-
-        /* FIX 2 — sync highlight on EVERY keystroke */
-        ta.addEventListener('input', () => {
-            isDirty = true;
-            markDirty();
-            syncHighlight();
-            updateCursorMetadata(ta);
-        });
-
-        ta.addEventListener('scroll', () => syncScroll(ta));
-        ta.addEventListener('click',  () => updateCursorMetadata(ta));
-        ta.addEventListener('keyup',  () => updateCursorMetadata(ta));
-
-        /* Tab key → 4 spaces */
-        ta.addEventListener('keydown', function(e) {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                const s = this.selectionStart;
-                const end = this.selectionEnd;
-                this.value = this.value.substring(0, s) + '    ' + this.value.substring(end);
-                this.selectionStart = this.selectionEnd = s + 4;
-                syncHighlight();
-                updateCursorMetadata(this);
-            }
-            /* Ctrl/Cmd+S */
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                handleSave();
-            }
-        });
+/* ═══════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════ */
+function switchTab(type){
+    currentMode = type;
+    document.querySelectorAll('.editor-panel').forEach(p=>p.classList.add('hidden'));
+    document.querySelectorAll('.editor-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.sidebar-file').forEach(f=>f.classList.remove('active'));
+    document.getElementById(`panel-${type}`).classList.remove('hidden');
+    document.getElementById(`tab-${type}`).classList.add('active');
+    document.getElementById(`side-tab-${type}`).classList.add('active');
+    document.getElementById('lang-label').textContent = LANG_LABEL[type];
+    document.getElementById('breadcrumb-file').textContent = FILE_NAME[type];
+    requestAnimationFrame(()=>{
+        syncHighlight();
+        const ta = activeTextarea();
+        if(ta){updateCursorMetadata(ta);ta.focus();}
     });
+}
 
-    /* Sidebar fields also mark dirty */
-    document.querySelectorAll('.sidebar-field').forEach(el => {
-        el.addEventListener('input', () => { isDirty = true; markDirty(); });
+/* ═══════════════════════════════════
+   FONT SIZE + WRAP
+═══════════════════════════════════ */
+function changeFontSize(delta){
+    fontSize = Math.max(10, Math.min(24, fontSize+delta));
+    document.getElementById('font-size-label').textContent = fontSize+'px';
+    const style = `font-size:${fontSize}px!important;line-height:1.6`;
+    document.querySelectorAll('.code-textarea, #highlight-layer').forEach(el=>{
+        el.style.fontSize = fontSize+'px';
     });
+    document.querySelectorAll('.line-number').forEach(el=>{el.style.fontSize=(fontSize-1)+'px';});
+    syncHighlight();
+}
 
-    function markDirty() {
-        /* Show amber dot on the active tab and sidebar file */
-        const tabDot  = document.querySelector(`#tab-${currentMode} .tab-dirty`);
-        const sideDot = document.querySelector(`#side-tab-${currentMode} .dirty-dot`);
-        if (tabDot)  tabDot.classList.remove('hidden');
-        if (sideDot) sideDot.classList.remove('hidden');
+function toggleWordWrap(){
+    wordWrap = !wordWrap;
+    const ta = document.querySelectorAll('.code-textarea');
+    const hl = document.getElementById('highlight-layer');
+    ta.forEach(t=>{ t.style.whiteSpace = wordWrap?'pre-wrap':'pre'; t.style.overflowX = wordWrap?'hidden':'auto'; });
+    if(hl){ hl.style.whiteSpace = wordWrap?'pre-wrap':'pre'; }
+    const knob = document.getElementById('wrap-knob');
+    const tog  = document.getElementById('wrap-toggle');
+    if(wordWrap){
+        tog.style.background='#007acc';
+        knob.style.left='16px';
+        knob.style.background='white';
+    } else {
+        tog.style.background='#3c3c3c';
+        knob.style.left='2px';
+        knob.style.background='#858585';
     }
+}
 
-    /* ─────────────────────────────────────────
-       Delete
-    ───────────────────────────────────────── */
-    let deleteConfirm = false;
-    function confirmDeletion() {
-        const btn  = document.getElementById('delete-btn');
-        const text = document.getElementById('delete-text');
-        if (!deleteConfirm) {
-            deleteConfirm = true;
-            text.textContent = 'Confirm Delete?';
-            btn.classList.add('bg-red-600','text-white','animate-pulse');
-            setTimeout(() => {
-                deleteConfirm = false;
-                text.textContent = 'Delete Page';
-                btn.classList.remove('bg-red-600','text-white','animate-pulse');
-            }, 3000);
-        } else {
-            window.location.href = `/admin/delete/{{ slug }}`;
+/* ═══════════════════════════════════
+   FIND & REPLACE
+═══════════════════════════════════ */
+function openFind(){
+    const panel = document.getElementById('find-panel');
+    panel.classList.remove('hidden');
+    const ta = activeTextarea();
+    if(ta && ta.selectionStart!==ta.selectionEnd){
+        document.getElementById('find-input').value = ta.value.substring(ta.selectionStart,ta.selectionEnd);
+    }
+    document.getElementById('find-input').focus();
+    doFind();
+}
+function closeFindPanel(){
+    document.getElementById('find-panel').classList.add('hidden');
+    findMatches=[];
+    syncHighlight();
+}
+
+function doFind(){
+    const query   = document.getElementById('find-input').value;
+    const caseSens= document.getElementById('find-case').checked;
+    const wholeWd = document.getElementById('find-word').checked;
+    const useRegex= document.getElementById('find-regex').checked;
+    const ta = activeTextarea();
+    if(!ta||!query){ document.getElementById('find-count').textContent=''; findMatches=[]; return; }
+
+    let pattern = useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    if(wholeWd && !useRegex) pattern = `\\b${pattern}\\b`;
+    let flags = caseSens ? 'g' : 'gi';
+    try {
+        const re = new RegExp(pattern,flags);
+        findMatches=[];
+        let m;
+        while((m=re.exec(ta.value))!==null){ findMatches.push({start:m.index,end:m.index+m[0].length}); }
+        document.getElementById('find-count').textContent = findMatches.length ? `${Math.min(findIndex+1,findMatches.length)}/${findMatches.length}` : '0/0';
+    } catch(e){ document.getElementById('find-count').textContent='err'; findMatches=[]; }
+}
+
+function findNext(){ if(!findMatches.length) return; findIndex=(findIndex+1)%findMatches.length; jumpToMatch(); }
+function findPrev(){ if(!findMatches.length) return; findIndex=(findIndex-1+findMatches.length)%findMatches.length; jumpToMatch(); }
+function jumpToMatch(){
+    const ta = activeTextarea();
+    if(!ta||!findMatches[findIndex]) return;
+    const m = findMatches[findIndex];
+    ta.focus();
+    ta.setSelectionRange(m.start,m.end);
+    document.getElementById('find-count').textContent=`${findIndex+1}/${findMatches.length}`;
+    // Scroll into view
+    const lineH = fontSize*1.6;
+    const linesBefore = ta.value.substring(0,m.start).split('\n').length-1;
+    ta.scrollTop = Math.max(0,(linesBefore-5)*lineH);
+    syncHighlight();
+}
+
+function doReplaceOne(){
+    const ta = activeTextarea();
+    if(!ta||!findMatches.length) return;
+    const replacement = document.getElementById('replace-input').value;
+    const m = findMatches[findIndex];
+    const before = ta.value.substring(0,m.start);
+    const after  = ta.value.substring(m.end);
+    ta.value = before + replacement + after;
+    isDirty=true; markDirty();
+    doFind(); syncHighlight();
+}
+
+function doReplaceAll(){
+    const ta = activeTextarea();
+    if(!ta||!findMatches.length) return;
+    const query   = document.getElementById('find-input').value;
+    const replacement = document.getElementById('replace-input').value;
+    const caseSens= document.getElementById('find-case').checked;
+    const useRegex= document.getElementById('find-regex').checked;
+    let pattern = useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    try {
+        const re = new RegExp(pattern, caseSens?'g':'gi');
+        ta.value = ta.value.replace(re, replacement);
+        isDirty=true; markDirty(); doFind(); syncHighlight();
+    } catch(e){}
+}
+
+/* ═══════════════════════════════════
+   COMMAND PALETTE
+═══════════════════════════════════ */
+let cmdSelected = 0;
+function openCmdPalette(){
+    document.getElementById('cmd-palette').classList.remove('hidden');
+    document.getElementById('cmd-input').value='';
+    filterCommands();
+    document.getElementById('cmd-input').focus();
+}
+function closeCmdPalette(){ document.getElementById('cmd-palette').classList.add('hidden'); }
+
+function filterCommands(){
+    const q = document.getElementById('cmd-input').value.toLowerCase();
+    const list = document.getElementById('cmd-list');
+    const filtered = COMMANDS.filter(c=>c.label.toLowerCase().includes(q));
+    cmdSelected = 0;
+    list.innerHTML = filtered.map((c,i)=>`
+        <div class="cmd-item${i===0?' selected':''}" onclick="runCmd(${COMMANDS.indexOf(c)})">
+            <i class="fa-solid ${c.icon}"></i>
+            <span>${c.label}</span>
+            ${c.kbd?`<span class="cmd-kbd">${c.kbd}</span>`:''}
+        </div>`).join('');
+}
+
+function cmdKeydown(e){
+    const items = document.querySelectorAll('.cmd-item');
+    if(e.key==='ArrowDown'){ e.preventDefault(); cmdSelected=Math.min(cmdSelected+1,items.length-1); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); cmdSelected=Math.max(cmdSelected-1,0); }
+    else if(e.key==='Enter'){ e.preventDefault(); items[cmdSelected]?.click(); return; }
+    else if(e.key==='Escape'){ closeCmdPalette(); return; }
+    items.forEach((el,i)=>el.classList.toggle('selected',i===cmdSelected));
+    items[cmdSelected]?.scrollIntoView({block:'nearest'});
+}
+
+function runCmd(idx){ COMMANDS[idx]?.fn(); closeCmdPalette(); }
+
+/* ═══════════════════════════════════
+   SAVE / EXIT
+═══════════════════════════════════ */
+async function handleSave(){
+    const form = document.getElementById('cms-form');
+    const fd   = new FormData(form);
+    fd.set('python_logic', document.querySelector('textarea[name="python_logic"]').value);
+    fd.set('content',      document.querySelector('textarea[name="content"]').value);
+    fd.set('css_content',  document.querySelector('textarea[name="css_content"]').value);
+    fd.set('js_content',   document.querySelector('textarea[name="js_content"]').value);
+    try {
+        const r = await fetch(window.location.pathname,{method:'POST',body:fd});
+        if(r.ok){
+            showToast(); isDirty=false;
+            document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d=>d.style.display='none');
         }
+    } catch(err){ console.error('Save failed:',err); }
+}
+
+function showToast(){
+    const t = document.getElementById('save-toast');
+    t.style.top='24px'; setTimeout(()=>t.style.top='-80px',3000);
+}
+function handleExit(){ if(isDirty) toggleExitModal(); else window.location.href='/admin'; }
+function toggleExitModal(){ document.getElementById('exit-modal').classList.toggle('hidden'); }
+async function saveAndExit(){ await handleSave(); window.location.href='/admin'; }
+
+function markDirty(){
+    const td = document.querySelector(`#tab-${currentMode} .tab-dirty`);
+    const sd = document.querySelector(`#side-tab-${currentMode} .dirty-dot`);
+    if(td) td.style.display='block';
+    if(sd) sd.style.display='block';
+}
+
+/* ═══════════════════════════════════
+   SIDEBAR TOGGLE
+═══════════════════════════════════ */
+function togglePanel(name){
+    if(name==='explorer'){
+        const sb = document.getElementById('sidebar');
+        const collapsed = sb.style.width==='0px';
+        sb.style.width = collapsed ? '' : '0px';
+        sb.style.overflow = collapsed ? '' : 'hidden';
+        document.getElementById('act-explorer').classList.toggle('active',collapsed);
+    }
+}
+
+/* ═══════════════════════════════════
+   PREVIEW
+═══════════════════════════════════ */
+async function togglePreview(){
+    const modal      = document.getElementById('preview-modal');
+    const frame      = document.getElementById('preview-frame');
+    const consoleOut = document.getElementById('console-output');
+    if(!modal.classList.contains('hidden')){ modal.classList.add('hidden'); return; }
+    consoleOut.innerHTML='<span style="color:#858585">Compiling…</span>';
+    const fd = new URLSearchParams();
+    fd.append('content',      document.querySelector('textarea[name="content"]').value);
+    fd.append('css',          document.querySelector('textarea[name="css_content"]').value);
+    fd.append('js',           document.querySelector('textarea[name="js_content"]').value);
+    fd.append('python_logic', document.querySelector('textarea[name="python_logic"]').value);
+    try {
+        const res  = await fetch('/_preview',{method:'POST',body:fd});
+        const text = await res.text();
+        frame.srcdoc = text;
+        modal.classList.remove('hidden');
+        consoleOut.innerHTML='<span style="color:#4ec9b0">✓ Rendered successfully</span>';
+    } catch(e){
+        consoleOut.innerHTML=`<span style="color:#f48771">Error: ${e}</span>`;
+    }
+}
+
+function setViewport(mode){
+    const c = document.getElementById('preview-container');
+    const btns = {desktop:'1152px',tablet:'768px',mobile:'375px'};
+    c.style.maxWidth = btns[mode]||'1152px';
+    ['desktop','tablet','mobile'].forEach(m=>{
+        const b = document.getElementById('view-'+m);
+        b.classList.toggle('bg-zinc-800',m===mode);
+        b.classList.toggle('text-white', m===mode);
+        b.classList.toggle('text-zinc-500',m!==mode);
+    });
+}
+
+function toggleConsole(){ document.getElementById('logic-console').classList.toggle('hidden'); }
+
+/* ═══════════════════════════════════
+   KEYBOARD SHORTCUTS (code areas)
+═══════════════════════════════════ */
+function handleEditorKeydown(e, ta){
+    const key = e.key;
+    const ctrl = e.ctrlKey||e.metaKey;
+    const shift = e.shiftKey;
+    const alt = e.altKey;
+
+    /* Ctrl+S */
+    if(ctrl && key==='s'){ e.preventDefault(); handleSave(); return; }
+    /* Ctrl+F */
+    if(ctrl && key==='f'){ e.preventDefault(); openFind(); return; }
+    /* Ctrl+P */
+    if(ctrl && !shift && key==='p'){ e.preventDefault(); openCmdPalette(); return; }
+    /* Ctrl+Shift+P */
+    if(ctrl && shift && key==='P'){ e.preventDefault(); togglePreview(); return; }
+    /* Ctrl++ / Ctrl+- */
+    if(ctrl && (key==='='||key==='+')){ e.preventDefault(); changeFontSize(1); return; }
+    if(ctrl && key==='-'){ e.preventDefault(); changeFontSize(-1); return; }
+    /* Escape — close find */
+    if(key==='Escape'){ closeFindPanel(); closeCmdPalette(); return; }
+
+    /* Tab / Shift+Tab */
+    if(key==='Tab'){
+        e.preventDefault();
+        const s=ta.selectionStart, en=ta.selectionEnd;
+        if(!shift){
+            ta.value=ta.value.substring(0,s)+'    '+ta.value.substring(en);
+            ta.selectionStart=ta.selectionEnd=s+4;
+        } else {
+            /* Outdent: remove up to 4 spaces before cursor on this line */
+            const lineStart = ta.value.lastIndexOf('\n',s-1)+1;
+            const lineText  = ta.value.substring(lineStart,s);
+            const spaces    = lineText.match(/^ {1,4}/)?.[0]?.length||0;
+            if(spaces>0){
+                ta.value=ta.value.substring(0,lineStart)+ta.value.substring(lineStart+spaces);
+                ta.selectionStart=ta.selectionEnd=Math.max(lineStart,s-spaces);
+            }
+        }
+        syncHighlight(); updateCursorMetadata(ta); return;
     }
 
-    /* ─────────────────────────────────────────
-       FIX 1 — Init: wait for Prism scripts to
-       finish loading before first highlight.
-       Using a short setTimeout is the simplest
-       cross-browser guarantee.
-    ───────────────────────────────────────── */
-    window.addEventListener('load', () => {
-        setTimeout(() => switchTab('py'), 80);
+    /* Ctrl+/ — toggle line comment */
+    if(ctrl && key==='/'){
+        e.preventDefault();
+        const pos = ta.selectionStart;
+        const lineStart = ta.value.lastIndexOf('\n',pos-1)+1;
+        const lineEnd   = ta.value.indexOf('\n',pos); const le = lineEnd===-1?ta.value.length:lineEnd;
+        const line = ta.value.substring(lineStart,le);
+        const prefixes = {py:'# ',html:'<!-- ',css:'/* ',js:'// '};
+        const pre = prefixes[currentMode]||'// ';
+        let newLine, offset;
+        if(line.trimStart().startsWith(pre.trim())){
+            const idx = line.indexOf(pre.trim());
+            newLine = line.substring(0,idx)+line.substring(idx+pre.length);
+            offset = -pre.length;
+        } else {
+            newLine = pre + line;
+            offset = pre.length;
+        }
+        ta.value = ta.value.substring(0,lineStart)+newLine+ta.value.substring(le);
+        ta.selectionStart=ta.selectionEnd=pos+offset;
+        syncHighlight(); updateCursorMetadata(ta); return;
+    }
+
+    /* Shift+Alt+D — duplicate line */
+    if(shift && alt && key.toLowerCase()==='d'){
+        e.preventDefault();
+        const pos = ta.selectionStart;
+        const lineStart = ta.value.lastIndexOf('\n',pos-1)+1;
+        const lineEnd   = ta.value.indexOf('\n',pos); const le = lineEnd===-1?ta.value.length:lineEnd;
+        const line = ta.value.substring(lineStart,le);
+        ta.value = ta.value.substring(0,le)+'\n'+line+ta.value.substring(le);
+        ta.selectionStart=ta.selectionEnd=pos+(le-lineStart+1);
+        syncHighlight(); updateCursorMetadata(ta); return;
+    }
+
+    /* Ctrl+Shift+K — delete line */
+    if(ctrl && shift && key==='K'){
+        e.preventDefault();
+        const pos = ta.selectionStart;
+        const lineStart = ta.value.lastIndexOf('\n',pos-1)+1;
+        let lineEnd = ta.value.indexOf('\n',pos);
+        if(lineEnd===-1) lineEnd=ta.value.length; else lineEnd++;
+        ta.value=ta.value.substring(0,lineStart)+ta.value.substring(lineEnd);
+        ta.selectionStart=ta.selectionEnd=lineStart;
+        syncHighlight(); updateCursorMetadata(ta); return;
+    }
+
+    /* Alt+↑/↓ — move line */
+    if(alt && (key==='ArrowUp'||key==='ArrowDown')){
+        e.preventDefault();
+        const pos = ta.selectionStart;
+        const lineStart = ta.value.lastIndexOf('\n',pos-1)+1;
+        const lineEnd   = ta.value.indexOf('\n',pos); const le = lineEnd===-1?ta.value.length:lineEnd;
+        const line = ta.value.substring(lineStart,le);
+        if(key==='ArrowUp' && lineStart>0){
+            const prevLineEnd = lineStart-1;
+            const prevLineStart = ta.value.lastIndexOf('\n',prevLineEnd-1)+1;
+            const prevLine = ta.value.substring(prevLineStart,prevLineEnd);
+            ta.value=ta.value.substring(0,prevLineStart)+line+'\n'+prevLine+ta.value.substring(le);
+            const newPos = prevLineStart+(pos-lineStart);
+            ta.selectionStart=ta.selectionEnd=newPos;
+        } else if(key==='ArrowDown' && le<ta.value.length){
+            const nextLineEnd = ta.value.indexOf('\n',le+1); const nle = nextLineEnd===-1?ta.value.length:nextLineEnd;
+            const nextLine = ta.value.substring(le+1,nle);
+            ta.value=ta.value.substring(0,lineStart)+nextLine+'\n'+line+ta.value.substring(nle);
+            const newPos = lineStart+nextLine.length+1+(pos-lineStart);
+            ta.selectionStart=ta.selectionEnd=newPos;
+        }
+        syncHighlight(); updateCursorMetadata(ta); return;
+    }
+
+    /* Auto-close brackets / quotes */
+    const PAIRS = {'(':')','{':'}','[':']','"':'"',"'":"'",'`':'`'};
+    if(PAIRS[key] && !ctrl){
+        e.preventDefault();
+        const s=ta.selectionStart, en=ta.selectionEnd;
+        const selected = ta.value.substring(s,en);
+        ta.value=ta.value.substring(0,s)+key+selected+PAIRS[key]+ta.value.substring(en);
+        ta.selectionStart=ta.selectionEnd=s+1+(selected.length>0?selected.length:0);
+        syncHighlight(); updateCursorMetadata(ta); return;
+    }
+}
+
+/* ═══════════════════════════════════
+   WIRE TEXTAREAS
+═══════════════════════════════════ */
+document.querySelectorAll('.code-textarea').forEach(ta=>{
+    ta.addEventListener('input',()=>{
+        isDirty=true; markDirty(); syncHighlight(); updateCursorMetadata(ta);
     });
+    ta.addEventListener('scroll',()=>syncScroll(ta));
+    ta.addEventListener('click', ()=>updateCursorMetadata(ta));
+    ta.addEventListener('keyup', ()=>updateCursorMetadata(ta));
+    ta.addEventListener('keydown',e=>handleEditorKeydown(e,ta));
+});
+document.querySelectorAll('.sidebar-field').forEach(el=>{
+    el.addEventListener('input',()=>{ isDirty=true; markDirty(); });
+});
+
+/* ═══════════════════════════════════
+   FIND — keyboard nav
+═══════════════════════════════════ */
+document.getElementById('find-input').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){ e.shiftKey?findPrev():findNext(); }
+    if(e.key==='Escape') closeFindPanel();
+});
+
+/* ═══════════════════════════════════
+   DELETE
+═══════════════════════════════════ */
+let deleteConfirm=false;
+function confirmDeletion(){
+    const btn=document.getElementById('delete-btn');
+    const txt=document.getElementById('delete-text');
+    if(!deleteConfirm){
+        deleteConfirm=true; txt.textContent='Confirm Delete?';
+        btn.classList.add('bg-red-600','text-white','animate-pulse');
+        setTimeout(()=>{ deleteConfirm=false; txt.textContent='Delete Page'; btn.classList.remove('bg-red-600','text-white','animate-pulse'); },3000);
+    } else { window.location.href='/admin/delete/{{ slug }}'; }
+}
+
+/* ═══════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+window.addEventListener('load',()=>setTimeout(()=>switchTab('py'),80));
 </script>
 {% endblock %}
