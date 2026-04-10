@@ -445,8 +445,12 @@
                 }, 500);
             };
 
+            // Check for common bot signatures in the user agent to avoid blocking crawlers
+            const isBot = /bot|googlebot|crawler|spider|robot|crawling|facebookexternalhit|linkedinbot/i.test(navigator.userAgent);
             const hasAccepted = localStorage.getItem('data-notice-accepted');
-            if (!hasAccepted) {
+
+            // Only show the modal if the user is human AND hasn't accepted yet
+            if (!hasAccepted && !isBot) {
                 setTimeout(() => {
                     dataModal.classList.remove('hidden');
                     setTimeout(() => {
@@ -456,6 +460,9 @@
                     }, 10);
                     document.body.style.overflow = 'hidden';
                 }, 600);
+            } else if (isBot) {
+                // Ensure the modal is strictly hidden for bots so it doesn't interfere with snapshots
+                dataModal.classList.add('hidden');
             }
         });
     </script>
