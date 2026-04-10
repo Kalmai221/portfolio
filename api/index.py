@@ -1055,6 +1055,23 @@ def robots_dot_txt():
     """Serves the robots.txt from the static folder at the root level."""
     return send_from_directory(app.static_folder, 'robots.txt')
 
+@app.route('/admin/api/reorder-nav', methods=['POST'])
+@login_required
+def api_reorder_nav():
+    """Updates the entire nav_links array via AJAX."""
+    data = request.get_json()
+    if not data or 'nav_links' not in data:
+        return {"error": "Invalid data"}, 400
+
+    try:
+        settings_collection.update_one(
+            {"name": "global_config"},
+            {"$set": {"nav_links": data['nav_links']}},
+            upsert=True
+        )
+        return {"status": "success"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 @app.errorhandler(404)
 def page_not_found(e):

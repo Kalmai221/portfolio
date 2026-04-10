@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
 <div class="max-w-7xl mx-auto px-6 py-12 space-y-12 reveal">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 pb-8 border-b border-zinc-900">
         <div>
@@ -9,7 +11,7 @@
         
         <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
             <button onclick="toggleSettingsModal(true)" class="btn btn-secondary !px-5 !text-[11px] font-bold uppercase tracking-widest flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 System Settings
             </button>
             <div class="flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-md focus-within:border-zinc-600 transition-colors shadow-sm flex-grow md:flex-grow-0">
@@ -139,18 +141,28 @@
                     <div id="nav-tab" class="tab-content space-y-8">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Navigation Links</h3>
-                            <span class="text-[10px] text-zinc-700 font-mono">{{ settings.nav_links|length }} / 8 Slots Used</span>
+                            <div class="flex items-center gap-4">
+                                <span class="text-[10px] text-zinc-700 font-mono">{{ settings.nav_links|length }} / 8 Slots Used</span>
+                                <button id="save-nav-order" onclick="saveNavOrder()" class="btn !bg-brand !text-white !py-1.5 !px-4 !text-[10px] font-bold uppercase tracking-widest opacity-50 cursor-not-allowed transition-all" disabled>
+                                    Save Order
+                                </button>
+                            </div>
                         </div>
 
                         <div class="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden shadow-inner">
                             <table class="w-full text-left table-fixed">
-                                <tbody class="divide-y divide-zinc-900">
+                                <tbody id="sortable-nav" class="divide-y divide-zinc-900">
                                     {% for link in settings.nav_links %}
-                                    <tr class="hover:bg-zinc-900/30 transition-all group">
+                                    <tr class="hover:bg-zinc-900/30 transition-all group cursor-move" data-label="{{ link.label }}" data-url="{{ link.url }}">
                                         <td class="px-4 md:px-6 py-4">
-                                            <div class="flex flex-col gap-0.5">
-                                                <span class="font-bold text-zinc-200 text-sm group-hover:text-brand transition-colors">{{ link.label }}</span>
-                                                <span class="text-zinc-600 font-mono text-[10px] truncate">{{ link.url }}</span>
+                                            <div class="flex items-center gap-4">
+                                                <div class="text-zinc-700 group-hover:text-zinc-500">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 11-2 2 2 2 0 012-2zm3 0a2 2 0 11-2 2 2 2 0 012-2zm3 0a2 2 0 11-2 2 2 2 0 012-2zM7 5a2 2 0 11-2 2 2 2 0 012-2zm3 0a2 2 0 11-2 2 2 2 0 012-2zm3 0a2 2 0 11-2 2 2 2 0 012-2z"/></svg>
+                                                </div>
+                                                <div class="flex flex-col gap-0.5">
+                                                    <span class="font-bold text-zinc-200 text-sm group-hover:text-brand transition-colors">{{ link.label }}</span>
+                                                    <span class="text-zinc-600 font-mono text-[10px] truncate">{{ link.url }}</span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td class="px-4 md:px-6 py-4 text-right">
@@ -296,6 +308,60 @@
         } else {
             btn.classList.add('text-brand', 'border-brand');
             btn.classList.remove('text-zinc-500', 'border-transparent');
+        }
+    }
+
+    // New Sortable logic and AJAX save
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById('sortable-nav');
+        const saveBtn = document.getElementById('save-nav-order');
+
+        if (el) {
+            Sortable.create(el, {
+                animation: 150,
+                ghostClass: 'bg-brand/5',
+                onEnd: () => {
+                    // Enable save button when order changes
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+    });
+
+    async function saveNavOrder() {
+        const rows = document.querySelectorAll('#sortable-nav tr');
+        const newOrder = Array.from(rows).map(row => ({
+            label: row.dataset.label,
+            url: row.dataset.url
+        }));
+
+        const saveBtn = document.getElementById('save-nav-order');
+        const originalText = saveBtn.innerText;
+        saveBtn.innerText = "Saving...";
+
+        try {
+            const response = await fetch('/admin/api/reorder-nav', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nav_links: newOrder })
+            });
+
+            if (response.ok) {
+                saveBtn.innerText = "Saved!";
+                saveBtn.classList.replace('bg-brand', 'bg-emerald-600');
+                setTimeout(() => {
+                    saveBtn.innerText = originalText;
+                    saveBtn.classList.replace('bg-emerald-600', 'bg-brand');
+                    saveBtn.disabled = true;
+                    saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }, 2000);
+            } else {
+                saveBtn.innerText = "Error!";
+            }
+        } catch (err) {
+            console.error("Failed to save order:", err);
+            saveBtn.innerText = "Error!";
         }
     }
 </script>
