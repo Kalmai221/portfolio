@@ -431,39 +431,49 @@
             document.getElementById('close-menu').onclick = () => toggleMobileMenu(false);
             mobileOverlay.onclick = () => toggleMobileMenu(false);
 
-            // 3. Privacy Modal Logic
-            const dataModal = document.getElementById('data-modal');
-            const modalContainer = document.getElementById('data-modal-container');
+        // 3. Privacy Modal Logic
+        const dataModal = document.getElementById('data-modal');
+        const modalContainer = document.getElementById('data-modal-container');
 
-            window.acceptDataNotice = function() {
-                localStorage.setItem('data-notice-accepted', 'true');
-                modalContainer.classList.add('translate-y-full');
-                dataModal.classList.remove('opacity-100');
-                setTimeout(() => {
-                    dataModal.classList.add('hidden');
-                    document.body.style.overflow = '';
-                }, 500);
-            };
-
-            // Check for common bot signatures in the user agent to avoid blocking crawlers
-            const isBot = /bot|googlebot|crawler|spider|robot|crawling|facebookexternalhit|linkedinbot/i.test(navigator.userAgent);
-            const hasAccepted = localStorage.getItem('data-notice-accepted');
-
-            // Only show the modal if the user is human AND hasn't accepted yet
-            if (!hasAccepted && !isBot) {
-                setTimeout(() => {
-                    dataModal.classList.remove('hidden');
-                    setTimeout(() => {
-                        dataModal.classList.add('opacity-100');
-                        modalContainer.classList.remove('translate-y-full');
-                        modalContainer.classList.add('translate-y-0');
-                    }, 10);
-                    document.body.style.overflow = 'hidden';
-                }, 600);
-            } else if (isBot) {
-                // Ensure the modal is strictly hidden for bots so it doesn't interfere with snapshots
+        window.acceptDataNotice = function() {
+            localStorage.setItem('data-notice-accepted', 'true');
+            modalContainer.classList.add('translate-y-full');
+            dataModal.classList.remove('opacity-100');
+            setTimeout(() => {
                 dataModal.classList.add('hidden');
-            }
+                document.body.style.overflow = '';
+            }, 500);
+        };
+
+        // --- ENHANCED BOT DETECTION ---
+        // 1. Check URL parameters for ?isBot=true (Triggered by your Python og-image route)
+        const urlParams = new URLSearchParams(window.location.search);
+        const isBotParam = urlParams.get('isBot') === 'true';
+
+        // 2. Check User Agent strings for common crawlers
+        const isBotUA = /bot|googlebot|crawler|spider|robot|crawling|facebookexternalhit|linkedinbot|preview/i.test(navigator.userAgent);
+
+        // Combined check
+        const isBot = isBotParam || isBotUA;
+        const hasAccepted = localStorage.getItem('data-notice-accepted');
+
+        // Execution Logic
+        if (!hasAccepted && !isBot) {
+            // Show modal for real, new human visitors
+            setTimeout(() => {
+                dataModal.classList.remove('hidden');
+                setTimeout(() => {
+                    dataModal.classList.add('opacity-100');
+                    modalContainer.classList.remove('translate-y-full');
+                    modalContainer.classList.add('translate-y-0');
+                }, 10);
+                document.body.style.overflow = 'hidden';
+            }, 600);
+        } else {
+            // Strictly hide for bots or returning users
+            dataModal.classList.add('hidden');
+            document.body.style.overflow = ''; // Ensure scrolling is enabled for snapshots
+        }
         });
     </script>
 </body>
