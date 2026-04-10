@@ -961,11 +961,11 @@ def sitemap():
     })
 
     excluded_endpoints = [
-        'static', 'login', 'logout', 'admin_dashboard', 'update_settings',
-        'add_nav_link', 'delete_nav_link', 'toggle_maintenance',
-        'admin_analytics', 'edit_page', 'delete_page', 'sitemap',
-        'dynamic_og_image', 'robots_dot_txt', "trial", "_preview", 
-        "trial/analytics", "trial/edit", "trial/toggle-maintenance"
+        '/static', '/login', '/logout', '/admin_dashboard', '/update_settings',
+        '/add_nav_link', '/delete_nav_link', '/toggle_maintenance',
+        '/admin_analytics', '/edit_page', '/delete_page', '/sitemap',
+        '/dynamic_og_image', '/robots_dot_txt', "/trial", "/_preview", 
+        "/trial/analytics", "/trial/toggle-maintenance"
     ]
 
     # 1. Static Routes (Python logic)
@@ -977,7 +977,7 @@ def sitemap():
                     x in route_path.lower() or x in rule.endpoint.lower()
                     for x in ["test", "admin"]):
                 continue
-            if rule.endpoint not in excluded_endpoints:
+            if route_path not in excluded_endpoints:
                 pages.append({
                     "url": f"{base_url}{route_path}",
                     "lastmod": datetime.now().strftime('%Y-%m-%d'),
