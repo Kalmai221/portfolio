@@ -925,7 +925,7 @@ def dynamic_og_image():
     site_title = f"{first_name} {last_name}"
 
     # 2. Thum.io URL - Adding 'delay/3' gives your Tailwind/Fonts time to render
-    api_url = f"https://image.thum.io/get/width/1200/crop/630/delay/3/noanimate/{target_url}"
+    api_url = f"https://image.thum.io/get/width/1200/crop/630/delay/3/{target_url}"
     
     from urllib.parse import quote
     clean_title = quote(f"{site_title} | Portfolio")
