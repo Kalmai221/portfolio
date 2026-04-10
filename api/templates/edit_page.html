@@ -6,7 +6,7 @@
     </div>
     <h2 class="text-white font-bold text-xl mb-2 uppercase tracking-tight">Desktop Environment Required</h2>
     <p class="text-zinc-500 text-sm max-w-xs leading-relaxed mb-8">
-        The Node Editor is optimized for large displays to support precise code editing and configuration. 
+        The Node Editor is optimized for large displays to support precise code editing and configuration.
         Please switch to a desktop browser to continue.
     </p>
     <a href="/admin" class="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded hover:text-white transition-all">
@@ -27,7 +27,7 @@
 </div>
 
 <div id="exit-modal" class="hidden fixed inset-0 z-[600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-[#252526] border border-zinc-800 w-full max-w-md p-6 rounded-lg shadow-2xl">
+    <div class="bg-[#252526] border border-zinc-700 w-full max-w-md p-6 rounded-lg shadow-2xl">
         <h3 class="text-white font-bold text-lg mb-2">Unsaved Progress</h3>
         <p class="text-zinc-400 text-sm mb-6">There are unsaved changes in the current buffer. Would you like to commit these changes before exiting?</p>
         <div class="flex flex-col gap-2">
@@ -38,78 +38,90 @@
     </div>
 </div>
 
-<div class="fixed inset-0 z-[200] bg-[#1e1e1e] flex flex-col lg:flex-row overflow-hidden font-sans selection:bg-brand/30">
-    
-    <div class="w-12 bg-[#333333] flex flex-col items-center py-4 gap-4 border-r border-[#191919] hidden lg:flex shrink-0">
-        <div class="p-2 text-zinc-100 border-l-2 border-brand cursor-pointer">
+<div class="fixed inset-0 z-[200] bg-[#1e1e1e] flex flex-col lg:flex-row overflow-hidden font-sans selection:bg-[#264f78]">
+
+    <!-- Activity Bar -->
+    <div class="w-12 bg-[#333333] flex-col items-center py-2 gap-1 border-r border-[#191919] hidden lg:flex shrink-0">
+        <div class="w-10 h-10 flex items-center justify-center text-white border-l-2 border-[#007acc] cursor-pointer" title="Explorer">
             <i class="fa-regular fa-folder-open text-[18px]"></i>
         </div>
-        <div onclick="togglePreview()" class="p-2 text-zinc-500 hover:text-zinc-100 transition-colors cursor-pointer" title="Preview Changes">
-            <i class="fa-solid fa-eye"></i>
+        <div onclick="togglePreview()" class="w-10 h-10 flex items-center justify-center text-[#858585] hover:text-white transition-colors cursor-pointer" title="Preview">
+            <i class="fa-solid fa-eye text-[16px]"></i>
         </div>
-        
-        <div class="mt-auto flex flex-col items-center gap-4 mb-2">
-            <button onclick="handleSave()" class="p-2 text-emerald-500 hover:text-emerald-400 transition-colors" title="Save (Ctrl+S)">
-                <i class="fa-solid fa-floppy-disk text-[20px]"></i>
+        <div class="mt-auto flex flex-col items-center gap-1 mb-2">
+            <button onclick="handleSave()" class="w-10 h-10 flex items-center justify-center text-[#858585] hover:text-emerald-400 transition-colors" title="Save (Ctrl+S)">
+                <i class="fa-solid fa-floppy-disk text-[18px]"></i>
             </button>
-            <button onclick="handleExit()" class="p-2 text-zinc-500 hover:text-red-400 transition-colors" title="Close Editor">
-                <i class="fa-solid fa-arrow-right-from-bracket text-[18px]"></i>
+            <button onclick="handleExit()" class="w-10 h-10 flex items-center justify-center text-[#858585] hover:text-red-400 transition-colors" title="Close Editor">
+                <i class="fa-solid fa-arrow-right-from-bracket text-[16px]"></i>
             </button>
         </div>
     </div>
 
-    <div class="w-full lg:w-64 bg-[#252526] flex flex-col border-r border-[#1e1e1e] shrink-0">
-        <div class="px-4 py-3 border-b border-[#1e1e1e]">
-            <span class="text-[10px] font-sans text-zinc-500 uppercase tracking-widest font-bold">Explorer</span>
+    <!-- Sidebar -->
+    <div class="w-full lg:w-60 bg-[#252526] flex flex-col border-r border-[#1e1e1e] shrink-0">
+        <div class="px-3 py-2 border-b border-[#1e1e1e]">
+            <span class="text-[11px] font-bold text-[#bbbbbe] uppercase tracking-widest">Explorer</span>
         </div>
-        
+
         <div class="flex-grow overflow-y-auto custom-scrollbar">
-            <div class="bg-[#37373d]/50 px-2 py-1.5 flex items-center gap-2 text-[10px] font-bold text-zinc-300 uppercase cursor-default">
+            <!-- Files section -->
+            <div class="px-2 py-1.5 flex items-center gap-1.5 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider cursor-default select-none">
                 <i class="fa-solid fa-chevron-down text-[8px]"></i>
-                Files
+                MY-PROJECT
             </div>
-            
-            <div class="flex flex-col py-1">
+
+            <div class="flex flex-col">
                 <button type="button" onclick="switchTab('py')" class="sidebar-file active" id="side-tab-py">
-                    <i class="fa-brands fa-python text-[14px]" style="color: #3776AB;"></i> {{ slug }}.py
+                    <i class="fa-brands fa-python text-[13px]" style="color:#3794ff"></i>
+                    <span>{{ slug }}.py</span>
+                    <span class="dirty-dot ml-auto w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
                 </button>
                 <button type="button" onclick="switchTab('html')" class="sidebar-file" id="side-tab-html">
-                    <i class="fa-brands fa-html5 text-[14px]" style="color: #E44D26;"></i> {{ slug }}.html
+                    <i class="fa-brands fa-html5 text-[13px]" style="color:#e34c26"></i>
+                    <span>{{ slug }}.html</span>
+                    <span class="dirty-dot ml-auto w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
                 </button>
                 <button type="button" onclick="switchTab('css')" class="sidebar-file" id="side-tab-css">
-                    <i class="fa-brands fa-css3-alt text-[14px]" style="color: #264DE4;"></i> {{ slug }}.css
+                    <i class="fa-brands fa-css3-alt text-[13px]" style="color:#264de4"></i>
+                    <span>{{ slug }}.css</span>
+                    <span class="dirty-dot ml-auto w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
                 </button>
                 <button type="button" onclick="switchTab('js')" class="sidebar-file" id="side-tab-js">
-                    <i class="fa-brands fa-js text-[14px]" style="color: #F7DF1E;"></i> {{ slug }}.js
+                    <i class="fa-brands fa-js text-[13px]" style="color:#f7df1e"></i>
+                    <span>{{ slug }}.js</span>
+                    <span class="dirty-dot ml-auto w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
                 </button>
             </div>
 
+            <!-- Configuration section -->
             <div class="mt-4 border-t border-[#1e1e1e]">
-                <div class="bg-[#37373d]/50 px-2 py-2 flex items-center gap-2 text-[10px] font-bold text-zinc-300 uppercase cursor-default tracking-wider">
+                <div class="px-3 py-2 flex items-center gap-2 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider cursor-default select-none">
                     <i class="fa-solid fa-sliders text-[10px]"></i>
                     Configuration
                 </div>
-                <div class="p-4 space-y-5">
-                    <form id="cms-form" method="POST" class="space-y-4">
-                        <div class="space-y-1.5">
-                            <label class="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-widest">Page Title</label>
+                <div class="p-3 space-y-4">
+                    <form id="cms-form" method="POST" class="space-y-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest">Page Title</label>
                             <input type="text" name="title" value="{{ page.title if page else '' }}" required class="sidebar-field" placeholder="Untitled Page">
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-widest">URL Segment</label>
-                            <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono text-brand/90" placeholder="index">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest">URL Segment</label>
+                            <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono" style="color:#9cdcfe" placeholder="index">
                         </div>
                     </form>
                 </div>
             </div>
 
+            <!-- System Actions -->
             <div class="mt-auto border-t border-[#1e1e1e]">
-                <div class="bg-zinc-900/50 px-2 py-2 flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase cursor-default tracking-wider">
+                <div class="px-3 py-2 flex items-center gap-2 text-[10px] font-bold text-[#858585] uppercase tracking-wider cursor-default select-none">
                     <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
                     System Actions
                 </div>
-                <div class="p-4">
-                    <button type="button" id="delete-btn" onclick="confirmDeletion()" class="w-full flex items-center justify-center gap-2 py-2 bg-zinc-800/50 border border-zinc-700 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-red-600/20 hover:text-red-500 hover:border-red-500/30 transition-all duration-200">
+                <div class="p-3">
+                    <button type="button" id="delete-btn" onclick="confirmDeletion()" class="w-full flex items-center justify-center gap-2 py-2 bg-transparent border border-[#3c3c3c] text-[#858585] text-[10px] font-bold uppercase tracking-widest rounded hover:bg-red-600/20 hover:text-red-400 hover:border-red-500/40 transition-all duration-200">
                         <i class="fa-solid fa-trash-can text-[10px]"></i>
                         <span id="delete-text">Delete Page</span>
                     </button>
@@ -118,27 +130,44 @@
         </div>
     </div>
 
+    <!-- Main Editor Area -->
     <div class="flex-grow flex flex-col bg-[#1e1e1e] min-w-0 h-full">
-        <div class="flex bg-[#2d2d2d] shrink-0 overflow-x-auto no-scrollbar border-b border-[#191919]">
+
+        <!-- Tabs -->
+        <div class="flex bg-[#2d2d2d] shrink-0 overflow-x-auto no-scrollbar" style="border-bottom:1px solid #252526">
             <button type="button" onclick="switchTab('py')" id="tab-py" class="editor-tab active">
-                <i class="fa-brands fa-python mr-2 text-[13px]" style="color: #3776AB;"></i> {{ slug }}.py
+                <i class="fa-brands fa-python mr-2 text-[12px]" style="color:#3794ff"></i>{{ slug }}.py
+                <span class="tab-dirty ml-2 w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
             </button>
             <button type="button" onclick="switchTab('html')" id="tab-html" class="editor-tab">
-                <i class="fa-brands fa-html5 mr-2 text-[13px]" style="color: #E44D26;"></i> {{ slug }}.html
+                <i class="fa-brands fa-html5 mr-2 text-[12px]" style="color:#e34c26"></i>{{ slug }}.html
+                <span class="tab-dirty ml-2 w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
             </button>
             <button type="button" onclick="switchTab('css')" id="tab-css" class="editor-tab">
-                <i class="fa-brands fa-css3-alt mr-2 text-[13px]" style="color: #264DE4;"></i> {{ slug }}.css
+                <i class="fa-brands fa-css3-alt mr-2 text-[12px]" style="color:#264de4"></i>{{ slug }}.css
+                <span class="tab-dirty ml-2 w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
             </button>
             <button type="button" onclick="switchTab('js')" id="tab-js" class="editor-tab">
-                <i class="fa-brands fa-js mr-2 text-[13px]" style="color: #F7DF1E;"></i> {{ slug }}.js
+                <i class="fa-brands fa-js mr-2 text-[12px]" style="color:#f7df1e"></i>{{ slug }}.js
+                <span class="tab-dirty ml-2 w-2 h-2 rounded-full bg-[#e8a838] hidden"></span>
             </button>
         </div>
 
-        <div class="flex-grow flex relative overflow-hidden">
-            <div id="line-numbers" class="w-12 bg-[#1e1e1e] flex flex-col items-end pr-3 pt-4 select-none shrink-0 border-r border-[#2d2d2d] z-10 custom-scrollbar overflow-hidden"></div>
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-1.5 px-4 py-1 bg-[#1e1e1e] border-b border-[#2d2d2d] shrink-0 select-none">
+            <span class="text-[12px] text-[#858585]">MY-PROJECT</span>
+            <span class="text-[12px] text-[#858585]">›</span>
+            <span class="text-[12px] text-[#cccccc]" id="breadcrumb-file">{{ slug }}.py</span>
+        </div>
 
+        <!-- Editor Body -->
+        <div class="flex-grow flex relative overflow-hidden">
+            <!-- Line Numbers -->
+            <div id="line-numbers" class="bg-[#1e1e1e] flex flex-col items-end pr-4 pt-[14px] select-none shrink-0 border-r border-[#2d2d2d] z-10 overflow-hidden" style="min-width:50px"></div>
+
+            <!-- Code Area -->
             <div class="flex-grow relative h-full bg-[#1e1e1e] overflow-hidden">
-                <div id="highlight-layer" class="absolute inset-0 p-4 pointer-events-none font-mono text-[14px] leading-6 whitespace-pre overflow-hidden bg-transparent z-0"></div>
+                <div id="highlight-layer" class="absolute inset-0 pointer-events-none font-mono whitespace-pre overflow-hidden bg-transparent z-0"></div>
                 <div class="absolute inset-0 z-10 overflow-hidden">
                     <div id="panel-py" class="editor-panel block h-full w-full">
                         <textarea name="python_logic" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false" onscroll="syncScroll(this)">{{ page.python_logic if page else '' }}</textarea>
@@ -156,19 +185,28 @@
             </div>
         </div>
 
-        <div class="h-6 bg-zinc-800 flex items-center px-3 justify-between text-[10px] font-sans text-zinc-400 shrink-0 z-20">
-            <div class="flex items-center gap-4">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-code-branch text-[9px]"></i> main*</span>
-                <span id="pos-indicator">Ln 1, Col 1</span>
+        <!-- VS Code-style Status Bar -->
+        <div class="h-[22px] flex items-center px-2 justify-between shrink-0 z-20 text-[11px] select-none" style="background:#007acc;color:rgba(255,255,255,0.9)">
+            <div class="flex items-center gap-1">
+                <span class="flex items-center gap-1 px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">
+                    <i class="fa-solid fa-code-branch text-[9px]"></i> main
+                </span>
+                <span class="flex items-center gap-1 px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">
+                    <i class="fa-solid fa-circle-check text-[9px]"></i> 0
+                </span>
             </div>
-            <div class="flex items-center gap-4">
-                <span>UTF-8</span>
-                <span id="lang-label">Python</span>
+            <div class="flex items-center gap-1">
+                <span id="pos-indicator" class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">Ln 1, Col 1</span>
+                <span class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">Spaces: 4</span>
+                <span class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">UTF-8</span>
+                <span class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">LF</span>
+                <span id="lang-label" class="px-2 py-px hover:bg-white/20 cursor-pointer rounded-sm">Python</span>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Preview Modal -->
 <div id="preview-modal" class="hidden fixed inset-0 z-[300] bg-[#0c0c0c]/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
     <div class="w-full max-w-6xl flex justify-between items-center mb-3 px-4 py-2 bg-[#252526] border border-zinc-800 rounded-t-lg shadow-2xl">
         <div class="flex items-center gap-6">
@@ -199,9 +237,11 @@
     </div>
 </div>
 
+<!-- Prism.js (load BEFORE our script) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -209,212 +249,232 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
+    /* ── Scrollbars ── */
     .custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(121, 121, 121, 0.2); border-radius: 0px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(121, 121, 121, 0.4); }
-
-    .sidebar-file { width: 100%; text-align: left; padding: 6px 20px; font-size: 13px; color: #a1a1aa; transition: all 0.2s; display: flex; align-items: center; gap: 8px; background: transparent; border: none; }
-    .sidebar-file:hover { background-color: #2a2d2e; color: #f4f4f5; }
-    .sidebar-file.active { background-color: #37373d; color: #ffffff; }
-
-    .sidebar-field { width: 100%; background-color: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 2px; padding: 6px 10px; font-size: 12px; color: #e4e4e7; outline: none; transition: border-color 0.2s; }
-    .sidebar-field:focus { border-color: #6366f1; }
-
-    .editor-tab { padding: 10px 20px; font-size: 12px; color: #969696; border-right: 1px solid #191919; background-color: #2d2d2d; min-width: 150px; text-align: left; display: flex; align-items: center; white-space: nowrap; cursor: pointer; border-top: 1px solid transparent; transition: color 0.2s; }
-    .editor-tab:hover { color: #e4e4e7; }
-    .editor-tab.active { background-color: #1e1e1e; color: #ffffff; border-top: 1px solid #6366f1; }
-
-    .code-textarea { display: block; width: 100%; height: 100% !important; background: transparent !important; padding: 1rem !important; outline: none !important; border: none !important; font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.5rem; resize: none; color: transparent !important; caret-color: #ffffff !important; white-space: pre; position: relative; overflow: auto; z-index: 20; }
-    #highlight-layer { padding: 1rem !important; pointer-events: none; color: #d4d4d4; z-index: 10; }
-
-    .line-number { font-size: 11px; font-mono; color: #858585; line-height: 1.5rem; width: 100%; text-align: right; }
-    .line-number.active-line { color: #c6c6c6; background: rgba(255, 255, 255, 0.05); }
-
-    .token.keyword { color: #569cd6; }
-    .token.string { color: #ce9178; }
-    .token.comment { color: #6a9955; }
-    .token.function { color: #dcdcaa; }
-
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(121,121,121,0.2); border-radius: 0; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(121,121,121,0.4); }
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    .ease-expo { transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
-.code-textarea { 
-        display: block; 
-        width: 100%; 
-        height: 100% !important; 
-        background: transparent !important; 
-        padding: 1.5rem !important; 
-        outline: none !important; 
-        border: none !important; 
-        /* Updated Font Stack */
-        font-family: 'JetBrains Mono', 'Fira Code', monospace; 
-        font-size: 13px; 
-        line-height: 1.6; 
-        letter-spacing: -0.01em;
-        resize: none; 
-        color: transparent !important; 
-        caret-color: #6366f1 !important; 
-        white-space: pre; 
-        position: relative; 
-        overflow: auto; 
-        z-index: 20; 
-        font-variant-ligatures: contextual;
+
+    /* ── Sidebar files ── */
+    .sidebar-file {
+        width: 100%; text-align: left; padding: 4px 12px 4px 22px;
+        font-size: 13px; color: #cccccc; display: flex; align-items: center;
+        gap: 8px; background: transparent; border: none; cursor: pointer; transition: background .1s;
+    }
+    .sidebar-file:hover { background: #2a2d2e; }
+    .sidebar-file.active { background: #37373d; color: #ffffff; }
+
+    /* ── Sidebar inputs ── */
+    .sidebar-field {
+        width: 100%; background: #3c3c3c; border: 1px solid #555; border-radius: 2px;
+        padding: 5px 8px; font-size: 12px; color: #cccccc; outline: none; transition: border-color .15s;
+        font-family: inherit;
+    }
+    .sidebar-field:focus { border-color: #007acc; }
+
+    /* ── Editor tabs ── */
+    .editor-tab {
+        padding: 0 16px; height: 35px; font-size: 13px; color: #969696;
+        border-right: 1px solid #252526; background: #2d2d2d;
+        min-width: 130px; text-align: left; display: flex; align-items: center;
+        white-space: nowrap; cursor: pointer; border-top: 2px solid transparent;
+        transition: color .15s, background .15s; border-bottom: none;
+    }
+    .editor-tab:hover { color: #cccccc; background: #2a2a2a; }
+    .editor-tab.active { background: #1e1e1e; color: #ffffff; border-top-color: #007acc; }
+
+    /* ── Code textarea (transparent, caret only) ── */
+    .code-textarea {
+        display: block; width: 100%; height: 100% !important;
+        background: transparent !important; padding: 14px 16px !important;
+        outline: none !important; border: none !important;
+        font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+        font-size: 13px; line-height: 1.6; letter-spacing: -0.01em;
+        resize: none; color: transparent !important;
+        caret-color: #aeafad !important;
+        white-space: pre; overflow: auto; z-index: 20; position: relative;
+        tab-size: 4;
     }
 
-    #highlight-layer { 
-        padding: 1.5rem !important; 
-        pointer-events: none; 
-        color: #d4d4d4; 
-        z-index: 10; 
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
-        font-size: 13px;
-        line-height: 1.6;
-        letter-spacing: -0.01em;
+    /* ── Highlight overlay ── */
+    #highlight-layer {
+        padding: 14px 16px !important; pointer-events: none;
+        font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+        font-size: 13px; line-height: 1.6; letter-spacing: -0.01em;
+        color: #d4d4d4; z-index: 10;
     }
 
-    /* Updated Line numbers to match new height */
-    .line-number { 
-        font-size: 11px; 
-        font-family: 'JetBrains Mono', monospace; 
-        color: #4b4b4b; 
-        line-height: 1.6; 
-        width: 100%; 
-        text-align: right; 
-        padding-right: 4px;
+    /* ── Line numbers ── */
+    .line-number {
+        display: block; font-size: 12px;
+        font-family: 'JetBrains Mono', monospace;
+        color: #4b4b4b; line-height: 1.6;
+        text-align: right; padding-right: 2px;
     }
+    .line-number.active-line { color: #c6c6c6; }
 
-    .line-number.active-line { 
-        color: #a1a1aa; 
-        background: rgba(255, 255, 255, 0.03); 
+    /* ── Prism token overrides (VS Code Dark+) ── */
+    .token.keyword    { color: #569cd6; font-weight: 600; }
+    .token.string     { color: #ce9178; }
+    .token.comment    { color: #6a9955; font-style: italic; }
+    .token.function   { color: #dcdcaa; }
+    .token.number     { color: #b5cea8; }
+    .token.class-name { color: #4ec9b0; }
+    .token.operator   { color: #d4d4d4; }
+    .token.punctuation{ color: #d4d4d4; }
+    .token.builtin    { color: #569cd6; }
+    /* HTML/CSS extras */
+    .token.tag .token.tag        { color: #4ec9b0; }
+    .token.tag .token.attr-name  { color: #9cdcfe; }
+    .token.attr-value            { color: #ce9178; }
+    .token.property              { color: #9cdcfe; }
+    .token.selector              { color: #d7ba7d; }
+
+    /* ── Misc ── */
+    .ease-expo { transition-timing-function: cubic-bezier(0.16,1,0.3,1); }
+
+    /* Current-line highlight (subtle) */
+    .active-line-bg {
+        position: absolute; left: 0; right: 0;
+        background: rgba(255,255,255,0.04); pointer-events: none;
     }
-
-    /* Subtle improvement to Prism token colors for JetBrains Mono */
-    .token.keyword { color: #569cd6; font-weight: 600; }
-    .token.string { color: #ce9178; }
-    .token.comment { color: #6a9955; font-style: italic; }
 </style>
 
 <script>
+    /* ─────────────────────────────────────────
+       State
+    ───────────────────────────────────────── */
     let currentMode = 'py';
-    let isDirty = false;
-    let pendingUrl = "";
-    let pendingPath = "";
+    let isDirty     = false;
+    let pendingUrl  = '';
+    let pendingPath = '';
 
-    function closeRedirectModal() { document.getElementById('redirect-modal').classList.add('hidden'); }
-
-    async function handleRedirectChoice(choice) {
-        const frame = document.getElementById('preview-frame');
-        if (choice === 'preview') {
-            let targetSlug = pendingPath.split('?')[0].replace(/^\//, '');
-            if (targetSlug === "") targetSlug = "home";
-            await executeNewPathPreview(targetSlug);
-        } else if (choice === 'tab') {
-            window.open(pendingUrl, '_blank');
-        }
-        closeRedirectModal();
-    }
-
-    async function executeNewPathPreview(slug) {
-        const consoleOut = document.getElementById('console-output');
-        const frame = document.getElementById('preview-frame');
-        consoleOut.innerHTML = `<span class="text-zinc-500">Shifting preview context to Node: ${slug}...</span>`;
-        try {
-            const res = await fetch(`/_preview?target_slug=${slug}`);
-            if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
-            const text = await res.text();
-            frame.srcdoc = text;
-            consoleOut.innerHTML = `<span class="text-emerald-500">STATUS: Context shifted. Now previewing ${slug}.</span>`;
-        } catch (e) {
-            consoleOut.innerHTML = `<span class="text-red-500">STATUS: Failed to resolve Node ${slug}. ${e.message}</span>`;
-        }
-    }
-
-    document.getElementById('btn-preview-redirect').onclick = () => handleRedirectChoice('preview');
-    document.getElementById('btn-tab-redirect').onclick = () => handleRedirectChoice('tab');
-
-    document.getElementById('preview-frame').onload = function() {
-        const frame = this;
-        try {
-            const frameDoc = frame.contentDocument || frame.contentWindow.document;
-            frameDoc.addEventListener('click', function(e) {
-                const anchor = e.target.closest('a');
-                if (anchor) {
-                    const href = anchor.getAttribute('href');
-                    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-                    e.preventDefault();
-                    pendingUrl = anchor.href;
-                    pendingPath = href;
-                    document.getElementById('redirect-url').textContent = pendingPath;
-                    document.getElementById('redirect-modal').classList.remove('hidden');
-                }
-            });
-        } catch (err) { console.warn("Navigation intercepted."); }
+    /* Lang maps */
+    const LANG_MAP  = { py:'python', html:'markup', css:'css', js:'javascript' };
+    const LANG_LABEL = { py:'Python', html:'HTML',   css:'CSS', js:'JavaScript' };
+    const FILE_NAME  = {
+        py:   '{{ slug }}.py',
+        html: '{{ slug }}.html',
+        css:  '{{ slug }}.css',
+        js:   '{{ slug }}.js'
     };
 
-    function updateCursorMetadata(textarea) {
-        const textLines = textarea.value.split('\n');
-        const cursorPosition = textarea.selectionStart;
-        const textBeforeCursor = textarea.value.substring(0, cursorPosition);
-        const linesBeforeCursor = textBeforeCursor.split('\n');
-        const currentLineIndex = linesBeforeCursor.length;
-        const currentColIndex = linesBeforeCursor[linesBeforeCursor.length - 1].length + 1;
+    /* ─────────────────────────────────────────
+       Core helpers
+    ───────────────────────────────────────── */
 
-        document.getElementById('pos-indicator').textContent = `Ln ${currentLineIndex}, Col ${currentColIndex}`;
-
-        const lineContainer = document.getElementById('line-numbers');
-        let html = '';
-        for (let i = 1; i <= textLines.length; i++) {
-            const isActive = i === currentLineIndex;
-            html += `<span class="line-number ${isActive ? 'active-line' : ''}">${i}</span>`;
-        }
-        lineContainer.innerHTML = html;
-        lineContainer.scrollTop = textarea.scrollTop;
+    /** Get the textarea that is currently visible */
+    function activeTextarea() {
+        return document.querySelector('.editor-panel:not(.hidden) textarea');
     }
 
-    function switchTab(type) {
-        currentMode = type;
-        document.querySelectorAll('.editor-panel').forEach(p => p.classList.add('hidden'));
-        document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.sidebar-file').forEach(f => f.classList.remove('active'));
-        document.getElementById(`panel-${type}`).classList.remove('hidden');
-        document.getElementById(`tab-${type}`).classList.add('active');
-        document.getElementById(`side-tab-${type}`).classList.add('active');
-        document.getElementById('lang-label').textContent = { 'py': 'Python', 'html': 'HTML', 'css': 'CSS', 'js': 'JavaScript' }[type];
-        
-        const activeTextarea = document.querySelector(`.editor-panel:not(.hidden) textarea`);
-        syncHighlight();
-        updateCursorMetadata(activeTextarea);
-    }
-
+    /**
+     * FIX 2 — Re-highlight using Prism every time content changes.
+     * Uses 'markup' (not 'html') which is what Prism actually registers.
+     */
     function syncHighlight() {
-        const textarea = document.querySelector(`.editor-panel:not(.hidden) textarea`);
-        const highlightLayer = document.getElementById('highlight-layer');
-        if(!textarea || !highlightLayer) return;
-        const langMap = { 'py': 'python', 'html': 'markup', 'css': 'css', 'js': 'javascript' };
-        highlightLayer.innerHTML = Prism.highlight(textarea.value, Prism.languages[langMap[currentMode]], langMap[currentMode]);
-        syncScroll(textarea);
+        const ta  = activeTextarea();
+        const hl  = document.getElementById('highlight-layer');
+        if (!ta || !hl) return;
+
+        const lang = LANG_MAP[currentMode];
+        const grammar = Prism.languages[lang];
+
+        if (grammar) {
+            hl.innerHTML = Prism.highlight(ta.value, grammar, lang) + '\n';
+        } else {
+            /* Fallback: escape HTML so content is at least visible */
+            hl.innerHTML = ta.value
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '\n';
+        }
+
+        syncScroll(ta);
+        updateLineNumbers(ta);
     }
 
     function syncScroll(el) {
-        const highlightLayer = document.getElementById('highlight-layer');
-        const lineContainer = document.getElementById('line-numbers');
-        highlightLayer.scrollTop = el.scrollTop;
-        highlightLayer.scrollLeft = el.scrollLeft;
-        lineContainer.scrollTop = el.scrollTop;
+        const hl  = document.getElementById('highlight-layer');
+        const ln  = document.getElementById('line-numbers');
+        if (hl) { hl.scrollTop = el.scrollTop; hl.scrollLeft = el.scrollLeft; }
+        if (ln) { ln.scrollTop = el.scrollTop; }
     }
 
+    function updateLineNumbers(ta) {
+        const lines = (ta.value + '\n').split('\n');
+        const container = document.getElementById('line-numbers');
+        if (!container) return;
+
+        /* Detect active line */
+        const before = ta.value.substring(0, ta.selectionStart);
+        const activeLine = before.split('\n').length;
+
+        let html = '';
+        for (let i = 1; i < lines.length; i++) {
+            html += `<span class="line-number${i === activeLine ? ' active-line' : ''}">${i}</span>`;
+        }
+        container.innerHTML = html;
+        container.scrollTop = ta.scrollTop;
+    }
+
+    function updateCursorMetadata(ta) {
+        const before = ta.value.substring(0, ta.selectionStart);
+        const lines  = before.split('\n');
+        const ln     = lines.length;
+        const col    = lines[lines.length - 1].length + 1;
+        document.getElementById('pos-indicator').textContent = `Ln ${ln}, Col ${col}`;
+        updateLineNumbers(ta);
+    }
+
+    /* ─────────────────────────────────────────
+       Tab switching
+    ───────────────────────────────────────── */
+    function switchTab(type) {
+        currentMode = type;
+
+        document.querySelectorAll('.editor-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.sidebar-file').forEach(f => f.classList.remove('active'));
+
+        document.getElementById(`panel-${type}`).classList.remove('hidden');
+        document.getElementById(`tab-${type}`).classList.add('active');
+        document.getElementById(`side-tab-${type}`).classList.add('active');
+
+        document.getElementById('lang-label').textContent   = LANG_LABEL[type];
+        document.getElementById('breadcrumb-file').textContent = FILE_NAME[type];
+
+        /* FIX 1 — always re-highlight after switching, giving browser a tick
+           to ensure the panel is visible before we read its textarea */
+        requestAnimationFrame(() => {
+            syncHighlight();
+            const ta = activeTextarea();
+            if (ta) { updateCursorMetadata(ta); ta.focus(); }
+        });
+    }
+
+    /* ─────────────────────────────────────────
+       Save / Exit
+    ───────────────────────────────────────── */
     async function handleSave() {
-        const form = document.getElementById('cms-form');
+        const form     = document.getElementById('cms-form');
         const formData = new FormData(form);
-        formData.append('python_logic', document.querySelector('textarea[name="python_logic"]').value);
-        formData.append('content', document.querySelector('textarea[name="content"]').value);
-        formData.append('css_content', document.querySelector('textarea[name="css_content"]').value);
-        formData.append('js_content', document.querySelector('textarea[name="js_content"]').value);
+
+        /* Ensure all textarea values are included (FormData only picks
+           textareas that are inside the form element; ours use form="cms-form") */
+        formData.set('python_logic', document.querySelector('textarea[name="python_logic"]').value);
+        formData.set('content',      document.querySelector('textarea[name="content"]').value);
+        formData.set('css_content',  document.querySelector('textarea[name="css_content"]').value);
+        formData.set('js_content',   document.querySelector('textarea[name="js_content"]').value);
 
         try {
-            const response = await fetch(window.location.pathname, { method: 'POST', body: formData });
-            if (response.ok) { showToast(); isDirty = false; }
-        } catch (error) { console.error('Save failed:', error); }
+            const response = await fetch(window.location.pathname, { method:'POST', body: formData });
+            if (response.ok) {
+                showToast();
+                isDirty = false;
+                /* Clear dirty dots */
+                document.querySelectorAll('.dirty-dot, .tab-dirty').forEach(d => d.classList.add('hidden'));
+            }
+        } catch (err) { console.error('Save failed:', err); }
     }
 
     function showToast() {
@@ -423,97 +483,151 @@
         setTimeout(() => { toast.style.top = '-100px'; }, 3000);
     }
 
-    function handleExit() {
-        if (isDirty) toggleExitModal();
-        else window.location.href = '/admin';
-    }
-
-    function toggleExitModal() { document.getElementById('exit-modal').classList.toggle('hidden'); }
+    function handleExit()    { if (isDirty) toggleExitModal(); else window.location.href = '/admin'; }
+    function toggleExitModal(){ document.getElementById('exit-modal').classList.toggle('hidden'); }
     async function saveAndExit() { await handleSave(); window.location.href = '/admin'; }
 
+    /* ─────────────────────────────────────────
+       Preview
+    ───────────────────────────────────────── */
     async function togglePreview() {
-        const modal = document.getElementById('preview-modal');
-        const frame = document.getElementById('preview-frame');
+        const modal      = document.getElementById('preview-modal');
+        const frame      = document.getElementById('preview-frame');
         const consoleOut = document.getElementById('console-output');
+
         if (!modal.classList.contains('hidden')) { modal.classList.add('hidden'); return; }
-        consoleOut.innerHTML = '<span class="text-zinc-500">Executing server-side logic...</span>';
+
+        consoleOut.innerHTML = '<span style="color:#858585">Executing server-side logic...</span>';
+
         const form = new URLSearchParams();
-        form.append('content', document.querySelector('textarea[name="content"]').value);
-        form.append('css', document.querySelector('textarea[name="css_content"]').value);
-        form.append('js', document.querySelector('textarea[name="js_content"]').value);
+        form.append('content',      document.querySelector('textarea[name="content"]').value);
+        form.append('css',          document.querySelector('textarea[name="css_content"]').value);
+        form.append('js',           document.querySelector('textarea[name="js_content"]').value);
         form.append('python_logic', document.querySelector('textarea[name="python_logic"]').value);
+
         try {
-            const res = await fetch('/_preview', { method: 'POST', body: form });
+            const res  = await fetch('/_preview', { method:'POST', body: form });
             const text = await res.text();
             frame.srcdoc = text;
             modal.classList.remove('hidden');
-        } catch (e) { consoleOut.innerHTML = `<span class="text-red-500">STATUS: Fetch Error. ${e}</span>`; }
+        } catch (e) {
+            consoleOut.innerHTML = `<span style="color:#f48771">STATUS: Fetch Error. ${e}</span>`;
+        }
     }
 
     function setViewport(mode) {
         const container = document.getElementById('preview-container');
         const btnD = document.getElementById('view-desktop');
         const btnM = document.getElementById('view-mobile');
-        if(mode === 'mobile') {
+        if (mode === 'mobile') {
             container.style.maxWidth = '375px';
-            btnM.classList.add('bg-zinc-800', 'text-white');
-            btnD.classList.remove('bg-zinc-800', 'text-white');
+            btnM.classList.add('bg-zinc-800','text-white');
+            btnD.classList.remove('bg-zinc-800','text-white');
         } else {
-            container.style.maxWidth = '1152px'; 
-            btnD.classList.add('bg-zinc-800', 'text-white');
-            btnM.classList.remove('bg-zinc-800', 'text-white');
+            container.style.maxWidth = '1152px';
+            btnD.classList.add('bg-zinc-800','text-white');
+            btnM.classList.remove('bg-zinc-800','text-white');
         }
     }
 
     function toggleConsole() { document.getElementById('logic-console').classList.toggle('hidden'); }
 
-    document.querySelectorAll('.code-textarea, .sidebar-field').forEach(el => {
-        el.addEventListener('input', () => {
+    /* ─────────────────────────────────────────
+       Preview nav interception
+    ───────────────────────────────────────── */
+    document.getElementById('preview-frame').onload = function() {
+        try {
+            const frameDoc = this.contentDocument || this.contentWindow.document;
+            frameDoc.addEventListener('click', function(e) {
+                const anchor = e.target.closest('a');
+                if (!anchor) return;
+                const href = anchor.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+                e.preventDefault();
+                pendingUrl  = anchor.href;
+                pendingPath = href;
+            });
+        } catch (err) { /* cross-origin — ignore */ }
+    };
+
+    /* ─────────────────────────────────────────
+       Textarea event wiring
+    ───────────────────────────────────────── */
+    document.querySelectorAll('.code-textarea').forEach(ta => {
+
+        /* FIX 2 — sync highlight on EVERY keystroke */
+        ta.addEventListener('input', () => {
             isDirty = true;
-            if(el.tagName === 'TEXTAREA') {
+            markDirty();
+            syncHighlight();
+            updateCursorMetadata(ta);
+        });
+
+        ta.addEventListener('scroll', () => syncScroll(ta));
+        ta.addEventListener('click',  () => updateCursorMetadata(ta));
+        ta.addEventListener('keyup',  () => updateCursorMetadata(ta));
+
+        /* Tab key → 4 spaces */
+        ta.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const s = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, s) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = s + 4;
                 syncHighlight();
-                updateCursorMetadata(el);
+                updateCursorMetadata(this);
+            }
+            /* Ctrl/Cmd+S */
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                handleSave();
             }
         });
-        
-        if(el.tagName === 'TEXTAREA') {
-            el.addEventListener('scroll', () => syncScroll(el));
-            el.addEventListener('click', () => updateCursorMetadata(el));
-            el.addEventListener('keyup', (e) => updateCursorMetadata(e.target));
-            el.addEventListener('keydown', function(e) {
-                if (e.key === 'Tab') {
-                    e.preventDefault();
-                    const start = this.selectionStart;
-                    const end = this.selectionEnd;
-                    this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-                    this.selectionStart = this.selectionEnd = start + 4;
-                    syncHighlight();
-                    updateCursorMetadata(this);
-                }
-            });
-        }
     });
 
+    /* Sidebar fields also mark dirty */
+    document.querySelectorAll('.sidebar-field').forEach(el => {
+        el.addEventListener('input', () => { isDirty = true; markDirty(); });
+    });
+
+    function markDirty() {
+        /* Show amber dot on the active tab and sidebar file */
+        const tabDot  = document.querySelector(`#tab-${currentMode} .tab-dirty`);
+        const sideDot = document.querySelector(`#side-tab-${currentMode} .dirty-dot`);
+        if (tabDot)  tabDot.classList.remove('hidden');
+        if (sideDot) sideDot.classList.remove('hidden');
+    }
+
+    /* ─────────────────────────────────────────
+       Delete
+    ───────────────────────────────────────── */
     let deleteConfirm = false;
     function confirmDeletion() {
-        const btn = document.getElementById('delete-btn');
+        const btn  = document.getElementById('delete-btn');
         const text = document.getElementById('delete-text');
         if (!deleteConfirm) {
             deleteConfirm = true;
-            text.textContent = "Confirm Delete?";
-            btn.classList.remove('bg-red-950/30', 'text-red-500');
-            btn.classList.add('bg-red-600', 'text-white', 'animate-pulse');
+            text.textContent = 'Confirm Delete?';
+            btn.classList.add('bg-red-600','text-white','animate-pulse');
             setTimeout(() => {
                 deleteConfirm = false;
-                text.textContent = "Delete Node";
-                btn.classList.add('bg-red-950/30', 'text-red-500');
-                btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse');
+                text.textContent = 'Delete Page';
+                btn.classList.remove('bg-red-600','text-white','animate-pulse');
             }, 3000);
         } else {
             window.location.href = `/admin/delete/{{ slug }}`;
         }
     }
 
-    window.onload = () => switchTab('py');
+    /* ─────────────────────────────────────────
+       FIX 1 — Init: wait for Prism scripts to
+       finish loading before first highlight.
+       Using a short setTimeout is the simplest
+       cross-browser guarantee.
+    ───────────────────────────────────────── */
+    window.addEventListener('load', () => {
+        setTimeout(() => switchTab('py'), 80);
+    });
 </script>
 {% endblock %}
