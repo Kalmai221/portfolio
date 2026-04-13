@@ -7,104 +7,135 @@
         <i class="fa-solid fa-desktop text-brand text-2xl"></i>
     </div>
     <h2 class="text-white font-bold text-xl mb-2 uppercase tracking-tight">Desktop Required</h2>
-    <p class="text-zinc-500 text-sm max-w-xs leading-relaxed mb-8">The Node Editor is optimised for large displays. Please switch to a desktop browser.</p>
+    <p class="text-zinc-500 text-sm max-w-xs leading-relaxed mb-8">The Node Editor is optimised for large displays.</p>
     <a href="/admin" class="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded hover:text-white transition-all">Return to Dashboard</a>
 </div>
 
 <!-- Save toast -->
-<div id="save-toast" class="fixed left-1/2 -translate-x-1/2 z-[500] transition-all duration-500" style="top:-80px">
-    <div class="bg-[#252526] border border-emerald-500/40 px-5 py-2.5 rounded-full flex items-center gap-3 shadow-2xl">
-        <div class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+<div id="save-toast" aria-live="polite">
+    <div class="toast-inner">
+        <div class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
             <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
         </div>
-        <span class="text-[11px] font-bold text-white uppercase tracking-wider">Saved</span>
-        <span class="text-[9px] font-mono text-emerald-400/80">Node synced</span>
+        <div class="flex flex-col">
+            <span class="text-[11px] font-bold text-white uppercase tracking-wider">Saved</span>
+            <span class="text-[9px] font-mono text-emerald-400/80 tracking-wider">Node synced to database</span>
+        </div>
     </div>
 </div>
 
 <!-- Exit modal -->
-<div id="exit-modal" class="hidden fixed inset-0 z-[600] bg-black/70 flex items-center justify-center p-4">
-    <div class="bg-[#252526] border border-zinc-700 w-full max-w-sm p-6 rounded-lg shadow-2xl">
-        <h3 class="text-white font-bold mb-1">Unsaved Changes</h3>
-        <p class="text-zinc-400 text-sm mb-5">Save before exiting?</p>
+<div id="exit-modal" class="modal-backdrop hidden">
+    <div class="modal-box">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm"></i>
+            </div>
+            <h3 class="text-white font-bold">Unsaved Changes</h3>
+        </div>
+        <p class="text-zinc-400 text-sm mb-5 pl-11">Your changes haven't been committed yet. Save before exiting?</p>
         <div class="flex flex-col gap-2">
-            <button onclick="saveAndExit()" class="w-full bg-[#007acc] py-2 text-white text-sm font-bold rounded hover:bg-[#0069b0]">Save & Exit</button>
-            <button onclick="window.location.href='/admin'" class="w-full bg-zinc-800 py-2 text-zinc-300 text-sm font-bold rounded hover:bg-zinc-700">Discard</button>
-            <button onclick="toggleExitModal()" class="py-2 text-zinc-500 text-sm hover:text-zinc-300">Cancel</button>
+            <button onclick="saveAndExit()" class="modal-btn-primary">Save & Exit</button>
+            <button onclick="window.location.href='/admin'" class="modal-btn-secondary">Discard Changes</button>
+            <button onclick="toggleExitModal()" class="modal-btn-ghost">Cancel</button>
         </div>
     </div>
 </div>
 
-<!-- Find/Replace panel -->
-<div id="find-panel" class="hidden fixed z-[400] bg-[#252526] border border-zinc-600 rounded shadow-2xl" style="right:20px;top:60px;width:380px">
-    <div class="flex items-center justify-between px-3 py-2 border-b border-zinc-700">
-        <span class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Find & Replace</span>
-        <button onclick="closeFindPanel()" class="text-zinc-500 hover:text-white text-lg leading-none">×</button>
+<!-- Find / Replace panel -->
+<div id="find-panel" class="find-panel" style="display:none">
+    <div class="find-header">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-magnifying-glass text-[#858585] text-[11px]"></i>
+            <span class="text-[11px] font-semibold text-[#cccccc] tracking-wide">Find & Replace</span>
+        </div>
+        <div class="flex items-center gap-1">
+            <span id="find-count" class="text-[10px] text-[#858585] font-mono min-w-[48px] text-right"></span>
+            <button onclick="closeFindPanel()" class="find-icon-btn" title="Close (Esc)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
     </div>
-    <div class="p-3 space-y-2">
-        <div class="flex gap-2 items-center">
-            <input id="find-input" type="text" placeholder="Find…" class="find-field flex-1" oninput="doFind()">
-            <span id="find-count" class="text-[10px] text-zinc-500 min-w-[40px] text-right"></span>
-            <button onclick="findPrev()" class="find-btn" title="Previous (Shift+Enter)">↑</button>
-            <button onclick="findNext()" class="find-btn" title="Next (Enter)">↓</button>
+    <div class="find-body">
+        <!-- Find row -->
+        <div class="find-row">
+            <div class="find-input-wrap">
+                <i class="fa-solid fa-magnifying-glass find-input-icon"></i>
+                <input id="find-input" type="text" placeholder="Search…" class="find-input" oninput="doFind()" autocomplete="off" spellcheck="false">
+                <div class="find-toggles">
+                    <button id="tog-case"  class="find-tog" onclick="toggleFindOpt('case')"  title="Match case (Alt+C)">Aa</button>
+                    <button id="tog-word"  class="find-tog" onclick="toggleFindOpt('word')"  title="Whole word (Alt+W)">ab</button>
+                    <button id="tog-regex" class="find-tog" onclick="toggleFindOpt('regex')" title="Regex (Alt+R)">.*</button>
+                </div>
+            </div>
+            <div class="find-nav-btns">
+                <button onclick="findPrev()" class="find-icon-btn" title="Previous match (Shift+Enter)"><i class="fa-solid fa-chevron-up"></i></button>
+                <button onclick="findNext()" class="find-icon-btn" title="Next match (Enter)"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
         </div>
-        <div class="flex gap-2 items-center">
-            <input id="replace-input" type="text" placeholder="Replace…" class="find-field flex-1">
-            <button onclick="doReplaceOne()" class="find-btn px-2 text-[10px]">Replace</button>
-            <button onclick="doReplaceAll()" class="find-btn px-2 text-[10px]">All</button>
+        <!-- Replace row -->
+        <div class="find-row">
+            <div class="find-input-wrap">
+                <i class="fa-solid fa-right-left find-input-icon"></i>
+                <input id="replace-input" type="text" placeholder="Replace with…" class="find-input" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="find-nav-btns">
+                <button onclick="doReplaceOne()" class="find-action-btn" title="Replace (Ctrl+H)">1</button>
+                <button onclick="doReplaceAll()" class="find-action-btn find-action-btn-all" title="Replace All">All</button>
+            </div>
         </div>
-        <div class="flex gap-3 pt-1">
-            <label class="flex items-center gap-1.5 text-[11px] text-zinc-400 cursor-pointer">
-                <input type="checkbox" id="find-case" onchange="doFind()" class="accent-[#007acc]"> Aa
-            </label>
-            <label class="flex items-center gap-1.5 text-[11px] text-zinc-400 cursor-pointer">
-                <input type="checkbox" id="find-word" onchange="doFind()" class="accent-[#007acc]"> \b Word
-            </label>
-            <label class="flex items-center gap-1.5 text-[11px] text-zinc-400 cursor-pointer">
-                <input type="checkbox" id="find-regex" onchange="doFind()" class="accent-[#007acc]"> .* Regex
-            </label>
-        </div>
+        <!-- Status bar -->
+        <div id="find-status" class="find-status"></div>
     </div>
 </div>
 
 <!-- Command palette -->
-<div id="cmd-palette" class="hidden fixed inset-0 z-[700] flex items-start justify-center pt-24">
-    <div class="bg-[#1f1f1f] border border-zinc-600 rounded-lg shadow-2xl w-full max-w-lg overflow-hidden" onclick.stop>
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-zinc-700">
-            <span class="text-zinc-500 text-sm">›</span>
-            <input id="cmd-input" type="text" placeholder="Type a command…" class="flex-1 bg-transparent text-white text-sm outline-none placeholder-zinc-500" oninput="filterCommands()" onkeydown="cmdKeydown(event)">
+<div id="cmd-palette" class="modal-backdrop hidden" onclick="closeCmdPalette()">
+    <div class="cmd-box" onclick="event.stopPropagation()">
+        <div class="cmd-input-row">
+            <i class="fa-solid fa-terminal text-[#858585] text-[13px] shrink-0"></i>
+            <input id="cmd-input" type="text" placeholder="Type a command or search…" class="cmd-input" oninput="filterCommands()" onkeydown="cmdKeydown(event)">
+            <kbd class="text-[9px] text-[#858585] bg-[#3c3c3c] px-1.5 py-0.5 rounded border border-[#555] shrink-0">Esc</kbd>
         </div>
-        <div id="cmd-list" class="max-h-72 overflow-y-auto"></div>
+        <div id="cmd-list" class="cmd-list"></div>
+        <div class="cmd-footer">
+            <span><kbd>↑↓</kbd> navigate</span>
+            <span><kbd>↵</kbd> run</span>
+            <span><kbd>Esc</kbd> close</span>
+        </div>
     </div>
-    <div class="absolute inset-0 -z-10" onclick="closeCmdPalette()"></div>
 </div>
 
 <!-- Shortcuts panel -->
-<div id="shortcuts-panel" class="hidden fixed z-[400] bg-[#1f1f1f] border border-zinc-700 rounded-lg shadow-2xl overflow-hidden" style="right:20px;bottom:40px;width:320px">
-    <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-700 bg-[#252526]">
-        <span class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Keyboard Shortcuts</span>
-        <button onclick="document.getElementById('shortcuts-panel').classList.add('hidden')" class="text-zinc-500 hover:text-white text-lg">×</button>
+<div id="shortcuts-panel" class="shortcuts-panel hidden">
+    <div class="shortcuts-header">
+        <span class="text-[11px] font-bold text-[#bbbbbe] uppercase tracking-widest">Keyboard Shortcuts</span>
+        <button onclick="document.getElementById('shortcuts-panel').classList.add('hidden')" class="find-icon-btn"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="p-3 space-y-1 text-[12px]">
-        <div class="shortcut-row"><span class="text-zinc-400">Save</span><kbd>Ctrl S</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Find & Replace</span><kbd>Ctrl F</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Command Palette</span><kbd>Ctrl P</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Preview</span><kbd>Ctrl Shift P</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Toggle Comment</span><kbd>Ctrl /</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Duplicate Line</span><kbd>Shift Alt D</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Delete Line</span><kbd>Ctrl Shift K</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Move Line Up</span><kbd>Alt ↑</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Move Line Down</span><kbd>Alt ↓</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Indent</span><kbd>Tab</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Outdent</span><kbd>Shift Tab</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Increase Font</span><kbd>Ctrl +</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Decrease Font</span><kbd>Ctrl -</kbd></div>
-        <div class="shortcut-row"><span class="text-zinc-400">Close Panel</span><kbd>Esc</kbd></div>
+    <div class="shortcuts-body">
+        <div class="shortcut-group-label">File</div>
+        <div class="shortcut-row"><span>Save</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>S</kbd></div></div>
+        <div class="shortcut-row"><span>Exit</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>Q</kbd></div></div>
+        <div class="shortcut-group-label">Editor</div>
+        <div class="shortcut-row"><span>Find & Replace</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>F</kbd></div></div>
+        <div class="shortcut-row"><span>Command Palette</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>P</kbd></div></div>
+        <div class="shortcut-row"><span>Preview</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>P</kbd></div></div>
+        <div class="shortcut-row"><span>Toggle Comment</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>/</kbd></div></div>
+        <div class="shortcut-row"><span>Duplicate Line</span><div class="kbd-group"><kbd>⇧</kbd><kbd>Alt</kbd><kbd>D</kbd></div></div>
+        <div class="shortcut-row"><span>Delete Line</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>K</kbd></div></div>
+        <div class="shortcut-row"><span>Move Line Up</span><div class="kbd-group"><kbd>Alt</kbd><kbd>↑</kbd></div></div>
+        <div class="shortcut-row"><span>Move Line Down</span><div class="kbd-group"><kbd>Alt</kbd><kbd>↓</kbd></div></div>
+        <div class="shortcut-row"><span>Indent</span><div class="kbd-group"><kbd>Tab</kbd></div></div>
+        <div class="shortcut-row"><span>Outdent</span><div class="kbd-group"><kbd>⇧</kbd><kbd>Tab</kbd></div></div>
+        <div class="shortcut-group-label">View</div>
+        <div class="shortcut-row"><span>Font Size +</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>+</kbd></div></div>
+        <div class="shortcut-row"><span>Font Size −</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>−</kbd></div></div>
+        <div class="shortcut-row"><span>Toggle Sidebar</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>B</kbd></div></div>
     </div>
 </div>
 
-<!-- Main editor shell -->
-<div class="fixed inset-0 z-[200] bg-[#1e1e1e] flex flex-col lg:flex-row overflow-hidden" style="font-family:'Segoe UI',system-ui,sans-serif">
+<!-- ═══ MAIN SHELL ═══ -->
+<div class="fixed inset-0 z-[200] bg-[#1e1e1e] flex flex-col lg:flex-row overflow-hidden editor-shell" style="font-family:'Segoe UI',system-ui,sans-serif">
 
     <!-- Activity bar -->
     <div class="w-12 bg-[#333333] flex-col items-center py-2 gap-0.5 border-r border-[#191919] hidden lg:flex shrink-0">
@@ -121,29 +152,25 @@
             <i class="fa-solid fa-terminal text-[14px]"></i>
         </button>
         <div class="flex-1"></div>
-        <button class="act-btn" onclick="document.getElementById('shortcuts-panel').classList.toggle('hidden')" title="Keyboard Shortcuts">
+        <button class="act-btn" onclick="document.getElementById('shortcuts-panel').classList.toggle('hidden')" title="Shortcuts">
             <i class="fa-regular fa-keyboard text-[15px]"></i>
         </button>
-        <button onclick="handleSave()" class="act-btn text-emerald-400 hover:text-emerald-300" title="Save (Ctrl+S)">
+        <button onclick="handleSave()" class="act-btn" id="act-save" title="Save (Ctrl+S)">
             <i class="fa-solid fa-floppy-disk text-[17px]"></i>
         </button>
-        <button onclick="handleExit()" class="act-btn hover:text-red-400" title="Exit">
+        <button onclick="handleExit()" class="act-btn" id="act-exit" title="Exit">
             <i class="fa-solid fa-arrow-right-from-bracket text-[15px]"></i>
         </button>
     </div>
 
     <!-- Sidebar -->
-    <div id="sidebar" class="w-full lg:w-60 bg-[#252526] flex flex-col border-r border-[#1e1e1e] shrink-0 transition-all duration-200">
-        <div class="px-3 py-2 border-b border-[#1e1e1e] flex items-center justify-between">
-            <span class="text-[11px] font-bold text-[#bbbbbe] uppercase tracking-widest">Explorer</span>
+    <div id="sidebar" class="sidebar-panel">
+        <div class="sidebar-title-bar">
+            <span>Explorer</span>
         </div>
         <div class="flex-grow overflow-y-auto custom-scrollbar">
-
-            <!-- Files -->
-            <div class="px-2 py-1.5 flex items-center gap-1 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider cursor-default select-none">
-                <span class="text-[9px]">▼</span> MY-PROJECT
-            </div>
-            <div class="flex flex-col" id="file-list">
+            <div class="section-header"><span class="text-[9px]">▼</span> MY-PROJECT</div>
+            <div class="flex flex-col">
                 <button type="button" onclick="switchTab('py')"   class="sidebar-file active" id="side-tab-py">
                     <i class="fa-brands fa-python" style="color:#3794ff;font-size:13px"></i><span>{{ slug }}.py</span><span class="dirty-dot"></span>
                 </button>
@@ -160,44 +187,44 @@
 
             <!-- Config -->
             <div class="mt-3 border-t border-[#1e1e1e]">
-                <div class="px-3 py-2 flex items-center gap-2 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider select-none cursor-default">
-                    <i class="fa-solid fa-sliders text-[10px]"></i> Configuration
-                </div>
+                <div class="section-header"><i class="fa-solid fa-sliders text-[10px]"></i> Configuration</div>
                 <div class="px-3 pb-3 space-y-3">
                     <form id="cms-form" method="POST" class="space-y-3">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest">Page Title</label>
+                            <label class="sidebar-label">Page Title</label>
                             <input type="text" name="title" value="{{ page.title if page else '' }}" required class="sidebar-field" placeholder="Untitled Page">
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest">URL Segment</label>
+                            <label class="sidebar-label">URL Segment</label>
                             <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono" style="color:#9cdcfe" placeholder="index">
                         </div>
                     </form>
-                    <!-- Font size control -->
-                    <div class="space-y-1 pt-1 border-t border-[#1e1e1e]">
-                        <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest">Editor Font Size</label>
+                    <!-- Font size -->
+                    <div class="space-y-1.5 pt-2 border-t border-[#1e1e1e]">
+                        <label class="sidebar-label">Editor Font Size</label>
                         <div class="flex items-center gap-2">
-                            <button onclick="changeFontSize(-1)" class="w-6 h-6 flex items-center justify-center bg-[#3c3c3c] text-zinc-300 rounded text-sm hover:bg-[#4a4a4a]">−</button>
-                            <span id="font-size-label" class="text-[12px] text-zinc-300 flex-1 text-center">13px</span>
-                            <button onclick="changeFontSize(1)"  class="w-6 h-6 flex items-center justify-center bg-[#3c3c3c] text-zinc-300 rounded text-sm hover:bg-[#4a4a4a]">+</button>
+                            <button onclick="changeFontSize(-1)" class="size-btn">−</button>
+                            <div class="flex-1 h-1.5 bg-[#3c3c3c] rounded-full relative cursor-pointer" id="font-track" onclick="fontTrackClick(event)">
+                                <div id="font-fill" class="h-full bg-[#007acc] rounded-full transition-all duration-150" style="width:30%"></div>
+                                <div id="font-thumb" class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#007acc] transition-all duration-150" style="left:calc(30% - 6px)"></div>
+                            </div>
+                            <button onclick="changeFontSize(1)"  class="size-btn">+</button>
+                            <span id="font-size-label" class="text-[11px] text-[#9cdcfe] font-mono w-8 text-right">13px</span>
                         </div>
                     </div>
-                    <!-- Word wrap toggle -->
-                    <div class="flex items-center justify-between pt-1">
-                        <label class="text-[10px] font-bold text-[#858585] uppercase tracking-widest cursor-pointer" onclick="toggleWordWrap()">Word Wrap</label>
-                        <div id="wrap-toggle" onclick="toggleWordWrap()" class="w-8 h-4 rounded-full bg-[#3c3c3c] relative cursor-pointer transition-colors">
-                            <div id="wrap-knob" class="absolute left-0.5 top-0.5 w-3 h-3 rounded-full bg-[#858585] transition-all"></div>
-                        </div>
+                    <!-- Word wrap -->
+                    <div class="flex items-center justify-between">
+                        <label class="sidebar-label cursor-pointer" onclick="toggleWordWrap()">Word Wrap</label>
+                        <button id="wrap-toggle" onclick="toggleWordWrap()" class="toggle-switch" role="switch" aria-checked="false">
+                            <span id="wrap-knob" class="toggle-knob"></span>
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Stats -->
             <div class="border-t border-[#1e1e1e]">
-                <div class="px-3 py-2 flex items-center gap-2 text-[11px] font-bold text-[#bbbbbe] uppercase tracking-wider select-none cursor-default">
-                    <i class="fa-solid fa-chart-simple text-[10px]"></i> File Stats
-                </div>
+                <div class="section-header"><i class="fa-solid fa-chart-simple text-[10px]"></i> File Stats</div>
                 <div class="px-3 pb-3 grid grid-cols-2 gap-2">
                     <div class="stat-card"><div class="stat-val" id="stat-lines">0</div><div class="stat-lbl">Lines</div></div>
                     <div class="stat-card"><div class="stat-val" id="stat-chars">0</div><div class="stat-lbl">Chars</div></div>
@@ -208,12 +235,9 @@
 
             <!-- System -->
             <div class="border-t border-[#1e1e1e]">
-                <div class="px-3 py-2 flex items-center gap-2 text-[10px] font-bold text-[#858585] uppercase tracking-wider select-none cursor-default">
-                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i> System
-                </div>
-                <div class="px-3 pb-3">
-                    <button type="button" id="delete-btn" onclick="confirmDeletion()"
-                        class="w-full flex items-center justify-center gap-2 py-2 bg-transparent border border-[#3c3c3c] text-[#858585] text-[10px] font-bold uppercase tracking-widest rounded hover:bg-red-600/20 hover:text-red-400 hover:border-red-500/40 transition-all">
+                <div class="section-header" style="color:#858585"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> System</div>
+                <div class="px-3 pb-4">
+                    <button type="button" id="delete-btn" onclick="confirmDeletion()" class="delete-btn">
                         <i class="fa-solid fa-trash-can text-[10px]"></i>
                         <span id="delete-text">Delete Page</span>
                     </button>
@@ -224,42 +248,34 @@
 
     <!-- Editor area -->
     <div class="flex-grow flex flex-col bg-[#1e1e1e] min-w-0 h-full">
-
         <!-- Tabs -->
         <div class="flex bg-[#2d2d2d] shrink-0 overflow-x-auto no-scrollbar" style="border-bottom:1px solid #252526">
             <button type="button" onclick="switchTab('py')"   id="tab-py"   class="editor-tab active">
-                <i class="fa-brands fa-python mr-1.5 text-[12px]" style="color:#3794ff"></i>{{ slug }}.py
-                <span class="tab-dirty ml-2"></span>
+                <i class="fa-brands fa-python mr-1.5" style="color:#3794ff;font-size:12px"></i>{{ slug }}.py<span class="tab-dirty"></span>
             </button>
             <button type="button" onclick="switchTab('html')" id="tab-html" class="editor-tab">
-                <i class="fa-brands fa-html5 mr-1.5 text-[12px]" style="color:#e34c26"></i>{{ slug }}.html
-                <span class="tab-dirty ml-2"></span>
+                <i class="fa-brands fa-html5 mr-1.5" style="color:#e34c26;font-size:12px"></i>{{ slug }}.html<span class="tab-dirty"></span>
             </button>
             <button type="button" onclick="switchTab('css')"  id="tab-css"  class="editor-tab">
-                <i class="fa-brands fa-css3-alt mr-1.5 text-[12px]" style="color:#264de4"></i>{{ slug }}.css
-                <span class="tab-dirty ml-2"></span>
+                <i class="fa-brands fa-css3-alt mr-1.5" style="color:#264de4;font-size:12px"></i>{{ slug }}.css<span class="tab-dirty"></span>
             </button>
             <button type="button" onclick="switchTab('js')"   id="tab-js"   class="editor-tab">
-                <i class="fa-brands fa-js mr-1.5 text-[12px]" style="color:#f7df1e"></i>{{ slug }}.js
-                <span class="tab-dirty ml-2"></span>
+                <i class="fa-brands fa-js mr-1.5" style="color:#f7df1e;font-size:12px"></i>{{ slug }}.js<span class="tab-dirty"></span>
             </button>
         </div>
-
         <!-- Breadcrumb -->
         <div class="flex items-center gap-1.5 px-4 h-7 bg-[#1e1e1e] border-b border-[#2d2d2d] shrink-0 select-none">
             <span class="text-[12px] text-[#858585]">MY-PROJECT</span>
-            <span class="text-[12px] text-[#858585]">›</span>
+            <span class="text-[12px] text-[#555]">›</span>
             <span class="text-[12px] text-[#cccccc]" id="breadcrumb-file">{{ slug }}.py</span>
         </div>
-
         <!-- Editor body -->
         <div class="flex-grow flex overflow-hidden relative">
-            <!-- Line numbers -->
-            <div id="line-numbers" class="bg-[#1e1e1e] flex flex-col items-end shrink-0 border-r border-[#2d2d2d] z-10 overflow-hidden select-none" style="min-width:52px;padding-top:14px;padding-right:10px"></div>
-
-            <!-- Code -->
+            <!-- Line numbers gutter — CRITICAL: padding/font must exactly match textarea -->
+            <div id="line-numbers" class="line-gutter custom-scrollbar"></div>
+            <!-- Code pane -->
             <div class="flex-grow relative h-full overflow-hidden">
-                <div id="highlight-layer" class="absolute inset-0 pointer-events-none font-mono whitespace-pre overflow-hidden z-0"></div>
+                <div id="highlight-layer" class="hl-layer"></div>
                 <div class="absolute inset-0 z-10 overflow-hidden">
                     <div id="panel-py"   class="editor-panel block  h-full w-full"><textarea name="python_logic" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.python_logic if page else '' }}</textarea></div>
                     <div id="panel-html" class="editor-panel hidden h-full w-full"><textarea name="content"       form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.content if page else '' }}</textarea></div>
@@ -268,52 +284,53 @@
                 </div>
             </div>
         </div>
-
         <!-- Status bar -->
-        <div class="h-[22px] flex items-center px-2 shrink-0 z-20 text-[11px] select-none" style="background:#007acc;color:rgba(255,255,255,0.9)">
+        <div class="statusbar">
             <div class="flex items-center gap-0.5">
-                <span class="status-pill"><i class="fa-solid fa-code-branch text-[9px]"></i> main</span>
-                <span class="status-pill"><i class="fa-solid fa-circle-check text-[9px]"></i> 0</span>
+                <span class="status-pill"><i class="fa-solid fa-code-branch" style="font-size:9px"></i> main</span>
+                <span class="status-pill"><i class="fa-solid fa-circle-check" style="font-size:9px"></i> 0</span>
             </div>
             <div class="flex items-center gap-0.5 ml-auto">
                 <span id="pos-indicator"  class="status-pill">Ln 1, Col 1</span>
-                <span id="sel-indicator"  class="status-pill hidden">0 sel</span>
+                <span id="sel-indicator"  class="status-pill" style="display:none">0 sel</span>
                 <span class="status-pill">Spaces: 4</span>
                 <span class="status-pill">UTF-8</span>
                 <span class="status-pill">LF</span>
-                <span id="lang-label"     class="status-pill">Python</span>
+                <span id="lang-label" class="status-pill">Python</span>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Preview modal -->
-<div id="preview-modal" class="hidden fixed inset-0 z-[300] bg-[#0c0c0c]/95 flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-6xl flex justify-between items-center mb-2 px-4 py-2 bg-[#252526] border border-zinc-800 rounded-t-lg">
-        <div class="flex items-center gap-5">
-            <div class="flex items-center gap-2">
-                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                <span class="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">Live Preview</span>
+<div id="preview-modal" class="modal-backdrop hidden" style="z-index:300">
+    <div style="width:100%;max-width:1200px;display:flex;flex-direction:column;height:90vh;gap:0" onclick="event.stopPropagation()">
+        <div class="preview-toolbar">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                    <span class="text-[10px] font-mono text-[#858585] uppercase tracking-widest">Live Preview</span>
+                </div>
+                <div class="viewport-switcher">
+                    <button onclick="setViewport('desktop')" id="view-desktop" class="vp-btn active"><i class="fa-solid fa-desktop"></i></button>
+                    <button onclick="setViewport('tablet')"  id="view-tablet"  class="vp-btn"><i class="fa-solid fa-tablet-screen-button"></i></button>
+                    <button onclick="setViewport('mobile')"  id="view-mobile"  class="vp-btn"><i class="fa-solid fa-mobile-screen"></i></button>
+                </div>
             </div>
-            <div class="flex bg-zinc-900 rounded p-0.5 border border-zinc-800">
-                <button onclick="setViewport('desktop')" id="view-desktop" class="px-3 py-1 rounded bg-zinc-800 text-white text-[12px]"><i class="fa-solid fa-desktop"></i></button>
-                <button onclick="setViewport('tablet')"  id="view-tablet"  class="px-3 py-1 rounded text-zinc-500 hover:text-zinc-300 text-[12px]"><i class="fa-solid fa-tablet-screen-button"></i></button>
-                <button onclick="setViewport('mobile')"  id="view-mobile"  class="px-3 py-1 rounded text-zinc-500 hover:text-zinc-300 text-[12px]"><i class="fa-solid fa-mobile-screen"></i></button>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleConsole()" class="text-[9px] font-mono text-[#858585] hover:text-white uppercase tracking-widest transition-colors">Terminal</button>
+                <button onclick="togglePreview()" class="find-icon-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
-        <div class="flex items-center gap-4">
-            <button onclick="toggleConsole()" class="text-[9px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest">Terminal</button>
-            <button onclick="togglePreview()" class="text-zinc-500 hover:text-white text-lg">×</button>
-        </div>
-    </div>
-    <div id="preview-container" class="w-full max-w-6xl flex-grow flex flex-col transition-all duration-300">
-        <iframe id="preview-frame" class="w-full h-full bg-white rounded-b-lg border-none"></iframe>
-        <div id="logic-console" class="hidden h-36 bg-[#0c0c0c] border border-zinc-800 rounded-b-lg mt-1 overflow-y-auto custom-scrollbar">
-            <div class="px-4 py-2 border-b border-zinc-800 flex items-center justify-between">
-                <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Terminal</span>
-                <button onclick="document.getElementById('console-output').innerHTML=''" class="text-[9px] text-zinc-600 hover:text-zinc-400">Clear</button>
+        <div id="preview-container" class="flex-grow flex flex-col transition-all duration-300" style="max-width:100%">
+            <iframe id="preview-frame" class="w-full flex-grow bg-white rounded-b-lg border-none"></iframe>
+            <div id="logic-console" class="console-panel hidden">
+                <div class="console-header">
+                    <span>Terminal</span>
+                    <button onclick="document.getElementById('console-output').innerHTML=''" class="text-[9px] text-[#858585] hover:text-[#cccccc]">Clear</button>
+                </div>
+                <div id="console-output" class="p-3 font-mono text-[11px] space-y-0.5"></div>
             </div>
-            <div id="console-output" class="p-3 font-mono text-[11px] space-y-0.5"></div>
         </div>
     </div>
 </div>
@@ -325,126 +342,335 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
-    /* Scrollbars */
-    .custom-scrollbar::-webkit-scrollbar{width:10px;height:10px}
-    .custom-scrollbar::-webkit-scrollbar-track{background:transparent}
-    .custom-scrollbar::-webkit-scrollbar-thumb{background:rgba(121,121,121,.2);border-radius:0}
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:rgba(121,121,121,.4)}
-    .no-scrollbar::-webkit-scrollbar{display:none}
+/* ─── Reset / base ─── */
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+    --ed-font: 'JetBrains Mono', 'Cascadia Code', monospace;
+    --ed-fs: 13px;
+    --ed-lh: 1.6;
+    --ed-pad-top: 14px;
+    --ed-pad-x: 16px;
+    --anim-fast: 120ms;
+    --anim-med: 220ms;
+    --anim-slow: 380ms;
+    --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
-    /* Activity bar */
-    .act-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#858585;background:none;border:none;cursor:pointer;transition:color .15s;border-left:2px solid transparent}
-    .act-btn:hover{color:#cccccc}
-    .act-btn.active{color:#ffffff;border-left-color:#007acc}
+/* ─── Scrollbars ─── */
+.custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
-    /* Sidebar file items */
-    .sidebar-file{width:100%;text-align:left;padding:4px 12px 4px 22px;font-size:13px;color:#cccccc;display:flex;align-items:center;gap:8px;background:transparent;border:none;cursor:pointer;transition:background .1s}
-    .sidebar-file:hover{background:#2a2d2e}
-    .sidebar-file.active{background:#37373d;color:#fff}
-    .dirty-dot{width:7px;height:7px;border-radius:50%;background:#e8a838;margin-left:auto;display:none;flex-shrink:0}
+/* ─── Entrance animation for the entire shell ─── */
+.editor-shell { animation: shellFadeIn var(--anim-slow) var(--ease-out) both; }
+@keyframes shellFadeIn { from { opacity:0; transform:scale(.985) } to { opacity:1; transform:scale(1) } }
 
-    /* Sidebar inputs */
-    .sidebar-field{width:100%;background:#3c3c3c;border:1px solid #555;border-radius:2px;padding:5px 8px;font-size:12px;color:#cccccc;outline:none;transition:border-color .15s;font-family:inherit}
-    .sidebar-field:focus{border-color:#007acc}
+/* ─── Toast ─── */
+#save-toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    z-index: 500; pointer-events: none;
+    top: -80px; transition: top 400ms var(--ease-bounce);
+}
+#save-toast.show { top: 20px; }
+.toast-inner {
+    background: #1f1f1f; border: 1px solid rgba(52,211,153,.3);
+    padding: 10px 18px; border-radius: 100px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    animation: none;
+}
 
-    /* Tabs */
-    .editor-tab{padding:0 14px;height:35px;font-size:13px;color:#969696;border-right:1px solid #252526;background:#2d2d2d;min-width:120px;text-align:left;display:flex;align-items:center;white-space:nowrap;cursor:pointer;border-top:2px solid transparent;transition:color .15s,background .15s;border-bottom:none}
-    .editor-tab:hover{color:#cccccc;background:#2a2a2a}
-    .editor-tab.active{background:#1e1e1e;color:#fff;border-top-color:#007acc}
-    .tab-dirty{width:7px;height:7px;border-radius:50%;background:#e8a838;display:none;flex-shrink:0}
+/* ─── Modal / backdrop ─── */
+.modal-backdrop {
+    position: fixed; inset: 0; z-index: 600;
+    background: rgba(0,0,0,.65);
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+    animation: fadeIn var(--anim-fast) ease both;
+}
+.modal-backdrop.hidden { display: none !important; }
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
 
-    /* Code area */
-    .code-textarea{display:block;width:100%;height:100%!important;background:transparent!important;padding:14px 16px!important;outline:none!important;border:none!important;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;letter-spacing:-.01em;resize:none;color:transparent!important;caret-color:#aeafad!important;white-space:pre;overflow:auto;z-index:20;position:relative;tab-size:4}
-    #highlight-layer{padding:14px 16px!important;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;letter-spacing:-.01em;color:#d4d4d4;z-index:10}
-    .line-number{display:block;font-size:12px;font-family:'JetBrains Mono',monospace;color:#4b4b4b;line-height:1.6;text-align:right;padding-right:2px}
-    .line-number.active-line{color:#c6c6c6}
+.modal-box {
+    background: #252526; border: 1px solid #3a3a3a;
+    border-radius: 10px; padding: 24px; width: 100%; max-width: 360px;
+    animation: slideUp var(--anim-med) var(--ease-out) both;
+    box-shadow: 0 24px 60px rgba(0,0,0,.6);
+}
+@keyframes slideUp { from { opacity:0; transform: translateY(16px) } to { opacity:1; transform: translateY(0) } }
 
-    /* Prism VS Code Dark+ */
-    .token.keyword{color:#569cd6;font-weight:600}
-    .token.string{color:#ce9178}
-    .token.comment{color:#6a9955;font-style:italic}
-    .token.function{color:#dcdcaa}
-    .token.number{color:#b5cea8}
-    .token.class-name{color:#4ec9b0}
-    .token.operator,.token.punctuation{color:#d4d4d4}
-    .token.builtin{color:#569cd6}
-    .token.tag .token.tag{color:#4ec9b0}
-    .token.tag .token.attr-name{color:#9cdcfe}
-    .token.attr-value{color:#ce9178}
-    .token.property{color:#9cdcfe}
-    .token.selector{color:#d7ba7d}
+.modal-btn-primary { width:100%; background:#007acc; padding:9px; color:#fff; font-size:13px; font-weight:700; border-radius:5px; border:none; cursor:pointer; transition:background var(--anim-fast); }
+.modal-btn-primary:hover { background:#0069b0; }
+.modal-btn-secondary { width:100%; background:#3c3c3c; padding:9px; color:#cccccc; font-size:13px; font-weight:600; border-radius:5px; border:none; cursor:pointer; transition:background var(--anim-fast); }
+.modal-btn-secondary:hover { background:#4a4a4a; }
+.modal-btn-ghost { width:100%; background:transparent; padding:8px; color:#858585; font-size:13px; border:none; cursor:pointer; transition:color var(--anim-fast); }
+.modal-btn-ghost:hover { color:#cccccc; }
 
-    /* Find panel inputs */
-    .find-field{background:#3c3c3c;border:1px solid #555;border-radius:2px;padding:4px 8px;font-size:12px;color:#cccccc;outline:none;font-family:inherit}
-    .find-field:focus{border-color:#007acc}
-    .find-btn{background:#3c3c3c;border:1px solid #555;color:#cccccc;border-radius:2px;padding:4px 8px;font-size:12px;cursor:pointer;transition:background .1s}
-    .find-btn:hover{background:#4a4a4a}
+/* ─── Activity bar ─── */
+.act-btn { width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:#858585; background:none; border:none; border-left:2px solid transparent; cursor:pointer; transition:color var(--anim-fast), border-color var(--anim-fast), background var(--anim-fast); }
+.act-btn:hover { color:#cccccc; background:rgba(255,255,255,.05); }
+.act-btn.active { color:#ffffff; border-left-color:#007acc; }
+#act-save { color:#4ec9b0; }
+#act-save:hover { color:#6ddfc0; }
+#act-exit:hover { color:#f48771; }
 
-    /* Find highlights */
-    mark.find-highlight{background:#623315;color:inherit;border-radius:2px}
-    mark.find-current{background:#9e6a03;color:inherit;outline:1px solid #f0a818;border-radius:2px}
+/* ─── Sidebar ─── */
+.sidebar-panel { width:240px; background:#252526; display:flex; flex-direction:column; border-right:1px solid #1e1e1e; flex-shrink:0; overflow:hidden; transition:width var(--anim-med) var(--ease-out); }
+.sidebar-panel.collapsed { width:0; }
+.sidebar-title-bar { padding:8px 12px; border-bottom:1px solid #1e1e1e; display:flex; align-items:center; }
+.sidebar-title-bar span { font-size:11px; font-weight:700; color:#bbbbbe; text-transform:uppercase; letter-spacing:.08em; }
+.section-header { padding:8px 12px 4px; font-size:11px; font-weight:700; color:#bbbbbe; text-transform:uppercase; letter-spacing:.06em; display:flex; align-items:center; gap:6px; cursor:default; user-select:none; }
+.sidebar-label { font-size:10px; font-weight:700; color:#858585; text-transform:uppercase; letter-spacing:.08em; display:block; }
+.sidebar-field { width:100%; background:#3c3c3c; border:1px solid #555; border-radius:3px; padding:5px 8px; font-size:12px; color:#cccccc; outline:none; transition:border-color var(--anim-fast); font-family:inherit; }
+.sidebar-field:focus { border-color:#007acc; box-shadow: 0 0 0 2px rgba(0,122,204,.15); }
+.sidebar-file { width:100%; text-align:left; padding:4px 12px 4px 20px; font-size:13px; color:#cccccc; display:flex; align-items:center; gap:8px; background:transparent; border:none; cursor:pointer; transition:background var(--anim-fast); }
+.sidebar-file:hover { background:#2a2d2e; }
+.sidebar-file.active { background:#37373d; color:#fff; }
+.dirty-dot { width:7px; height:7px; border-radius:50%; background:#e8a838; margin-left:auto; display:none; flex-shrink:0; }
 
-    /* Status bar pills */
-    .status-pill{padding:0 6px;height:22px;display:inline-flex;align-items:center;gap:3px;cursor:pointer;border-radius:2px;transition:background .1s}
-    .status-pill:hover{background:rgba(255,255,255,.15)}
+/* Size btn */
+.size-btn { width:22px; height:22px; display:flex; align-items:center; justify-content:center; background:#3c3c3c; color:#cccccc; border:none; border-radius:3px; font-size:14px; cursor:pointer; transition:background var(--anim-fast); flex-shrink:0; }
+.size-btn:hover { background:#4a4a4a; }
 
-    /* Stat cards */
-    .stat-card{background:#1e1e1e;border-radius:3px;padding:6px 8px;text-align:center}
-    .stat-val{font-size:15px;font-weight:700;color:#cccccc;font-family:'JetBrains Mono',monospace}
-    .stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#858585;margin-top:1px}
+/* Toggle switch */
+.toggle-switch { width:32px; height:18px; border-radius:100px; background:#3c3c3c; border:none; cursor:pointer; position:relative; transition:background var(--anim-med); flex-shrink:0; }
+.toggle-switch.on { background:#007acc; }
+.toggle-knob { position:absolute; left:3px; top:50%; transform:translateY(-50%); width:12px; height:12px; border-radius:50%; background:#858585; transition:left var(--anim-med) var(--ease-bounce), background var(--anim-med); }
+.toggle-switch.on .toggle-knob { left:17px; background:#fff; }
 
-    /* Shortcuts panel */
-    .shortcut-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2a2a2a}
-    .shortcut-row:last-child{border-bottom:none}
-    kbd{background:#3c3c3c;border:1px solid #555;border-radius:3px;padding:2px 6px;font-size:10px;font-family:'JetBrains Mono',monospace;color:#cccccc}
+/* Stats */
+.stat-card { background:#1e1e1e; border-radius:4px; padding:7px 8px; text-align:center; }
+.stat-val { font-size:15px; font-weight:700; color:#cccccc; font-family:var(--ed-font); }
+.stat-lbl { font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:#858585; margin-top:1px; }
 
-    /* Command palette */
-    .cmd-item{padding:8px 16px;font-size:13px;color:#cccccc;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a2a}
-    .cmd-item:hover,.cmd-item.selected{background:#04395e;color:#fff}
-    .cmd-item i{width:16px;text-align:center;color:#858585;font-size:13px;flex-shrink:0}
-    .cmd-kbd{margin-left:auto;font-size:10px;color:#858585;font-family:'JetBrains Mono',monospace}
+/* Delete */
+.delete-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:6px; padding:7px; background:transparent; border:1px solid #3c3c3c; color:#858585; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; border-radius:4px; cursor:pointer; transition:all var(--anim-fast); }
+.delete-btn:hover { background:rgba(239,68,68,.15); color:#f87171; border-color:rgba(239,68,68,.3); }
+
+/* ─── Tabs ─── */
+.editor-tab { padding:0 14px; height:35px; font-size:13px; color:#969696; border-right:1px solid #252526; background:#2d2d2d; min-width:120px; text-align:left; display:flex; align-items:center; white-space:nowrap; cursor:pointer; border-top:2px solid transparent; border-bottom:none; transition:color var(--anim-fast), background var(--anim-fast); }
+.editor-tab:hover { color:#cccccc; background:#2a2a2a; }
+.editor-tab.active { background:#1e1e1e; color:#fff; border-top-color:#007acc; }
+.tab-dirty { width:7px; height:7px; border-radius:50%; background:#e8a838; display:none; flex-shrink:0; margin-left:6px; }
+
+/* ─── Line numbers — MUST match textarea exactly ─── */
+.line-gutter {
+    background:#1e1e1e;
+    display:flex; flex-direction:column; align-items:flex-end;
+    flex-shrink:0; border-right:1px solid #2d2d2d; z-index:10;
+    overflow:hidden; user-select:none;
+    min-width:52px;
+    /* padding-top/font/line-height set by JS to exactly match textarea */
+    padding-top: var(--ed-pad-top);
+    padding-right: 10px;
+    padding-bottom: 14px;
+}
+.line-number {
+    display:block;
+    font-family: var(--ed-font);
+    font-size: var(--ed-fs);
+    line-height: var(--ed-lh);
+    color:#4b4b4b;
+    text-align:right;
+    white-space:nowrap;
+    transition: color var(--anim-fast);
+}
+.line-number.active-line { color:#c6c6c6; }
+
+/* ─── Highlight + textarea ─── */
+.hl-layer {
+    position:absolute; inset:0;
+    padding: var(--ed-pad-top) var(--ed-pad-x);
+    pointer-events:none; z-index:0;
+    font-family: var(--ed-font);
+    font-size: var(--ed-fs);
+    line-height: var(--ed-lh);
+    color:#d4d4d4; white-space:pre; overflow:hidden;
+}
+.code-textarea {
+    display:block; width:100%; height:100% !important;
+    background:transparent !important;
+    padding: var(--ed-pad-top) var(--ed-pad-x) !important;
+    outline:none !important; border:none !important;
+    font-family: var(--ed-font);
+    font-size: var(--ed-fs);
+    line-height: var(--ed-lh);
+    letter-spacing:-.01em;
+    resize:none; color:transparent !important; caret-color:#aeafad !important;
+    white-space:pre; overflow:auto; z-index:20; position:relative; tab-size:4;
+}
+
+/* ─── Prism token colours ─── */
+.token.keyword { color:#569cd6; font-weight:600; }
+.token.string { color:#ce9178; }
+.token.comment { color:#6a9955; font-style:italic; }
+.token.function { color:#dcdcaa; }
+.token.number { color:#b5cea8; }
+.token.class-name { color:#4ec9b0; }
+.token.operator, .token.punctuation { color:#d4d4d4; }
+.token.builtin { color:#569cd6; }
+.token.tag .token.tag { color:#4ec9b0; }
+.token.tag .token.attr-name { color:#9cdcfe; }
+.token.attr-value { color:#ce9178; }
+.token.property { color:#9cdcfe; }
+.token.selector { color:#d7ba7d; }
+
+/* ─── Status bar ─── */
+.statusbar { height:22px; display:flex; align-items:center; padding:0 6px; flex-shrink:0; z-index:20; font-size:11px; user-select:none; background:#007acc; color:rgba(255,255,255,.9); }
+.status-pill { padding:0 6px; height:22px; display:inline-flex; align-items:center; gap:3px; cursor:pointer; border-radius:2px; transition:background var(--anim-fast); white-space:nowrap; }
+.status-pill:hover { background:rgba(255,255,255,.15); }
+
+/* ─── Find/Replace panel ─── */
+.find-panel {
+    position:fixed; z-index:400; right:20px; top:56px; width:420px;
+    background:#252526; border:1px solid #3a3a3a; border-radius:8px;
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
+    animation: findSlideIn var(--anim-med) var(--ease-out) both;
+    overflow:hidden;
+}
+@keyframes findSlideIn { from { opacity:0; transform:translateY(-10px) } to { opacity:1; transform:translateY(0) } }
+.find-panel.closing { animation: findSlideOut var(--anim-fast) ease both; }
+@keyframes findSlideOut { to { opacity:0; transform:translateY(-8px) } }
+
+.find-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px 8px; border-bottom:1px solid #333; }
+.find-body { padding:10px 12px; display:flex; flex-direction:column; gap:7px; }
+
+.find-input-wrap { position:relative; display:flex; align-items:center; flex:1; background:#1e1e1e; border:1px solid #3c3c3c; border-radius:4px; transition:border-color var(--anim-fast); overflow:hidden; }
+.find-input-wrap:focus-within { border-color:#007acc; box-shadow: 0 0 0 2px rgba(0,122,204,.2); }
+.find-input-icon { position:absolute; left:9px; color:#555; font-size:11px; pointer-events:none; }
+.find-input { flex:1; background:transparent; border:none; outline:none; padding:7px 8px 7px 28px; font-size:12px; color:#cccccc; font-family:inherit; }
+.find-input::placeholder { color:#555; }
+
+.find-toggles { display:flex; align-items:center; gap:1px; padding:0 4px; border-left:1px solid #333; }
+.find-tog { background:none; border:none; border-radius:3px; padding:3px 6px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#858585; cursor:pointer; transition:background var(--anim-fast), color var(--anim-fast); }
+.find-tog:hover { background:#3c3c3c; color:#cccccc; }
+.find-tog.active { background:#07438c; color:#9cdcfe; }
+
+.find-row { display:flex; align-items:center; gap:6px; }
+.find-nav-btns { display:flex; gap:3px; flex-shrink:0; }
+.find-icon-btn { width:26px; height:26px; display:flex; align-items:center; justify-content:center; background:none; border:1px solid transparent; border-radius:4px; color:#858585; cursor:pointer; font-size:12px; transition:all var(--anim-fast); }
+.find-icon-btn:hover { background:#3c3c3c; color:#cccccc; border-color:#555; }
+.find-action-btn { padding:4px 10px; font-size:11px; background:#3c3c3c; border:1px solid #555; border-radius:4px; color:#cccccc; cursor:pointer; transition:background var(--anim-fast); white-space:nowrap; font-family:inherit; }
+.find-action-btn:hover { background:#4a4a4a; }
+.find-action-btn-all { background:#07438c; border-color:#0e5bb5; color:#9cdcfe; }
+.find-action-btn-all:hover { background:#0e5bb5; }
+.find-status { font-size:11px; color:#858585; font-family:'JetBrains Mono',monospace; min-height:16px; padding:0 2px; }
+.find-status.no-results { color:#f48771; }
+.find-status.has-results { color:#4ec9b0; }
+
+/* ─── Command palette ─── */
+.cmd-box { background:#1f1f1f; border:1px solid #3a3a3a; border-radius:10px; box-shadow:0 24px 60px rgba(0,0,0,.7); width:100%; max-width:540px; overflow:hidden; animation:slideUp var(--anim-med) var(--ease-out) both; }
+.cmd-input-row { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid #2a2a2a; }
+.cmd-input { flex:1; background:transparent; border:none; outline:none; font-size:14px; color:#cccccc; font-family:inherit; }
+.cmd-input::placeholder { color:#555; }
+.cmd-list { max-height:320px; overflow-y:auto; }
+.cmd-item { padding:9px 16px; font-size:13px; color:#cccccc; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #2a2a2a; transition:background var(--anim-fast); }
+.cmd-item:hover, .cmd-item.selected { background:#04395e; color:#fff; }
+.cmd-item i { width:16px; text-align:center; color:#858585; font-size:13px; flex-shrink:0; }
+.cmd-item.selected i { color:#9cdcfe; }
+.cmd-kbd { margin-left:auto; font-size:10px; color:#858585; font-family:'JetBrains Mono',monospace; }
+.cmd-footer { display:flex; gap:16px; padding:8px 16px; border-top:1px solid #2a2a2a; font-size:10px; color:#858585; }
+.cmd-footer kbd { background:#3c3c3c; border:1px solid #555; border-radius:3px; padding:1px 5px; font-family:'JetBrains Mono',monospace; margin-right:4px; }
+
+/* ─── Shortcuts panel ─── */
+.shortcuts-panel { position:fixed; z-index:400; right:16px; bottom:30px; width:300px; background:#1f1f1f; border:1px solid #3a3a3a; border-radius:10px; overflow:hidden; box-shadow:0 16px 48px rgba(0,0,0,.6); animation:slideUp var(--anim-med) var(--ease-out) both; }
+.shortcuts-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid #2a2a2a; background:#252526; }
+.shortcuts-body { padding:8px 12px 12px; max-height:400px; overflow-y:auto; }
+.shortcut-group-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#555; padding:8px 0 4px; border-top:1px solid #2a2a2a; margin-top:4px; }
+.shortcut-group-label:first-child { border-top:none; margin-top:0; }
+.shortcut-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; }
+.shortcut-row span { font-size:12px; color:#858585; }
+.kbd-group { display:flex; gap:2px; }
+kbd { background:#3c3c3c; border:1px solid #555; border-radius:3px; padding:1px 6px; font-size:10px; font-family:'JetBrains Mono',monospace; color:#cccccc; }
+
+/* ─── Preview ─── */
+.preview-toolbar { display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:#252526; border:1px solid #333; border-bottom:none; border-radius:8px 8px 0 0; }
+.viewport-switcher { display:flex; background:#1e1e1e; border:1px solid #3c3c3c; border-radius:4px; overflow:hidden; }
+.vp-btn { padding:5px 12px; font-size:12px; background:transparent; border:none; color:#858585; cursor:pointer; transition:all var(--anim-fast); }
+.vp-btn:hover { color:#cccccc; }
+.vp-btn.active { background:#3c3c3c; color:#fff; }
+.console-panel { background:#0c0c0c; border:1px solid #2a2a2a; border-top:none; border-radius:0 0 8px 8px; }
+.console-header { display:flex; align-items:center; justify-content:space-between; padding:6px 14px; border-bottom:1px solid #2a2a2a; font-size:10px; font-family:'JetBrains Mono',monospace; color:#555; text-transform:uppercase; letter-spacing:.08em; }
 </style>
 
 <script>
-/* ═══════════════════════════════════
-   STATE
-═══════════════════════════════════ */
+/* ═══════════════════════ STATE ═══════════════════════ */
+const LS_KEY = 'node-editor-settings';
 let currentMode = 'py';
 let isDirty      = false;
 let fontSize     = 13;
+let lineHeight   = 1.6;
 let wordWrap     = false;
 let findMatches  = [];
 let findIndex    = 0;
+let findOpts     = { case:false, word:false, regex:false };
 
 const LANG_MAP   = {py:'python',html:'markup',css:'css',js:'javascript'};
 const LANG_LABEL = {py:'Python',html:'HTML',css:'CSS',js:'JavaScript'};
 const FILE_NAME  = {py:'{{ slug }}.py',html:'{{ slug }}.html',css:'{{ slug }}.css',js:'{{ slug }}.js'};
 
-const COMMANDS = [
-    {label:'Save file',           icon:'fa-floppy-disk',       kbd:'Ctrl+S',        fn:()=>handleSave()},
-    {label:'Toggle preview',      icon:'fa-eye',               kbd:'Ctrl+Shift+P',  fn:()=>togglePreview()},
-    {label:'Find & replace',      icon:'fa-magnifying-glass',  kbd:'Ctrl+F',        fn:()=>openFind()},
-    {label:'Toggle sidebar',      icon:'fa-sidebar',           kbd:'Ctrl+B',        fn:()=>togglePanel('explorer')},
-    {label:'Switch to Python',    icon:'fa-python',            kbd:'',              fn:()=>switchTab('py')},
-    {label:'Switch to HTML',      icon:'fa-html5',             kbd:'',              fn:()=>switchTab('html')},
-    {label:'Switch to CSS',       icon:'fa-css3-alt',          kbd:'',              fn:()=>switchTab('css')},
-    {label:'Switch to JavaScript',icon:'fa-js',                kbd:'',              fn:()=>switchTab('js')},
-    {label:'Increase font size',  icon:'fa-text-height',       kbd:'Ctrl++',        fn:()=>changeFontSize(1)},
-    {label:'Decrease font size',  icon:'fa-text-height',       kbd:'Ctrl+-',        fn:()=>changeFontSize(-1)},
-    {label:'Toggle word wrap',    icon:'fa-text-width',        kbd:'',              fn:()=>toggleWordWrap()},
-    {label:'Show shortcuts',      icon:'fa-keyboard',          kbd:'',              fn:()=>document.getElementById('shortcuts-panel').classList.toggle('hidden')},
-    {label:'Delete page',         icon:'fa-trash-can',         kbd:'',              fn:()=>confirmDeletion()},
-    {label:'Exit editor',         icon:'fa-arrow-right-from-bracket',kbd:'',       fn:()=>handleExit()},
-];
+/* ═══════════════════════ LOCALSTORAGE SETTINGS ═══════════════════════ */
+function saveSettings(){
+    try {
+        localStorage.setItem(LS_KEY, JSON.stringify({ fontSize, wordWrap }));
+    } catch(e){}
+}
 
-/* ═══════════════════════════════════
-   CORE HELPERS
-═══════════════════════════════════ */
+function loadSettings(){
+    try {
+        const raw = localStorage.getItem(LS_KEY);
+        if(!raw) return;
+        const s = JSON.parse(raw);
+        if(s.fontSize && s.fontSize >= 10 && s.fontSize <= 24) fontSize = s.fontSize;
+        if(typeof s.wordWrap === 'boolean') wordWrap = s.wordWrap;
+    } catch(e){}
+}
+
+/* ═══════════════════════ CSS VARIABLE SYNC ═══════════════════════
+   The single source of truth for editor font/size/lh.
+   Line numbers, highlight layer, and textarea all read CSS vars.
+══════════════════════════════════════════════════════════════════ */
+function applyEditorStyle(){
+    const root = document.documentElement;
+    root.style.setProperty('--ed-fs', fontSize + 'px');
+    root.style.setProperty('--ed-lh', lineHeight.toString());
+
+    /* Keep line gutter width adequate */
+    const ta = activeTextarea();
+    if(ta){
+        const lines = (ta.value+'\n').split('\n').length - 1;
+        const digits = String(Math.max(lines, 99)).length;
+        const gutterW = Math.max(44, digits * (fontSize * 0.6) + 24);
+        document.getElementById('line-numbers').style.minWidth = gutterW + 'px';
+    }
+
+    document.getElementById('font-size-label').textContent = fontSize + 'px';
+
+    /* Slider track fill: range 10–24 */
+    const pct = ((fontSize - 10) / 14) * 100;
+    document.getElementById('font-fill').style.width  = pct + '%';
+    document.getElementById('font-thumb').style.left  = 'calc(' + pct + '% - 6px)';
+
+    /* Word wrap state */
+    document.querySelectorAll('.code-textarea').forEach(t => {
+        t.style.whiteSpace  = wordWrap ? 'pre-wrap' : 'pre';
+        t.style.overflowX   = wordWrap ? 'hidden'   : 'auto';
+    });
+    const hl = document.getElementById('highlight-layer');
+    if(hl) hl.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
+
+    const tog  = document.getElementById('wrap-toggle');
+    if(tog) tog.classList.toggle('on', wordWrap);
+
+    syncHighlight();
+}
+
+/* ═══════════════════════ EDITOR CORE ═══════════════════════ */
 function activeTextarea(){
     return document.querySelector('.editor-panel:not(.hidden) textarea');
 }
@@ -452,12 +678,14 @@ function activeTextarea(){
 function syncHighlight(){
     const ta = activeTextarea();
     const hl = document.getElementById('highlight-layer');
-    if(!ta||!hl) return;
+    if(!ta || !hl) return;
+
     const grammar = Prism.languages[LANG_MAP[currentMode]];
     hl.innerHTML = (grammar
         ? Prism.highlight(ta.value, grammar, LANG_MAP[currentMode])
         : ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     ) + '\n';
+
     syncScroll(ta);
     updateLineNumbers(ta);
     updateStats(ta);
@@ -466,33 +694,41 @@ function syncHighlight(){
 function syncScroll(el){
     const hl = document.getElementById('highlight-layer');
     const ln = document.getElementById('line-numbers');
-    if(hl){hl.scrollTop=el.scrollTop;hl.scrollLeft=el.scrollLeft;}
-    if(ln) ln.scrollTop = el.scrollTop;
+    if(hl){ hl.scrollTop = el.scrollTop; hl.scrollLeft = el.scrollLeft; }
+    if(ln)   ln.scrollTop = el.scrollTop;
 }
 
+/* ─── Line numbers: must match textarea padding & line-height exactly ─── */
 function updateLineNumbers(ta){
-    const lines = (ta.value+'\n').split('\n');
-    const before = ta.value.substring(0,ta.selectionStart);
+    const before = ta.value.substring(0, ta.selectionStart);
     const activeLine = before.split('\n').length;
-    const container = document.getElementById('line-numbers');
+    const totalLines = (ta.value + '\n').split('\n').length - 1;
+    const container  = document.getElementById('line-numbers');
     if(!container) return;
-    let html='';
-    for(let i=1;i<lines.length;i++){
-        html+=`<span class="line-number${i===activeLine?' active-line':''}">${i}</span>`;
+
+    /* Sync gutter padding-top to match textarea — both use CSS var --ed-pad-top */
+    /* already handled by CSS var; just build numbers */
+    let html = '';
+    for(let i = 1; i <= totalLines; i++){
+        html += `<span class="line-number${i === activeLine ? ' active-line' : ''}">${i}</span>`;
     }
-    container.innerHTML=html;
-    container.scrollTop=ta.scrollTop;
+    container.innerHTML = html;
+    container.scrollTop = ta.scrollTop;
+
+    /* Widen gutter if needed */
+    const digits  = String(totalLines).length;
+    const gutterW = Math.max(44, digits * Math.ceil(fontSize * 0.62) + 22);
+    container.style.minWidth = gutterW + 'px';
 }
 
 function updateCursorMetadata(ta){
-    const before = ta.value.substring(0,ta.selectionStart);
+    const before = ta.value.substring(0, ta.selectionStart);
     const lines  = before.split('\n');
-    document.getElementById('pos-indicator').textContent=`Ln ${lines.length}, Col ${lines[lines.length-1].length+1}`;
-    // Selection indicator
+    document.getElementById('pos-indicator').textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length+1}`;
     const selLen = ta.selectionEnd - ta.selectionStart;
     const selEl  = document.getElementById('sel-indicator');
-    if(selLen>0){ selEl.textContent=`${selLen} sel`; selEl.classList.remove('hidden'); }
-    else selEl.classList.add('hidden');
+    if(selLen > 0){ selEl.textContent = `${selLen} sel`; selEl.style.display = 'inline-flex'; }
+    else selEl.style.display = 'none';
     updateLineNumbers(ta);
 }
 
@@ -500,157 +736,182 @@ function updateStats(ta){
     const val = ta.value;
     const lines = val.split('\n').length;
     const chars = val.length;
-    const words = val.trim()==='' ? 0 : val.trim().split(/\s+/).length;
-    const size  = new Blob([val]).size;
-    const sizeStr = size<1024 ? size+'B' : size<1048576 ? (size/1024).toFixed(1)+'K' : (size/1048576).toFixed(1)+'M';
+    const words = val.trim() === '' ? 0 : val.trim().split(/\s+/).length;
+    const bytes  = new Blob([val]).size;
+    const sz     = bytes < 1024 ? bytes+'B' : bytes < 1048576 ? (bytes/1024).toFixed(1)+'K' : (bytes/1048576).toFixed(1)+'M';
     document.getElementById('stat-lines').textContent = lines;
     document.getElementById('stat-chars').textContent = chars;
     document.getElementById('stat-words').textContent = words;
-    document.getElementById('stat-size').textContent  = sizeStr;
+    document.getElementById('stat-size').textContent  = sz;
 }
 
-/* ═══════════════════════════════════
-   TAB SWITCHING
-═══════════════════════════════════ */
+/* ═══════════════════════ TAB SWITCHING ═══════════════════════ */
 function switchTab(type){
     currentMode = type;
-    document.querySelectorAll('.editor-panel').forEach(p=>p.classList.add('hidden'));
-    document.querySelectorAll('.editor-tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.sidebar-file').forEach(f=>f.classList.remove('active'));
+    document.querySelectorAll('.editor-panel').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sidebar-file').forEach(f => f.classList.remove('active'));
     document.getElementById(`panel-${type}`).classList.remove('hidden');
     document.getElementById(`tab-${type}`).classList.add('active');
     document.getElementById(`side-tab-${type}`).classList.add('active');
-    document.getElementById('lang-label').textContent = LANG_LABEL[type];
-    document.getElementById('breadcrumb-file').textContent = FILE_NAME[type];
+    document.getElementById('lang-label').textContent       = LANG_LABEL[type];
+    document.getElementById('breadcrumb-file').textContent  = FILE_NAME[type];
     requestAnimationFrame(()=>{
         syncHighlight();
         const ta = activeTextarea();
-        if(ta){updateCursorMetadata(ta);ta.focus();}
+        if(ta){ updateCursorMetadata(ta); ta.focus(); }
     });
 }
 
-/* ═══════════════════════════════════
-   FONT SIZE + WRAP
-═══════════════════════════════════ */
+/* ═══════════════════════ FONT SIZE ═══════════════════════ */
 function changeFontSize(delta){
-    fontSize = Math.max(10, Math.min(24, fontSize+delta));
-    document.getElementById('font-size-label').textContent = fontSize+'px';
-    const style = `font-size:${fontSize}px!important;line-height:1.6`;
-    document.querySelectorAll('.code-textarea, #highlight-layer').forEach(el=>{
-        el.style.fontSize = fontSize+'px';
-    });
-    document.querySelectorAll('.line-number').forEach(el=>{el.style.fontSize=(fontSize-1)+'px';});
-    syncHighlight();
+    fontSize = Math.max(10, Math.min(24, fontSize + delta));
+    applyEditorStyle();
+    saveSettings();
 }
 
+function fontTrackClick(e){
+    const track = document.getElementById('font-track');
+    const rect  = track.getBoundingClientRect();
+    const pct   = (e.clientX - rect.left) / rect.width;
+    fontSize    = Math.round(10 + pct * 14);
+    applyEditorStyle();
+    saveSettings();
+}
+
+/* ═══════════════════════ WORD WRAP ═══════════════════════ */
 function toggleWordWrap(){
     wordWrap = !wordWrap;
-    const ta = document.querySelectorAll('.code-textarea');
-    const hl = document.getElementById('highlight-layer');
-    ta.forEach(t=>{ t.style.whiteSpace = wordWrap?'pre-wrap':'pre'; t.style.overflowX = wordWrap?'hidden':'auto'; });
-    if(hl){ hl.style.whiteSpace = wordWrap?'pre-wrap':'pre'; }
-    const knob = document.getElementById('wrap-knob');
-    const tog  = document.getElementById('wrap-toggle');
-    if(wordWrap){
-        tog.style.background='#007acc';
-        knob.style.left='16px';
-        knob.style.background='white';
-    } else {
-        tog.style.background='#3c3c3c';
-        knob.style.left='2px';
-        knob.style.background='#858585';
-    }
+    applyEditorStyle();
+    saveSettings();
 }
 
-/* ═══════════════════════════════════
-   FIND & REPLACE
-═══════════════════════════════════ */
+/* ═══════════════════════ FIND & REPLACE ═══════════════════════ */
 function openFind(){
     const panel = document.getElementById('find-panel');
-    panel.classList.remove('hidden');
+    panel.classList.remove('closing');
+    panel.style.display = 'block';
     const ta = activeTextarea();
-    if(ta && ta.selectionStart!==ta.selectionEnd){
-        document.getElementById('find-input').value = ta.value.substring(ta.selectionStart,ta.selectionEnd);
+    if(ta && ta.selectionStart !== ta.selectionEnd){
+        document.getElementById('find-input').value = ta.value.substring(ta.selectionStart, ta.selectionEnd);
     }
     document.getElementById('find-input').focus();
     doFind();
 }
+
 function closeFindPanel(){
-    document.getElementById('find-panel').classList.add('hidden');
-    findMatches=[];
+    const panel = document.getElementById('find-panel');
+    panel.classList.add('closing');
+    setTimeout(()=>{ panel.style.display='none'; panel.classList.remove('closing'); }, 120);
+    findMatches = [];
+    document.getElementById('find-status').textContent = '';
+    document.getElementById('find-count').textContent  = '';
     syncHighlight();
 }
 
-function doFind(){
-    const query   = document.getElementById('find-input').value;
-    const caseSens= document.getElementById('find-case').checked;
-    const wholeWd = document.getElementById('find-word').checked;
-    const useRegex= document.getElementById('find-regex').checked;
-    const ta = activeTextarea();
-    if(!ta||!query){ document.getElementById('find-count').textContent=''; findMatches=[]; return; }
-
-    let pattern = useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    if(wholeWd && !useRegex) pattern = `\\b${pattern}\\b`;
-    let flags = caseSens ? 'g' : 'gi';
-    try {
-        const re = new RegExp(pattern,flags);
-        findMatches=[];
-        let m;
-        while((m=re.exec(ta.value))!==null){ findMatches.push({start:m.index,end:m.index+m[0].length}); }
-        document.getElementById('find-count').textContent = findMatches.length ? `${Math.min(findIndex+1,findMatches.length)}/${findMatches.length}` : '0/0';
-    } catch(e){ document.getElementById('find-count').textContent='err'; findMatches=[]; }
+function toggleFindOpt(opt){
+    findOpts[opt] = !findOpts[opt];
+    document.getElementById('tog-' + opt).classList.toggle('active', findOpts[opt]);
+    doFind();
 }
 
-function findNext(){ if(!findMatches.length) return; findIndex=(findIndex+1)%findMatches.length; jumpToMatch(); }
-function findPrev(){ if(!findMatches.length) return; findIndex=(findIndex-1+findMatches.length)%findMatches.length; jumpToMatch(); }
-function jumpToMatch(){
+function buildRegex(query){
+    let pattern = findOpts.regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    if(findOpts.word && !findOpts.regex) pattern = `\\b${pattern}\\b`;
+    const flags = findOpts.case ? 'g' : 'gi';
+    return new RegExp(pattern, flags);
+}
+
+function doFind(){
+    const query  = document.getElementById('find-input').value;
+    const status = document.getElementById('find-status');
+    const count  = document.getElementById('find-count');
+    const ta     = activeTextarea();
+    findMatches  = [];
+    if(!ta || !query){ status.textContent=''; count.textContent=''; return; }
+    try {
+        const re = buildRegex(query);
+        let m;
+        while((m = re.exec(ta.value)) !== null) findMatches.push({start:m.index, end:m.index+m[0].length});
+        if(findMatches.length === 0){
+            status.className = 'find-status no-results';
+            status.textContent = 'No results';
+            count.textContent  = '';
+        } else {
+            findIndex = Math.min(findIndex, findMatches.length - 1);
+            status.className = 'find-status has-results';
+            status.textContent = `${findMatches.length} match${findMatches.length>1?'es':''}`;
+            count.textContent  = `${findIndex+1} / ${findMatches.length}`;
+            jumpToMatch(false);
+        }
+    } catch(e){
+        status.className = 'find-status no-results';
+        status.textContent = 'Invalid expression';
+    }
+}
+
+function findNext(){ if(!findMatches.length) return; findIndex=(findIndex+1)%findMatches.length; jumpToMatch(true); }
+function findPrev(){ if(!findMatches.length) return; findIndex=(findIndex-1+findMatches.length)%findMatches.length; jumpToMatch(true); }
+
+function jumpToMatch(updateCount=true){
     const ta = activeTextarea();
-    if(!ta||!findMatches[findIndex]) return;
+    if(!ta || !findMatches[findIndex]) return;
     const m = findMatches[findIndex];
     ta.focus();
-    ta.setSelectionRange(m.start,m.end);
-    document.getElementById('find-count').textContent=`${findIndex+1}/${findMatches.length}`;
-    // Scroll into view
-    const lineH = fontSize*1.6;
-    const linesBefore = ta.value.substring(0,m.start).split('\n').length-1;
-    ta.scrollTop = Math.max(0,(linesBefore-5)*lineH);
+    ta.setSelectionRange(m.start, m.end);
+    if(updateCount) document.getElementById('find-count').textContent = `${findIndex+1} / ${findMatches.length}`;
+    /* Scroll into view */
+    const lineH  = fontSize * lineHeight;
+    const before = ta.value.substring(0, m.start);
+    const lineNo = before.split('\n').length - 1;
+    ta.scrollTop = Math.max(0, (lineNo - 4) * lineH);
     syncHighlight();
 }
 
 function doReplaceOne(){
     const ta = activeTextarea();
-    if(!ta||!findMatches.length) return;
+    if(!ta || !findMatches.length) return;
     const replacement = document.getElementById('replace-input').value;
     const m = findMatches[findIndex];
-    const before = ta.value.substring(0,m.start);
-    const after  = ta.value.substring(m.end);
-    ta.value = before + replacement + after;
-    isDirty=true; markDirty();
+    ta.value = ta.value.substring(0,m.start) + replacement + ta.value.substring(m.end);
+    isDirty = true; markDirty();
     doFind(); syncHighlight();
 }
 
 function doReplaceAll(){
     const ta = activeTextarea();
-    if(!ta||!findMatches.length) return;
-    const query   = document.getElementById('find-input').value;
+    if(!ta || !findMatches.length) return;
+    const query = document.getElementById('find-input').value;
     const replacement = document.getElementById('replace-input').value;
-    const caseSens= document.getElementById('find-case').checked;
-    const useRegex= document.getElementById('find-regex').checked;
-    let pattern = useRegex ? query : query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     try {
-        const re = new RegExp(pattern, caseSens?'g':'gi');
-        ta.value = ta.value.replace(re, replacement);
-        isDirty=true; markDirty(); doFind(); syncHighlight();
+        ta.value = ta.value.replace(buildRegex(query), replacement);
+        isDirty = true; markDirty();
+        doFind(); syncHighlight();
     } catch(e){}
 }
 
-/* ═══════════════════════════════════
-   COMMAND PALETTE
-═══════════════════════════════════ */
+/* ═══════════════════════ COMMAND PALETTE ═══════════════════════ */
+const COMMANDS = [
+    {label:'Save file',              icon:'fa-floppy-disk',              kbd:'Ctrl+S',        fn:()=>handleSave()},
+    {label:'Toggle preview',         icon:'fa-eye',                      kbd:'Ctrl+Shift+P',  fn:()=>togglePreview()},
+    {label:'Find & replace',         icon:'fa-magnifying-glass',         kbd:'Ctrl+F',        fn:()=>openFind()},
+    {label:'Toggle sidebar',         icon:'fa-sidebar',                  kbd:'Ctrl+B',        fn:()=>togglePanel('explorer')},
+    {label:'Switch to Python',       icon:'fa-python',                   kbd:'',              fn:()=>switchTab('py')},
+    {label:'Switch to HTML',         icon:'fa-html5',                    kbd:'',              fn:()=>switchTab('html')},
+    {label:'Switch to CSS',          icon:'fa-css3-alt',                 kbd:'',              fn:()=>switchTab('css')},
+    {label:'Switch to JavaScript',   icon:'fa-js',                       kbd:'',              fn:()=>switchTab('js')},
+    {label:'Increase font size',     icon:'fa-text-height',              kbd:'Ctrl++',        fn:()=>changeFontSize(1)},
+    {label:'Decrease font size',     icon:'fa-text-height',              kbd:'Ctrl+-',        fn:()=>changeFontSize(-1)},
+    {label:'Toggle word wrap',       icon:'fa-text-width',               kbd:'',              fn:()=>toggleWordWrap()},
+    {label:'Show shortcuts',         icon:'fa-keyboard',                 kbd:'',              fn:()=>document.getElementById('shortcuts-panel').classList.toggle('hidden')},
+    {label:'Delete page',            icon:'fa-trash-can',                kbd:'',              fn:()=>confirmDeletion()},
+    {label:'Exit editor',            icon:'fa-arrow-right-from-bracket', kbd:'',              fn:()=>handleExit()},
+];
+
 let cmdSelected = 0;
 function openCmdPalette(){
     document.getElementById('cmd-palette').classList.remove('hidden');
-    document.getElementById('cmd-input').value='';
+    document.getElementById('cmd-input').value = '';
     filterCommands();
     document.getElementById('cmd-input').focus();
 }
@@ -658,15 +919,15 @@ function closeCmdPalette(){ document.getElementById('cmd-palette').classList.add
 
 function filterCommands(){
     const q = document.getElementById('cmd-input').value.toLowerCase();
-    const list = document.getElementById('cmd-list');
-    const filtered = COMMANDS.filter(c=>c.label.toLowerCase().includes(q));
+    const filtered = COMMANDS.filter(c => c.label.toLowerCase().includes(q));
     cmdSelected = 0;
-    list.innerHTML = filtered.map((c,i)=>`
-        <div class="cmd-item${i===0?' selected':''}" onclick="runCmd(${COMMANDS.indexOf(c)})">
+    document.getElementById('cmd-list').innerHTML = filtered.map((c,i) =>
+        `<div class="cmd-item${i===0?' selected':''}" onclick="runCmd(${COMMANDS.indexOf(c)})">
             <i class="fa-solid ${c.icon}"></i>
             <span>${c.label}</span>
-            ${c.kbd?`<span class="cmd-kbd">${c.kbd}</span>`:''}
-        </div>`).join('');
+            ${c.kbd ? `<span class="cmd-kbd">${c.kbd}</span>` : ''}
+        </div>`
+    ).join('');
 }
 
 function cmdKeydown(e){
@@ -675,16 +936,15 @@ function cmdKeydown(e){
     else if(e.key==='ArrowUp'){ e.preventDefault(); cmdSelected=Math.max(cmdSelected-1,0); }
     else if(e.key==='Enter'){ e.preventDefault(); items[cmdSelected]?.click(); return; }
     else if(e.key==='Escape'){ closeCmdPalette(); return; }
-    items.forEach((el,i)=>el.classList.toggle('selected',i===cmdSelected));
+    items.forEach((el,i) => el.classList.toggle('selected', i===cmdSelected));
     items[cmdSelected]?.scrollIntoView({block:'nearest'});
 }
-
 function runCmd(idx){ COMMANDS[idx]?.fn(); closeCmdPalette(); }
 
-/* ═══════════════════════════════════
-   SAVE / EXIT
-═══════════════════════════════════ */
+/* ═══════════════════════ SAVE / EXIT ═══════════════════════ */
 async function handleSave(){
+    const btn = document.getElementById('act-save');
+    btn.style.animation = 'none';
     const form = document.getElementById('cms-form');
     const fd   = new FormData(form);
     fd.set('python_logic', document.querySelector('textarea[name="python_logic"]').value);
@@ -692,18 +952,20 @@ async function handleSave(){
     fd.set('css_content',  document.querySelector('textarea[name="css_content"]').value);
     fd.set('js_content',   document.querySelector('textarea[name="js_content"]').value);
     try {
-        const r = await fetch(window.location.pathname,{method:'POST',body:fd});
+        const r = await fetch(window.location.pathname, {method:'POST', body:fd});
         if(r.ok){
-            showToast(); isDirty=false;
-            document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d=>d.style.display='none');
+            showToast(); isDirty = false;
+            document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d => d.style.display='none');
         }
-    } catch(err){ console.error('Save failed:',err); }
+    } catch(err){ console.error('Save failed:', err); }
 }
 
 function showToast(){
     const t = document.getElementById('save-toast');
-    t.style.top='24px'; setTimeout(()=>t.style.top='-80px',3000);
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 3000);
 }
+
 function handleExit(){ if(isDirty) toggleExitModal(); else window.location.href='/admin'; }
 function toggleExitModal(){ document.getElementById('exit-modal').classList.toggle('hidden'); }
 async function saveAndExit(){ await handleSave(); window.location.href='/admin'; }
@@ -715,79 +977,61 @@ function markDirty(){
     if(sd) sd.style.display='block';
 }
 
-/* ═══════════════════════════════════
-   SIDEBAR TOGGLE
-═══════════════════════════════════ */
+/* ═══════════════════════ SIDEBAR ═══════════════════════ */
 function togglePanel(name){
     if(name==='explorer'){
         const sb = document.getElementById('sidebar');
-        const collapsed = sb.style.width==='0px';
-        sb.style.width = collapsed ? '' : '0px';
-        sb.style.overflow = collapsed ? '' : 'hidden';
-        document.getElementById('act-explorer').classList.toggle('active',collapsed);
+        sb.classList.toggle('collapsed');
+        document.getElementById('act-explorer').classList.toggle('active', !sb.classList.contains('collapsed'));
     }
 }
 
-/* ═══════════════════════════════════
-   PREVIEW
-═══════════════════════════════════ */
+/* ═══════════════════════ PREVIEW ═══════════════════════ */
 async function togglePreview(){
     const modal      = document.getElementById('preview-modal');
-    const frame      = document.getElementById('preview-frame');
     const consoleOut = document.getElementById('console-output');
     if(!modal.classList.contains('hidden')){ modal.classList.add('hidden'); return; }
-    consoleOut.innerHTML='<span style="color:#858585">Compiling…</span>';
+    consoleOut.innerHTML = '<span style="color:#858585">Compiling…</span>';
     const fd = new URLSearchParams();
     fd.append('content',      document.querySelector('textarea[name="content"]').value);
     fd.append('css',          document.querySelector('textarea[name="css_content"]').value);
     fd.append('js',           document.querySelector('textarea[name="js_content"]').value);
     fd.append('python_logic', document.querySelector('textarea[name="python_logic"]').value);
     try {
-        const res  = await fetch('/_preview',{method:'POST',body:fd});
+        const res  = await fetch('/_preview', {method:'POST', body:fd});
         const text = await res.text();
-        frame.srcdoc = text;
+        document.getElementById('preview-frame').srcdoc = text;
         modal.classList.remove('hidden');
-        consoleOut.innerHTML='<span style="color:#4ec9b0">✓ Rendered successfully</span>';
+        consoleOut.innerHTML = '<span style="color:#4ec9b0">✓ Rendered successfully</span>';
     } catch(e){
-        consoleOut.innerHTML=`<span style="color:#f48771">Error: ${e}</span>`;
+        consoleOut.innerHTML = `<span style="color:#f48771">Error: ${e}</span>`;
     }
 }
 
 function setViewport(mode){
-    const c = document.getElementById('preview-container');
-    const btns = {desktop:'1152px',tablet:'768px',mobile:'375px'};
-    c.style.maxWidth = btns[mode]||'1152px';
-    ['desktop','tablet','mobile'].forEach(m=>{
-        const b = document.getElementById('view-'+m);
-        b.classList.toggle('bg-zinc-800',m===mode);
-        b.classList.toggle('text-white', m===mode);
-        b.classList.toggle('text-zinc-500',m!==mode);
-    });
+    const c    = document.getElementById('preview-container');
+    const sizes = {desktop:'100%', tablet:'768px', mobile:'390px'};
+    c.style.maxWidth = sizes[mode] || '100%';
+    document.querySelectorAll('.vp-btn').forEach((b,_,arr)=> b.classList.remove('active'));
+    document.getElementById('view-' + mode).classList.add('active');
 }
 
 function toggleConsole(){ document.getElementById('logic-console').classList.toggle('hidden'); }
 
-/* ═══════════════════════════════════
-   KEYBOARD SHORTCUTS (code areas)
-═══════════════════════════════════ */
+/* ═══════════════════════ KEYBOARD SHORTCUTS ═══════════════════════ */
 function handleEditorKeydown(e, ta){
-    const key = e.key;
-    const ctrl = e.ctrlKey||e.metaKey;
+    const key   = e.key;
+    const ctrl  = e.ctrlKey || e.metaKey;
     const shift = e.shiftKey;
-    const alt = e.altKey;
+    const alt   = e.altKey;
 
-    /* Ctrl+S */
     if(ctrl && key==='s'){ e.preventDefault(); handleSave(); return; }
-    /* Ctrl+F */
     if(ctrl && key==='f'){ e.preventDefault(); openFind(); return; }
-    /* Ctrl+P */
     if(ctrl && !shift && key==='p'){ e.preventDefault(); openCmdPalette(); return; }
-    /* Ctrl+Shift+P */
-    if(ctrl && shift && key==='P'){ e.preventDefault(); togglePreview(); return; }
-    /* Ctrl++ / Ctrl+- */
+    if(ctrl && shift  && key==='P'){ e.preventDefault(); togglePreview(); return; }
     if(ctrl && (key==='='||key==='+')){ e.preventDefault(); changeFontSize(1); return; }
     if(ctrl && key==='-'){ e.preventDefault(); changeFontSize(-1); return; }
-    /* Escape — close find */
+    if(ctrl && key==='b'){ e.preventDefault(); togglePanel('explorer'); return; }
     if(key==='Escape'){ closeFindPanel(); closeCmdPalette(); return; }
 
     /* Tab / Shift+Tab */
@@ -795,145 +1039,135 @@ function handleEditorKeydown(e, ta){
         e.preventDefault();
         const s=ta.selectionStart, en=ta.selectionEnd;
         if(!shift){
-            ta.value=ta.value.substring(0,s)+'    '+ta.value.substring(en);
-            ta.selectionStart=ta.selectionEnd=s+4;
+            ta.value = ta.value.substring(0,s)+'    '+ta.value.substring(en);
+            ta.selectionStart = ta.selectionEnd = s+4;
         } else {
-            /* Outdent: remove up to 4 spaces before cursor on this line */
             const lineStart = ta.value.lastIndexOf('\n',s-1)+1;
-            const lineText  = ta.value.substring(lineStart,s);
-            const spaces    = lineText.match(/^ {1,4}/)?.[0]?.length||0;
+            const spaces    = ta.value.substring(lineStart,s).match(/^ {1,4}/)?.[0]?.length||0;
             if(spaces>0){
-                ta.value=ta.value.substring(0,lineStart)+ta.value.substring(lineStart+spaces);
-                ta.selectionStart=ta.selectionEnd=Math.max(lineStart,s-spaces);
+                ta.value = ta.value.substring(0,lineStart)+ta.value.substring(lineStart+spaces);
+                ta.selectionStart = ta.selectionEnd = Math.max(lineStart, s-spaces);
             }
         }
         syncHighlight(); updateCursorMetadata(ta); return;
     }
 
-    /* Ctrl+/ — toggle line comment */
+    /* Ctrl+/ toggle comment */
     if(ctrl && key==='/'){
         e.preventDefault();
         const pos = ta.selectionStart;
-        const lineStart = ta.value.lastIndexOf('\n',pos-1)+1;
-        const lineEnd   = ta.value.indexOf('\n',pos); const le = lineEnd===-1?ta.value.length:lineEnd;
-        const line = ta.value.substring(lineStart,le);
-        const prefixes = {py:'# ',html:'<!-- ',css:'/* ',js:'// '};
-        const pre = prefixes[currentMode]||'// ';
+        const ls  = ta.value.lastIndexOf('\n',pos-1)+1;
+        const le  = (ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
+        const line = ta.value.substring(ls,le);
+        const pre  = {py:'# ',html:'<!-- ',css:'/* ',js:'// '}[currentMode]||'// ';
         let newLine, offset;
         if(line.trimStart().startsWith(pre.trim())){
             const idx = line.indexOf(pre.trim());
             newLine = line.substring(0,idx)+line.substring(idx+pre.length);
-            offset = -pre.length;
+            offset  = -pre.length;
         } else {
-            newLine = pre + line;
-            offset = pre.length;
+            newLine = pre+line; offset = pre.length;
         }
-        ta.value = ta.value.substring(0,lineStart)+newLine+ta.value.substring(le);
-        ta.selectionStart=ta.selectionEnd=pos+offset;
+        ta.value = ta.value.substring(0,ls)+newLine+ta.value.substring(le);
+        ta.selectionStart = ta.selectionEnd = pos+offset;
         syncHighlight(); updateCursorMetadata(ta); return;
     }
 
-    /* Shift+Alt+D — duplicate line */
+    /* Shift+Alt+D duplicate line */
     if(shift && alt && key.toLowerCase()==='d'){
         e.preventDefault();
         const pos = ta.selectionStart;
-        const lineStart = ta.value.lastIndexOf('\n',pos-1)+1;
-        const lineEnd   = ta.value.indexOf('\n',pos); const le = lineEnd===-1?ta.value.length:lineEnd;
-        const line = ta.value.substring(lineStart,le);
+        const ls  = ta.value.lastIndexOf('\n',pos-1)+1;
+        const le  = (ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
+        const line = ta.value.substring(ls,le);
         ta.value = ta.value.substring(0,le)+'\n'+line+ta.value.substring(le);
-        ta.selectionStart=ta.selectionEnd=pos+(le-lineStart+1);
+        ta.selectionStart = ta.selectionEnd = pos+(le-ls+1);
         syncHighlight(); updateCursorMetadata(ta); return;
     }
 
-    /* Ctrl+Shift+K — delete line */
+    /* Ctrl+Shift+K delete line */
     if(ctrl && shift && key==='K'){
         e.preventDefault();
         const pos = ta.selectionStart;
-        const lineStart = ta.value.lastIndexOf('\n',pos-1)+1;
-        let lineEnd = ta.value.indexOf('\n',pos);
-        if(lineEnd===-1) lineEnd=ta.value.length; else lineEnd++;
-        ta.value=ta.value.substring(0,lineStart)+ta.value.substring(lineEnd);
-        ta.selectionStart=ta.selectionEnd=lineStart;
+        const ls  = ta.value.lastIndexOf('\n',pos-1)+1;
+        let   le  = ta.value.indexOf('\n',pos);
+        if(le===-1) le=ta.value.length; else le++;
+        ta.value = ta.value.substring(0,ls)+ta.value.substring(le);
+        ta.selectionStart = ta.selectionEnd = ls;
         syncHighlight(); updateCursorMetadata(ta); return;
     }
 
-    /* Alt+↑/↓ — move line */
+    /* Alt+↑↓ move line */
     if(alt && (key==='ArrowUp'||key==='ArrowDown')){
         e.preventDefault();
         const pos = ta.selectionStart;
-        const lineStart = ta.value.lastIndexOf('\n',pos-1)+1;
-        const lineEnd   = ta.value.indexOf('\n',pos); const le = lineEnd===-1?ta.value.length:lineEnd;
-        const line = ta.value.substring(lineStart,le);
-        if(key==='ArrowUp' && lineStart>0){
-            const prevLineEnd = lineStart-1;
-            const prevLineStart = ta.value.lastIndexOf('\n',prevLineEnd-1)+1;
-            const prevLine = ta.value.substring(prevLineStart,prevLineEnd);
-            ta.value=ta.value.substring(0,prevLineStart)+line+'\n'+prevLine+ta.value.substring(le);
-            const newPos = prevLineStart+(pos-lineStart);
-            ta.selectionStart=ta.selectionEnd=newPos;
+        const ls  = ta.value.lastIndexOf('\n',pos-1)+1;
+        const le  = (ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
+        const line= ta.value.substring(ls,le);
+        if(key==='ArrowUp' && ls>0){
+            const pls = ta.value.lastIndexOf('\n',ls-2)+1;
+            const pl  = ta.value.substring(pls,ls-1);
+            ta.value  = ta.value.substring(0,pls)+line+'\n'+pl+ta.value.substring(le);
+            ta.selectionStart = ta.selectionEnd = pls+(pos-ls);
         } else if(key==='ArrowDown' && le<ta.value.length){
-            const nextLineEnd = ta.value.indexOf('\n',le+1); const nle = nextLineEnd===-1?ta.value.length:nextLineEnd;
-            const nextLine = ta.value.substring(le+1,nle);
-            ta.value=ta.value.substring(0,lineStart)+nextLine+'\n'+line+ta.value.substring(nle);
-            const newPos = lineStart+nextLine.length+1+(pos-lineStart);
-            ta.selectionStart=ta.selectionEnd=newPos;
+            const nle = (ta.value.indexOf('\n',le+1)+1||ta.value.length+1)-1;
+            const nl  = ta.value.substring(le+1,nle);
+            ta.value  = ta.value.substring(0,ls)+nl+'\n'+line+ta.value.substring(nle);
+            ta.selectionStart = ta.selectionEnd = ls+nl.length+1+(pos-ls);
         }
         syncHighlight(); updateCursorMetadata(ta); return;
     }
 
-    /* Auto-close brackets / quotes */
+    /* Auto-close brackets/quotes */
     const PAIRS = {'(':')','{':'}','[':']','"':'"',"'":"'",'`':'`'};
     if(PAIRS[key] && !ctrl){
         e.preventDefault();
         const s=ta.selectionStart, en=ta.selectionEnd;
-        const selected = ta.value.substring(s,en);
-        ta.value=ta.value.substring(0,s)+key+selected+PAIRS[key]+ta.value.substring(en);
-        ta.selectionStart=ta.selectionEnd=s+1+(selected.length>0?selected.length:0);
+        const sel = ta.value.substring(s,en);
+        ta.value = ta.value.substring(0,s)+key+sel+PAIRS[key]+ta.value.substring(en);
+        ta.selectionStart = ta.selectionEnd = s+1+(sel.length>0?sel.length:0);
         syncHighlight(); updateCursorMetadata(ta); return;
     }
 }
 
-/* ═══════════════════════════════════
-   WIRE TEXTAREAS
-═══════════════════════════════════ */
+/* ═══════════════════════ DELETE ═══════════════════════ */
+let deleteConfirm = false;
+function confirmDeletion(){
+    const btn = document.getElementById('delete-btn');
+    const txt = document.getElementById('delete-text');
+    if(!deleteConfirm){
+        deleteConfirm = true; txt.textContent = 'Confirm Delete?';
+        btn.style.background='rgba(239,68,68,.2)'; btn.style.color='#f87171'; btn.style.borderColor='rgba(239,68,68,.4)';
+        setTimeout(()=>{
+            deleteConfirm=false; txt.textContent='Delete Page';
+            btn.style.background=''; btn.style.color=''; btn.style.borderColor='';
+        },3000);
+    } else { window.location.href = '/admin/delete/{{ slug }}'; }
+}
+
+/* ═══════════════════════ WIRE UP ═══════════════════════ */
 document.querySelectorAll('.code-textarea').forEach(ta=>{
-    ta.addEventListener('input',()=>{
-        isDirty=true; markDirty(); syncHighlight(); updateCursorMetadata(ta);
-    });
-    ta.addEventListener('scroll',()=>syncScroll(ta));
-    ta.addEventListener('click', ()=>updateCursorMetadata(ta));
-    ta.addEventListener('keyup', ()=>updateCursorMetadata(ta));
-    ta.addEventListener('keydown',e=>handleEditorKeydown(e,ta));
+    ta.addEventListener('input', ()=>{ isDirty=true; markDirty(); syncHighlight(); updateCursorMetadata(ta); });
+    ta.addEventListener('scroll', ()=>syncScroll(ta));
+    ta.addEventListener('click',  ()=>updateCursorMetadata(ta));
+    ta.addEventListener('keyup',  ()=>updateCursorMetadata(ta));
+    ta.addEventListener('keydown', e=>handleEditorKeydown(e,ta));
 });
 document.querySelectorAll('.sidebar-field').forEach(el=>{
     el.addEventListener('input',()=>{ isDirty=true; markDirty(); });
 });
-
-/* ═══════════════════════════════════
-   FIND — keyboard nav
-═══════════════════════════════════ */
 document.getElementById('find-input').addEventListener('keydown',e=>{
     if(e.key==='Enter'){ e.shiftKey?findPrev():findNext(); }
     if(e.key==='Escape') closeFindPanel();
 });
 
-/* ═══════════════════════════════════
-   DELETE
-═══════════════════════════════════ */
-let deleteConfirm=false;
-function confirmDeletion(){
-    const btn=document.getElementById('delete-btn');
-    const txt=document.getElementById('delete-text');
-    if(!deleteConfirm){
-        deleteConfirm=true; txt.textContent='Confirm Delete?';
-        btn.classList.add('bg-red-600','text-white','animate-pulse');
-        setTimeout(()=>{ deleteConfirm=false; txt.textContent='Delete Page'; btn.classList.remove('bg-red-600','text-white','animate-pulse'); },3000);
-    } else { window.location.href='/admin/delete/{{ slug }}'; }
-}
-
-/* ═══════════════════════════════════
-   INIT
-═══════════════════════════════════ */
-window.addEventListener('load',()=>setTimeout(()=>switchTab('py'),80));
+/* ═══════════════════════ INIT ═══════════════════════ */
+window.addEventListener('load', ()=>{
+    loadSettings();
+    setTimeout(()=>{
+        applyEditorStyle();
+        switchTab('py');
+    }, 80);
+});
 </script>
 {% endblock %}
