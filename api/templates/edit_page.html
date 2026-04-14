@@ -28,12 +28,12 @@
 <div id="exit-modal" class="modal-backdrop hidden">
     <div class="modal-box">
         <div class="flex items-center gap-3 mb-3">
-            <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm"></i>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(234,179,8,.15)">
+                <i class="fa-solid fa-triangle-exclamation text-sm" style="color:#eab308"></i>
             </div>
             <h3 class="text-white font-bold">Unsaved Changes</h3>
         </div>
-        <p class="text-zinc-400 text-sm mb-5 pl-11">Your changes haven't been committed yet. Save before exiting?</p>
+        <p class="text-zinc-400 text-sm mb-5 pl-11">Your changes haven't been committed. Save before exiting?</p>
         <div class="flex flex-col gap-2">
             <button onclick="saveAndExit()" class="modal-btn-primary">Save & Exit</button>
             <button onclick="window.location.href='/admin'" class="modal-btn-secondary">Discard Changes</button>
@@ -42,62 +42,74 @@
     </div>
 </div>
 
-<!-- Find / Replace panel -->
+<!-- Link interception modal -->
+<div id="link-modal" class="modal-backdrop hidden" style="z-index:9999">
+    <div class="modal-box" style="max-width:400px">
+        <div id="link-modal-icon" class="flex items-center gap-3 mb-3">
+            <div id="link-icon-wrap" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style="background:rgba(0,122,204,.15)">
+                <i id="link-icon" class="fa-solid fa-link text-sm" style="color:#007acc"></i>
+            </div>
+            <div>
+                <h3 class="text-white font-bold text-sm" id="link-modal-title">Navigate to link?</h3>
+                <p class="text-[11px] font-mono mt-0.5 truncate max-w-[260px]" id="link-modal-url" style="color:#858585"></p>
+            </div>
+        </div>
+        <p class="text-zinc-400 text-sm mb-4 pl-11" id="link-modal-desc"></p>
+        <div class="flex flex-col gap-2" id="link-modal-actions"></div>
+    </div>
+</div>
+
+<!-- Find / Replace -->
 <div id="find-panel" class="find-panel" style="display:none">
     <div class="find-header">
         <div class="flex items-center gap-2">
-            <i class="fa-solid fa-magnifying-glass text-[#858585] text-[11px]"></i>
-            <span class="text-[11px] font-semibold text-[#cccccc] tracking-wide">Find & Replace</span>
+            <i class="fa-solid fa-magnifying-glass text-[11px]" style="color:#858585"></i>
+            <span class="text-[11px] font-semibold tracking-wide" style="color:#cccccc">Find & Replace</span>
         </div>
         <div class="flex items-center gap-1">
-            <span id="find-count" class="text-[10px] text-[#858585] font-mono min-w-[48px] text-right"></span>
-            <button onclick="closeFindPanel()" class="find-icon-btn" title="Close (Esc)">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <span id="find-count" class="text-[10px] font-mono min-w-[52px] text-right" style="color:#858585"></span>
+            <button onclick="closeFindPanel()" class="find-icon-btn" title="Close (Esc)"><i class="fa-solid fa-xmark"></i></button>
         </div>
     </div>
     <div class="find-body">
-        <!-- Find row -->
         <div class="find-row">
             <div class="find-input-wrap">
                 <i class="fa-solid fa-magnifying-glass find-input-icon"></i>
                 <input id="find-input" type="text" placeholder="Search…" class="find-input" oninput="doFind()" autocomplete="off" spellcheck="false">
                 <div class="find-toggles">
-                    <button id="tog-case"  class="find-tog" onclick="toggleFindOpt('case')"  title="Match case (Alt+C)">Aa</button>
-                    <button id="tog-word"  class="find-tog" onclick="toggleFindOpt('word')"  title="Whole word (Alt+W)">ab</button>
-                    <button id="tog-regex" class="find-tog" onclick="toggleFindOpt('regex')" title="Regex (Alt+R)">.*</button>
+                    <button id="tog-case"  class="find-tog" onclick="toggleFindOpt('case')"  title="Match case">Aa</button>
+                    <button id="tog-word"  class="find-tog" onclick="toggleFindOpt('word')"  title="Whole word">ab</button>
+                    <button id="tog-regex" class="find-tog" onclick="toggleFindOpt('regex')" title="Regex">.*</button>
                 </div>
             </div>
             <div class="find-nav-btns">
-                <button onclick="findPrev()" class="find-icon-btn" title="Previous match (Shift+Enter)"><i class="fa-solid fa-chevron-up"></i></button>
-                <button onclick="findNext()" class="find-icon-btn" title="Next match (Enter)"><i class="fa-solid fa-chevron-down"></i></button>
+                <button onclick="findPrev()" class="find-icon-btn" title="Prev (Shift+Enter)"><i class="fa-solid fa-chevron-up"></i></button>
+                <button onclick="findNext()" class="find-icon-btn" title="Next (Enter)"><i class="fa-solid fa-chevron-down"></i></button>
             </div>
         </div>
-        <!-- Replace row -->
         <div class="find-row">
             <div class="find-input-wrap">
                 <i class="fa-solid fa-right-left find-input-icon"></i>
                 <input id="replace-input" type="text" placeholder="Replace with…" class="find-input" autocomplete="off" spellcheck="false">
             </div>
             <div class="find-nav-btns">
-                <button onclick="doReplaceOne()" class="find-action-btn" title="Replace (Ctrl+H)">1</button>
-                <button onclick="doReplaceAll()" class="find-action-btn find-action-btn-all" title="Replace All">All</button>
+                <button onclick="doReplaceOne()" class="find-action-btn" title="Replace one">1×</button>
+                <button onclick="doReplaceAll()" class="find-action-btn find-action-btn-all" title="Replace all">All</button>
             </div>
         </div>
-        <!-- Status bar -->
         <div id="find-status" class="find-status"></div>
     </div>
 </div>
 
 <!-- Command palette -->
-<div id="cmd-palette" class="modal-backdrop hidden" onclick="closeCmdPalette()">
+<div id="cmd-palette" class="modal-backdrop hidden" onclick="closeCmdPalette()" style="z-index:700;align-items:flex-start;padding-top:80px">
     <div class="cmd-box" onclick="event.stopPropagation()">
         <div class="cmd-input-row">
-            <i class="fa-solid fa-terminal text-[#858585] text-[13px] shrink-0"></i>
+            <i class="fa-solid fa-terminal shrink-0" style="color:#858585;font-size:13px"></i>
             <input id="cmd-input" type="text" placeholder="Type a command or search…" class="cmd-input" oninput="filterCommands()" onkeydown="cmdKeydown(event)">
-            <kbd class="text-[9px] text-[#858585] bg-[#3c3c3c] px-1.5 py-0.5 rounded border border-[#555] shrink-0">Esc</kbd>
+            <kbd class="cmd-esc-badge">Esc</kbd>
         </div>
-        <div id="cmd-list" class="cmd-list"></div>
+        <div id="cmd-list" class="cmd-list custom-scrollbar"></div>
         <div class="cmd-footer">
             <span><kbd>↑↓</kbd> navigate</span>
             <span><kbd>↵</kbd> run</span>
@@ -109,85 +121,71 @@
 <!-- Shortcuts panel -->
 <div id="shortcuts-panel" class="shortcuts-panel hidden">
     <div class="shortcuts-header">
-        <span class="text-[11px] font-bold text-[#bbbbbe] uppercase tracking-widest">Keyboard Shortcuts</span>
+        <span class="text-[11px] font-bold uppercase tracking-widest" style="color:#bbbbbe">Keyboard Shortcuts</span>
         <button onclick="document.getElementById('shortcuts-panel').classList.add('hidden')" class="find-icon-btn"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="shortcuts-body">
+    <div class="shortcuts-body custom-scrollbar">
         <div class="shortcut-group-label">File</div>
         <div class="shortcut-row"><span>Save</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>S</kbd></div></div>
         <div class="shortcut-row"><span>Exit</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>Q</kbd></div></div>
-        <div class="shortcut-group-label">Editor</div>
+        <div class="shortcut-group-label">Search</div>
         <div class="shortcut-row"><span>Find & Replace</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>F</kbd></div></div>
         <div class="shortcut-row"><span>Command Palette</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>P</kbd></div></div>
+        <div class="shortcut-group-label">Editing</div>
         <div class="shortcut-row"><span>Preview</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>P</kbd></div></div>
         <div class="shortcut-row"><span>Toggle Comment</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>/</kbd></div></div>
         <div class="shortcut-row"><span>Duplicate Line</span><div class="kbd-group"><kbd>⇧</kbd><kbd>Alt</kbd><kbd>D</kbd></div></div>
         <div class="shortcut-row"><span>Delete Line</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>K</kbd></div></div>
-        <div class="shortcut-row"><span>Move Line Up</span><div class="kbd-group"><kbd>Alt</kbd><kbd>↑</kbd></div></div>
-        <div class="shortcut-row"><span>Move Line Down</span><div class="kbd-group"><kbd>Alt</kbd><kbd>↓</kbd></div></div>
-        <div class="shortcut-row"><span>Indent</span><div class="kbd-group"><kbd>Tab</kbd></div></div>
-        <div class="shortcut-row"><span>Outdent</span><div class="kbd-group"><kbd>⇧</kbd><kbd>Tab</kbd></div></div>
+        <div class="shortcut-row"><span>Move Line Up/Down</span><div class="kbd-group"><kbd>Alt</kbd><kbd>↑↓</kbd></div></div>
+        <div class="shortcut-row"><span>Indent / Outdent</span><div class="kbd-group"><kbd>Tab</kbd><kbd>⇧Tab</kbd></div></div>
         <div class="shortcut-group-label">View</div>
-        <div class="shortcut-row"><span>Font Size +</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>+</kbd></div></div>
-        <div class="shortcut-row"><span>Font Size −</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>−</kbd></div></div>
+        <div class="shortcut-row"><span>Font Size</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>+/−</kbd></div></div>
         <div class="shortcut-row"><span>Toggle Sidebar</span><div class="kbd-group"><kbd>Ctrl</kbd><kbd>B</kbd></div></div>
     </div>
 </div>
 
 <!-- ═══ MAIN SHELL ═══ -->
-<div class="fixed inset-0 z-[200] bg-[#1e1e1e] flex flex-col lg:flex-row overflow-hidden editor-shell" style="font-family:'Segoe UI',system-ui,sans-serif">
+<div class="fixed inset-0 z-[200] flex flex-col lg:flex-row overflow-hidden editor-shell" style="background:#1e1e1e;font-family:'Segoe UI',system-ui,sans-serif">
 
     <!-- Activity bar -->
-    <div class="w-12 bg-[#333333] flex-col items-center py-2 gap-0.5 border-r border-[#191919] hidden lg:flex shrink-0">
+    <div class="w-12 flex-col items-center py-2 gap-0.5 border-r border-[#191919] hidden lg:flex shrink-0" style="background:#333333">
         <button class="act-btn active" id="act-explorer" onclick="togglePanel('explorer')" title="Explorer (Ctrl+B)">
-            <i class="fa-regular fa-folder-open text-[17px]"></i>
+            <i class="fa-regular fa-folder-open" style="font-size:17px"></i>
         </button>
         <button class="act-btn" onclick="openFind()" title="Find (Ctrl+F)">
-            <i class="fa-solid fa-magnifying-glass text-[15px]"></i>
+            <i class="fa-solid fa-magnifying-glass" style="font-size:15px"></i>
         </button>
-        <button class="act-btn" onclick="togglePreview()" title="Preview (Ctrl+Shift+P)">
-            <i class="fa-solid fa-eye text-[15px]"></i>
+        <button class="act-btn" id="act-preview-btn" onclick="togglePreview()" title="Preview (Ctrl+Shift+P)">
+            <i class="fa-solid fa-eye" style="font-size:15px"></i>
         </button>
         <button class="act-btn" onclick="openCmdPalette()" title="Command Palette (Ctrl+P)">
-            <i class="fa-solid fa-terminal text-[14px]"></i>
+            <i class="fa-solid fa-terminal" style="font-size:14px"></i>
         </button>
         <div class="flex-1"></div>
         <button class="act-btn" onclick="document.getElementById('shortcuts-panel').classList.toggle('hidden')" title="Shortcuts">
-            <i class="fa-regular fa-keyboard text-[15px]"></i>
+            <i class="fa-regular fa-keyboard" style="font-size:15px"></i>
         </button>
         <button onclick="handleSave()" class="act-btn" id="act-save" title="Save (Ctrl+S)">
-            <i class="fa-solid fa-floppy-disk text-[17px]"></i>
+            <i class="fa-solid fa-floppy-disk" style="font-size:17px"></i>
         </button>
         <button onclick="handleExit()" class="act-btn" id="act-exit" title="Exit">
-            <i class="fa-solid fa-arrow-right-from-bracket text-[15px]"></i>
+            <i class="fa-solid fa-arrow-right-from-bracket" style="font-size:15px"></i>
         </button>
     </div>
 
     <!-- Sidebar -->
     <div id="sidebar" class="sidebar-panel">
-        <div class="sidebar-title-bar">
-            <span>Explorer</span>
-        </div>
+        <div class="sidebar-title-bar"><span>Explorer</span></div>
         <div class="flex-grow overflow-y-auto custom-scrollbar">
-            <div class="section-header"><span class="text-[9px]">▼</span> MY-PROJECT</div>
+            <div class="section-header"><span style="font-size:9px">▼</span> MY-PROJECT</div>
             <div class="flex flex-col">
-                <button type="button" onclick="switchTab('py')"   class="sidebar-file active" id="side-tab-py">
-                    <i class="fa-brands fa-python" style="color:#3794ff;font-size:13px"></i><span>{{ slug }}.py</span><span class="dirty-dot"></span>
-                </button>
-                <button type="button" onclick="switchTab('html')" class="sidebar-file" id="side-tab-html">
-                    <i class="fa-brands fa-html5" style="color:#e34c26;font-size:13px"></i><span>{{ slug }}.html</span><span class="dirty-dot"></span>
-                </button>
-                <button type="button" onclick="switchTab('css')"  class="sidebar-file" id="side-tab-css">
-                    <i class="fa-brands fa-css3-alt" style="color:#264de4;font-size:13px"></i><span>{{ slug }}.css</span><span class="dirty-dot"></span>
-                </button>
-                <button type="button" onclick="switchTab('js')"   class="sidebar-file" id="side-tab-js">
-                    <i class="fa-brands fa-js" style="color:#f7df1e;font-size:13px"></i><span>{{ slug }}.js</span><span class="dirty-dot"></span>
-                </button>
+                <button type="button" onclick="switchTab('py')"   class="sidebar-file active" id="side-tab-py"><i class="fa-brands fa-python" style="color:#3794ff;font-size:13px"></i><span>{{ slug }}.py</span><span class="dirty-dot"></span></button>
+                <button type="button" onclick="switchTab('html')" class="sidebar-file" id="side-tab-html"><i class="fa-brands fa-html5" style="color:#e34c26;font-size:13px"></i><span>{{ slug }}.html</span><span class="dirty-dot"></span></button>
+                <button type="button" onclick="switchTab('css')"  class="sidebar-file" id="side-tab-css"><i class="fa-brands fa-css3-alt" style="color:#264de4;font-size:13px"></i><span>{{ slug }}.css</span><span class="dirty-dot"></span></button>
+                <button type="button" onclick="switchTab('js')"   class="sidebar-file" id="side-tab-js"><i class="fa-brands fa-js" style="color:#f7df1e;font-size:13px"></i><span>{{ slug }}.js</span><span class="dirty-dot"></span></button>
             </div>
-
-            <!-- Config -->
             <div class="mt-3 border-t border-[#1e1e1e]">
-                <div class="section-header"><i class="fa-solid fa-sliders text-[10px]"></i> Configuration</div>
+                <div class="section-header"><i class="fa-solid fa-sliders" style="font-size:10px"></i> Configuration</div>
                 <div class="px-3 pb-3 space-y-3">
                     <form id="cms-form" method="POST" class="space-y-3">
                         <div class="space-y-1">
@@ -199,32 +197,26 @@
                             <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono" style="color:#9cdcfe" placeholder="index">
                         </div>
                     </form>
-                    <!-- Font size -->
                     <div class="space-y-1.5 pt-2 border-t border-[#1e1e1e]">
                         <label class="sidebar-label">Editor Font Size</label>
                         <div class="flex items-center gap-2">
                             <button onclick="changeFontSize(-1)" class="size-btn">−</button>
-                            <div class="flex-1 h-1.5 bg-[#3c3c3c] rounded-full relative cursor-pointer" id="font-track" onclick="fontTrackClick(event)">
-                                <div id="font-fill" class="h-full bg-[#007acc] rounded-full transition-all duration-150" style="width:30%"></div>
-                                <div id="font-thumb" class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#007acc] transition-all duration-150" style="left:calc(30% - 6px)"></div>
+                            <div class="flex-1 h-1.5 rounded-full relative cursor-pointer" id="font-track" style="background:#3c3c3c" onclick="fontTrackClick(event)">
+                                <div id="font-fill" class="h-full rounded-full" style="width:30%;background:#007acc;transition:width .15s"></div>
+                                <div id="font-thumb" class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-[#007acc]" style="left:calc(30% - 6px);background:white;transition:left .15s"></div>
                             </div>
                             <button onclick="changeFontSize(1)"  class="size-btn">+</button>
-                            <span id="font-size-label" class="text-[11px] text-[#9cdcfe] font-mono w-8 text-right">13px</span>
+                            <span id="font-size-label" class="text-[11px] font-mono w-8 text-right" style="color:#9cdcfe">13px</span>
                         </div>
                     </div>
-                    <!-- Word wrap -->
                     <div class="flex items-center justify-between">
                         <label class="sidebar-label cursor-pointer" onclick="toggleWordWrap()">Word Wrap</label>
-                        <button id="wrap-toggle" onclick="toggleWordWrap()" class="toggle-switch" role="switch" aria-checked="false">
-                            <span id="wrap-knob" class="toggle-knob"></span>
-                        </button>
+                        <button id="wrap-toggle" onclick="toggleWordWrap()" class="toggle-switch" role="switch" aria-checked="false"><span id="wrap-knob" class="toggle-knob"></span></button>
                     </div>
                 </div>
             </div>
-
-            <!-- Stats -->
             <div class="border-t border-[#1e1e1e]">
-                <div class="section-header"><i class="fa-solid fa-chart-simple text-[10px]"></i> File Stats</div>
+                <div class="section-header"><i class="fa-solid fa-chart-simple" style="font-size:10px"></i> File Stats</div>
                 <div class="px-3 pb-3 grid grid-cols-2 gap-2">
                     <div class="stat-card"><div class="stat-val" id="stat-lines">0</div><div class="stat-lbl">Lines</div></div>
                     <div class="stat-card"><div class="stat-val" id="stat-chars">0</div><div class="stat-lbl">Chars</div></div>
@@ -232,13 +224,11 @@
                     <div class="stat-card"><div class="stat-val" id="stat-size">0B</div><div class="stat-lbl">Size</div></div>
                 </div>
             </div>
-
-            <!-- System -->
             <div class="border-t border-[#1e1e1e]">
-                <div class="section-header" style="color:#858585"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> System</div>
+                <div class="section-header" style="color:#858585"><i class="fa-solid fa-circle-exclamation" style="font-size:10px"></i> System</div>
                 <div class="px-3 pb-4">
                     <button type="button" id="delete-btn" onclick="confirmDeletion()" class="delete-btn">
-                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                        <i class="fa-solid fa-trash-can" style="font-size:10px"></i>
                         <span id="delete-text">Delete Page</span>
                     </button>
                 </div>
@@ -247,34 +237,25 @@
     </div>
 
     <!-- Editor area -->
-    <div class="flex-grow flex flex-col bg-[#1e1e1e] min-w-0 h-full">
-        <!-- Tabs -->
-        <div class="flex bg-[#2d2d2d] shrink-0 overflow-x-auto no-scrollbar" style="border-bottom:1px solid #252526">
-            <button type="button" onclick="switchTab('py')"   id="tab-py"   class="editor-tab active">
-                <i class="fa-brands fa-python mr-1.5" style="color:#3794ff;font-size:12px"></i>{{ slug }}.py<span class="tab-dirty"></span>
-            </button>
-            <button type="button" onclick="switchTab('html')" id="tab-html" class="editor-tab">
-                <i class="fa-brands fa-html5 mr-1.5" style="color:#e34c26;font-size:12px"></i>{{ slug }}.html<span class="tab-dirty"></span>
-            </button>
-            <button type="button" onclick="switchTab('css')"  id="tab-css"  class="editor-tab">
-                <i class="fa-brands fa-css3-alt mr-1.5" style="color:#264de4;font-size:12px"></i>{{ slug }}.css<span class="tab-dirty"></span>
-            </button>
-            <button type="button" onclick="switchTab('js')"   id="tab-js"   class="editor-tab">
-                <i class="fa-brands fa-js mr-1.5" style="color:#f7df1e;font-size:12px"></i>{{ slug }}.js<span class="tab-dirty"></span>
-            </button>
+    <div class="flex-grow flex flex-col min-w-0 h-full" style="background:#1e1e1e">
+        <div class="flex shrink-0 overflow-x-auto no-scrollbar" style="background:#2d2d2d;border-bottom:1px solid #252526">
+            <button type="button" onclick="switchTab('py')"   id="tab-py"   class="editor-tab active"><i class="fa-brands fa-python mr-1.5" style="color:#3794ff;font-size:12px"></i>{{ slug }}.py<span class="tab-dirty"></span></button>
+            <button type="button" onclick="switchTab('html')" id="tab-html" class="editor-tab"><i class="fa-brands fa-html5 mr-1.5" style="color:#e34c26;font-size:12px"></i>{{ slug }}.html<span class="tab-dirty"></span></button>
+            <button type="button" onclick="switchTab('css')"  id="tab-css"  class="editor-tab"><i class="fa-brands fa-css3-alt mr-1.5" style="color:#264de4;font-size:12px"></i>{{ slug }}.css<span class="tab-dirty"></span></button>
+            <button type="button" onclick="switchTab('js')"   id="tab-js"   class="editor-tab"><i class="fa-brands fa-js mr-1.5" style="color:#f7df1e;font-size:12px"></i>{{ slug }}.js<span class="tab-dirty"></span></button>
         </div>
-        <!-- Breadcrumb -->
-        <div class="flex items-center gap-1.5 px-4 h-7 bg-[#1e1e1e] border-b border-[#2d2d2d] shrink-0 select-none">
-            <span class="text-[12px] text-[#858585]">MY-PROJECT</span>
-            <span class="text-[12px] text-[#555]">›</span>
-            <span class="text-[12px] text-[#cccccc]" id="breadcrumb-file">{{ slug }}.py</span>
+        <div class="flex items-center gap-1.5 px-4 shrink-0 select-none" style="height:27px;background:#1e1e1e;border-bottom:1px solid #2d2d2d">
+            <span style="font-size:12px;color:#858585">MY-PROJECT</span>
+            <span style="font-size:12px;color:#444">›</span>
+            <span style="font-size:12px;color:#cccccc" id="breadcrumb-file">{{ slug }}.py</span>
         </div>
-        <!-- Editor body -->
-        <div class="flex-grow flex overflow-hidden relative">
-            <!-- Line numbers gutter — CRITICAL: padding/font must exactly match textarea -->
-            <div id="line-numbers" class="line-gutter custom-scrollbar"></div>
-            <!-- Code pane -->
+
+        <!-- CODE AREA — FIX 4: editor-body uses position:relative so gutter and textarea share the same coordinate space -->
+        <div class="flex-grow flex overflow-hidden" id="editor-body">
+            <!-- FIX 2 & 4: gutter is a plain flex column, never scrolls horizontally, overflow:hidden -->
+            <div id="line-numbers" class="line-gutter"></div>
             <div class="flex-grow relative h-full overflow-hidden">
+                <!-- FIX 4: hl-layer must have identical box model to textarea — no extra borders/offsets -->
                 <div id="highlight-layer" class="hl-layer"></div>
                 <div class="absolute inset-0 z-10 overflow-hidden">
                     <div id="panel-py"   class="editor-panel block  h-full w-full"><textarea name="python_logic" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.python_logic if page else '' }}</textarea></div>
@@ -284,7 +265,6 @@
                 </div>
             </div>
         </div>
-        <!-- Status bar -->
         <div class="statusbar">
             <div class="flex items-center gap-0.5">
                 <span class="status-pill"><i class="fa-solid fa-code-branch" style="font-size:9px"></i> main</span>
@@ -302,36 +282,70 @@
     </div>
 </div>
 
-<!-- Preview modal -->
-<div id="preview-modal" class="modal-backdrop hidden" style="z-index:300">
-    <div style="width:100%;max-width:1200px;display:flex;flex-direction:column;height:90vh;gap:0" onclick="event.stopPropagation()">
-        <div class="preview-toolbar">
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                    <span class="text-[10px] font-mono text-[#858585] uppercase tracking-widest">Live Preview</span>
-                </div>
-                <div class="viewport-switcher">
-                    <button onclick="setViewport('desktop')" id="view-desktop" class="vp-btn active"><i class="fa-solid fa-desktop"></i></button>
-                    <button onclick="setViewport('tablet')"  id="view-tablet"  class="vp-btn"><i class="fa-solid fa-tablet-screen-button"></i></button>
-                    <button onclick="setViewport('mobile')"  id="view-mobile"  class="vp-btn"><i class="fa-solid fa-mobile-screen"></i></button>
-                </div>
+<!-- ═══ PREVIEW SYSTEM (completely rebuilt) ═══ -->
+<div id="preview-overlay" class="preview-overlay hidden">
+    <!-- Top chrome bar -->
+    <div class="preview-chrome">
+        <div class="preview-chrome-left">
+            <!-- Traffic lights -->
+            <div class="preview-lights">
+                <button class="light light-red"    onclick="togglePreview()" title="Close preview"></button>
+                <button class="light light-yellow" onclick="reloadPreview()" title="Reload"></button>
+                <button class="light light-green"  onclick="popoutPreview()" title="Open in new tab"></button>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="toggleConsole()" class="text-[9px] font-mono text-[#858585] hover:text-white uppercase tracking-widest transition-colors">Terminal</button>
-                <button onclick="togglePreview()" class="find-icon-btn"><i class="fa-solid fa-xmark"></i></button>
+            <div class="preview-url-bar">
+                <i class="fa-solid fa-lock" style="font-size:9px;color:#858585;flex-shrink:0"></i>
+                <span id="preview-url-display" style="font-size:11px;color:#cccccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">localhost / {{ slug }}</span>
+            </div>
+            <button onclick="reloadPreview()" class="preview-reload-btn" title="Reload (Ctrl+R)">
+                <i class="fa-solid fa-rotate-right" style="font-size:11px"></i>
+            </button>
+        </div>
+        <div class="preview-chrome-center">
+            <div class="vp-switcher">
+                <button onclick="setViewport('desktop')" id="vp-desktop" class="vp-btn active" title="Desktop"><i class="fa-solid fa-display"></i><span>Desktop</span></button>
+                <button onclick="setViewport('tablet')"  id="vp-tablet"  class="vp-btn"        title="Tablet"><i class="fa-solid fa-tablet-screen-button"></i><span>Tablet</span></button>
+                <button onclick="setViewport('mobile')"  id="vp-mobile"  class="vp-btn"        title="Mobile"><i class="fa-solid fa-mobile-screen"></i><span>Mobile</span></button>
             </div>
         </div>
-        <div id="preview-container" class="flex-grow flex flex-col transition-all duration-300" style="max-width:100%">
-            <iframe id="preview-frame" class="w-full flex-grow bg-white rounded-b-lg border-none"></iframe>
-            <div id="logic-console" class="console-panel hidden">
-                <div class="console-header">
-                    <span>Terminal</span>
-                    <button onclick="document.getElementById('console-output').innerHTML=''" class="text-[9px] text-[#858585] hover:text-[#cccccc]">Clear</button>
+        <div class="preview-chrome-right">
+            <span id="preview-load-status" class="preview-load-status"></span>
+            <button onclick="toggleTerminal()" id="terminal-toggle-btn" class="preview-toolbar-btn" title="Toggle Terminal">
+                <i class="fa-solid fa-terminal" style="font-size:11px"></i>
+            </button>
+            <button onclick="togglePreview()" class="preview-toolbar-btn" title="Close (Esc)">
+                <i class="fa-solid fa-xmark" style="font-size:13px"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Device frame + iframe -->
+    <div class="preview-stage" id="preview-stage">
+        <div class="preview-device-wrap" id="preview-device-wrap">
+            <div class="preview-device-chrome hidden" id="device-chrome">
+                <div class="device-notch"></div>
+                <div class="device-home"></div>
+            </div>
+            <div class="preview-iframe-wrap">
+                <div id="preview-loading" class="preview-loading-overlay">
+                    <div class="preview-spinner"></div>
+                    <span style="font-size:11px;color:#858585;margin-top:10px">Rendering…</span>
                 </div>
-                <div id="console-output" class="p-3 font-mono text-[11px] space-y-0.5"></div>
+                <iframe id="preview-frame" class="preview-iframe" sandbox="allow-scripts allow-same-origin allow-forms" title="Page preview"></iframe>
             </div>
         </div>
+    </div>
+
+    <!-- Terminal drawer -->
+    <div id="preview-terminal" class="preview-terminal hidden">
+        <div class="terminal-header">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-terminal" style="font-size:10px;color:#858585"></i>
+                <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#858585;text-transform:uppercase;letter-spacing:.08em">Server Output</span>
+            </div>
+            <button onclick="document.getElementById('console-output').innerHTML=''" style="font-size:9px;color:#858585;background:none;border:none;cursor:pointer" class="hover:text-white transition-colors">Clear</button>
+        </div>
+        <div id="console-output" class="terminal-body custom-scrollbar"></div>
     </div>
 </div>
 
@@ -345,829 +359,780 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
-/* ─── Reset / base ─── */
-*, *::before, *::after { box-sizing: border-box; }
-:root {
-    --ed-font: 'JetBrains Mono', 'Cascadia Code', monospace;
-    --ed-fs: 13px;
-    --ed-lh: 1.6;
-    --ed-pad-top: 14px;
-    --ed-pad-x: 16px;
-    --anim-fast: 120ms;
-    --anim-med: 220ms;
-    --anim-slow: 380ms;
-    --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
-    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+*,*::before,*::after{box-sizing:border-box}
+:root{
+    --ed-font:'JetBrains Mono','Cascadia Code',monospace;
+    --ed-fs:13px; --ed-lh:1.6; --ed-pad-top:14px; --ed-pad-x:16px;
+    --af:120ms; --am:220ms; --as:380ms;
+    --ease-out:cubic-bezier(.2,.8,.3,1);
+    --ease-bounce:cubic-bezier(.34,1.56,.64,1);
 }
 
-/* ─── Scrollbars ─── */
-.custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
-.no-scrollbar::-webkit-scrollbar { display: none; }
+/* Scrollbars — applies globally including cmd-list */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+.no-scrollbar::-webkit-scrollbar{display:none}
 
-/* ─── Entrance animation for the entire shell ─── */
-.editor-shell { animation: shellFadeIn var(--anim-slow) var(--ease-out) both; }
-@keyframes shellFadeIn { from { opacity:0; transform:scale(.985) } to { opacity:1; transform:scale(1) } }
+/* Shell entrance */
+.editor-shell{animation:shellIn var(--as) var(--ease-out) both}
+@keyframes shellIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
 
-/* ─── Toast ─── */
-#save-toast {
-    position: fixed; left: 50%; transform: translateX(-50%);
-    z-index: 500; pointer-events: none;
-    top: -80px; transition: top 400ms var(--ease-bounce);
-}
-#save-toast.show { top: 20px; }
-.toast-inner {
-    background: #1f1f1f; border: 1px solid rgba(52,211,153,.3);
-    padding: 10px 18px; border-radius: 100px;
-    display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.5);
-    animation: none;
-}
+/* Toast */
+#save-toast{position:fixed;left:50%;transform:translateX(-50%);z-index:500;pointer-events:none;top:-80px;transition:top 400ms var(--ease-bounce)}
+#save-toast.show{top:20px}
+.toast-inner{background:#1f1f1f;border:1px solid rgba(52,211,153,.3);padding:10px 18px;border-radius:100px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
 
-/* ─── Modal / backdrop ─── */
-.modal-backdrop {
-    position: fixed; inset: 0; z-index: 600;
-    background: rgba(0,0,0,.65);
-    display: flex; align-items: center; justify-content: center; padding: 1rem;
-    animation: fadeIn var(--anim-fast) ease both;
-}
-.modal-backdrop.hidden { display: none !important; }
-@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn var(--af) ease both}
+.modal-backdrop.hidden{display:none!important}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:#252526;border:1px solid #3a3a3a;border-radius:10px;padding:24px;width:100%;max-width:360px;animation:slideUp var(--am) var(--ease-out) both;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.modal-btn-primary{width:100%;background:#007acc;padding:9px;color:#fff;font-size:13px;font-weight:700;border-radius:5px;border:none;cursor:pointer;transition:background var(--af)}
+.modal-btn-primary:hover{background:#0069b0}
+.modal-btn-secondary{width:100%;background:#3c3c3c;padding:9px;color:#cccccc;font-size:13px;font-weight:600;border-radius:5px;border:none;cursor:pointer;transition:background var(--af)}
+.modal-btn-secondary:hover{background:#4a4a4a}
+.modal-btn-ghost{width:100%;background:transparent;padding:8px;color:#858585;font-size:13px;border:none;cursor:pointer;transition:color var(--af)}
+.modal-btn-ghost:hover{color:#cccccc}
 
-.modal-box {
-    background: #252526; border: 1px solid #3a3a3a;
-    border-radius: 10px; padding: 24px; width: 100%; max-width: 360px;
-    animation: slideUp var(--anim-med) var(--ease-out) both;
-    box-shadow: 0 24px 60px rgba(0,0,0,.6);
-}
-@keyframes slideUp { from { opacity:0; transform: translateY(16px) } to { opacity:1; transform: translateY(0) } }
+/* Activity bar */
+.act-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#858585;background:none;border:none;border-left:2px solid transparent;cursor:pointer;transition:color var(--af),border-color var(--af),background var(--af)}
+.act-btn:hover{color:#cccccc;background:rgba(255,255,255,.05)}
+.act-btn.active{color:#fff;border-left-color:#007acc}
+#act-save{color:#4ec9b0}
+#act-save:hover{color:#6ddfc0}
+#act-exit:hover{color:#f48771}
+#act-preview-btn.previewing{color:#f7df1e;border-left-color:#f7df1e}
 
-.modal-btn-primary { width:100%; background:#007acc; padding:9px; color:#fff; font-size:13px; font-weight:700; border-radius:5px; border:none; cursor:pointer; transition:background var(--anim-fast); }
-.modal-btn-primary:hover { background:#0069b0; }
-.modal-btn-secondary { width:100%; background:#3c3c3c; padding:9px; color:#cccccc; font-size:13px; font-weight:600; border-radius:5px; border:none; cursor:pointer; transition:background var(--anim-fast); }
-.modal-btn-secondary:hover { background:#4a4a4a; }
-.modal-btn-ghost { width:100%; background:transparent; padding:8px; color:#858585; font-size:13px; border:none; cursor:pointer; transition:color var(--anim-fast); }
-.modal-btn-ghost:hover { color:#cccccc; }
+/* Sidebar */
+.sidebar-panel{width:240px;background:#252526;display:flex;flex-direction:column;border-right:1px solid #1e1e1e;flex-shrink:0;overflow:hidden;transition:width var(--am) var(--ease-out)}
+.sidebar-panel.collapsed{width:0}
+.sidebar-title-bar{padding:8px 12px;border-bottom:1px solid #1e1e1e;display:flex;align-items:center}
+.sidebar-title-bar span{font-size:11px;font-weight:700;color:#bbbbbe;text-transform:uppercase;letter-spacing:.08em}
+.section-header{padding:8px 12px 4px;font-size:11px;font-weight:700;color:#bbbbbe;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;cursor:default;user-select:none}
+.sidebar-label{font-size:10px;font-weight:700;color:#858585;text-transform:uppercase;letter-spacing:.08em;display:block}
+.sidebar-field{width:100%;background:#3c3c3c;border:1px solid #555;border-radius:3px;padding:5px 8px;font-size:12px;color:#cccccc;outline:none;transition:border-color var(--af);font-family:inherit}
+.sidebar-field:focus{border-color:#007acc;box-shadow:0 0 0 2px rgba(0,122,204,.15)}
+.sidebar-file{width:100%;text-align:left;padding:4px 12px 4px 20px;font-size:13px;color:#cccccc;display:flex;align-items:center;gap:8px;background:transparent;border:none;cursor:pointer;transition:background var(--af)}
+.sidebar-file:hover{background:#2a2d2e}
+.sidebar-file.active{background:#37373d;color:#fff}
+.dirty-dot{width:7px;height:7px;border-radius:50%;background:#e8a838;margin-left:auto;display:none;flex-shrink:0}
+.size-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:#3c3c3c;color:#cccccc;border:none;border-radius:3px;font-size:14px;cursor:pointer;transition:background var(--af);flex-shrink:0}
+.size-btn:hover{background:#4a4a4a}
+.toggle-switch{width:32px;height:18px;border-radius:100px;background:#3c3c3c;border:none;cursor:pointer;position:relative;transition:background var(--am);flex-shrink:0}
+.toggle-switch.on{background:#007acc}
+.toggle-knob{position:absolute;left:3px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:#858585;transition:left var(--am) var(--ease-bounce),background var(--am)}
+.toggle-switch.on .toggle-knob{left:17px;background:#fff}
+.stat-card{background:#1e1e1e;border-radius:4px;padding:7px 8px;text-align:center}
+.stat-val{font-size:15px;font-weight:700;color:#cccccc;font-family:var(--ed-font)}
+.stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#858585;margin-top:1px}
+.delete-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px;background:transparent;border:1px solid #3c3c3c;color:#858585;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;border-radius:4px;cursor:pointer;transition:all var(--af)}
+.delete-btn:hover{background:rgba(239,68,68,.15);color:#f87171;border-color:rgba(239,68,68,.3)}
 
-/* ─── Activity bar ─── */
-.act-btn { width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:#858585; background:none; border:none; border-left:2px solid transparent; cursor:pointer; transition:color var(--anim-fast), border-color var(--anim-fast), background var(--anim-fast); }
-.act-btn:hover { color:#cccccc; background:rgba(255,255,255,.05); }
-.act-btn.active { color:#ffffff; border-left-color:#007acc; }
-#act-save { color:#4ec9b0; }
-#act-save:hover { color:#6ddfc0; }
-#act-exit:hover { color:#f48771; }
+/* Tabs */
+.editor-tab{padding:0 14px;height:35px;font-size:13px;color:#969696;border-right:1px solid #252526;background:#2d2d2d;min-width:120px;text-align:left;display:flex;align-items:center;white-space:nowrap;cursor:pointer;border-top:2px solid transparent;border-bottom:none;transition:color var(--af),background var(--af)}
+.editor-tab:hover{color:#cccccc;background:#2a2a2a}
+.editor-tab.active{background:#1e1e1e;color:#fff;border-top-color:#007acc}
+.tab-dirty{width:7px;height:7px;border-radius:50%;background:#e8a838;display:none;flex-shrink:0;margin-left:6px}
 
-/* ─── Sidebar ─── */
-.sidebar-panel { width:240px; background:#252526; display:flex; flex-direction:column; border-right:1px solid #1e1e1e; flex-shrink:0; overflow:hidden; transition:width var(--anim-med) var(--ease-out); }
-.sidebar-panel.collapsed { width:0; }
-.sidebar-title-bar { padding:8px 12px; border-bottom:1px solid #1e1e1e; display:flex; align-items:center; }
-.sidebar-title-bar span { font-size:11px; font-weight:700; color:#bbbbbe; text-transform:uppercase; letter-spacing:.08em; }
-.section-header { padding:8px 12px 4px; font-size:11px; font-weight:700; color:#bbbbbe; text-transform:uppercase; letter-spacing:.06em; display:flex; align-items:center; gap:6px; cursor:default; user-select:none; }
-.sidebar-label { font-size:10px; font-weight:700; color:#858585; text-transform:uppercase; letter-spacing:.08em; display:block; }
-.sidebar-field { width:100%; background:#3c3c3c; border:1px solid #555; border-radius:3px; padding:5px 8px; font-size:12px; color:#cccccc; outline:none; transition:border-color var(--anim-fast); font-family:inherit; }
-.sidebar-field:focus { border-color:#007acc; box-shadow: 0 0 0 2px rgba(0,122,204,.15); }
-.sidebar-file { width:100%; text-align:left; padding:4px 12px 4px 20px; font-size:13px; color:#cccccc; display:flex; align-items:center; gap:8px; background:transparent; border:none; cursor:pointer; transition:background var(--anim-fast); }
-.sidebar-file:hover { background:#2a2d2e; }
-.sidebar-file.active { background:#37373d; color:#fff; }
-.dirty-dot { width:7px; height:7px; border-radius:50%; background:#e8a838; margin-left:auto; display:none; flex-shrink:0; }
-
-/* Size btn */
-.size-btn { width:22px; height:22px; display:flex; align-items:center; justify-content:center; background:#3c3c3c; color:#cccccc; border:none; border-radius:3px; font-size:14px; cursor:pointer; transition:background var(--anim-fast); flex-shrink:0; }
-.size-btn:hover { background:#4a4a4a; }
-
-/* Toggle switch */
-.toggle-switch { width:32px; height:18px; border-radius:100px; background:#3c3c3c; border:none; cursor:pointer; position:relative; transition:background var(--anim-med); flex-shrink:0; }
-.toggle-switch.on { background:#007acc; }
-.toggle-knob { position:absolute; left:3px; top:50%; transform:translateY(-50%); width:12px; height:12px; border-radius:50%; background:#858585; transition:left var(--anim-med) var(--ease-bounce), background var(--anim-med); }
-.toggle-switch.on .toggle-knob { left:17px; background:#fff; }
-
-/* Stats */
-.stat-card { background:#1e1e1e; border-radius:4px; padding:7px 8px; text-align:center; }
-.stat-val { font-size:15px; font-weight:700; color:#cccccc; font-family:var(--ed-font); }
-.stat-lbl { font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:#858585; margin-top:1px; }
-
-/* Delete */
-.delete-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:6px; padding:7px; background:transparent; border:1px solid #3c3c3c; color:#858585; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; border-radius:4px; cursor:pointer; transition:all var(--anim-fast); }
-.delete-btn:hover { background:rgba(239,68,68,.15); color:#f87171; border-color:rgba(239,68,68,.3); }
-
-/* ─── Tabs ─── */
-.editor-tab { padding:0 14px; height:35px; font-size:13px; color:#969696; border-right:1px solid #252526; background:#2d2d2d; min-width:120px; text-align:left; display:flex; align-items:center; white-space:nowrap; cursor:pointer; border-top:2px solid transparent; border-bottom:none; transition:color var(--anim-fast), background var(--anim-fast); }
-.editor-tab:hover { color:#cccccc; background:#2a2a2a; }
-.editor-tab.active { background:#1e1e1e; color:#fff; border-top-color:#007acc; }
-.tab-dirty { width:7px; height:7px; border-radius:50%; background:#e8a838; display:none; flex-shrink:0; margin-left:6px; }
-
-/* ─── Line numbers — MUST match textarea exactly ─── */
-.line-gutter {
+/* ═══ LINE NUMBERS — the key fixes ═══
+   FIX 2: In word-wrap mode each source line still gets ONE line-number span.
+           The span height must equal the textarea's wrapped-line visual height,
+           which we compute in JS. In non-wrap mode height = 1 × lineHeight (em).
+   FIX 4: gutter uses the exact same font, size, padding-top as the textarea.
+           No extra margin, no border that would shift coordinate space.
+*/
+.line-gutter{
     background:#1e1e1e;
-    display:flex; flex-direction:column; align-items:flex-end;
-    flex-shrink:0; border-right:1px solid #2d2d2d; z-index:10;
-    overflow:hidden; user-select:none;
+    display:flex;flex-direction:column;align-items:flex-end;
+    flex-shrink:0;border-right:1px solid #2d2d2d;z-index:10;
+    overflow:hidden;user-select:none;
     min-width:52px;
-    /* padding-top/font/line-height set by JS to exactly match textarea */
-    padding-top: var(--ed-pad-top);
-    padding-right: 10px;
-    padding-bottom: 14px;
+    padding-top:var(--ed-pad-top);
+    padding-right:10px;
+    padding-bottom:14px;
+    /* gutter does NOT scroll horizontally — only vertically in sync */
 }
-.line-number {
+.line-number{
     display:block;
-    font-family: var(--ed-font);
-    font-size: var(--ed-fs);
-    line-height: var(--ed-lh);
+    font-family:var(--ed-font);
+    font-size:var(--ed-fs);
+    /* height is set inline by JS for each span to match wrapped text height */
+    line-height:var(--ed-lh);
     color:#4b4b4b;
     text-align:right;
     white-space:nowrap;
-    transition: color var(--anim-fast);
+    transition:color var(--af);
+    flex-shrink:0;
 }
-.line-number.active-line { color:#c6c6c6; }
+.line-number.active-line{color:#c6c6c6}
 
-/* ─── Highlight + textarea ─── */
-.hl-layer {
-    position:absolute; inset:0;
-    padding: var(--ed-pad-top) var(--ed-pad-x);
-    pointer-events:none; z-index:0;
-    font-family: var(--ed-font);
-    font-size: var(--ed-fs);
-    line-height: var(--ed-lh);
-    color:#d4d4d4; white-space:pre; overflow:hidden;
+/* FIX 4: hl-layer must be pixel-identical to textarea (same padding, font, size).
+   letter-spacing removed — it subtly shifts char positions vs textarea. */
+.hl-layer{
+    position:absolute;inset:0;
+    padding:var(--ed-pad-top) var(--ed-pad-x);
+    pointer-events:none;z-index:0;
+    font-family:var(--ed-font);
+    font-size:var(--ed-fs);
+    line-height:var(--ed-lh);
+    color:#d4d4d4;white-space:pre;overflow:hidden;
+    /* letter-spacing intentionally omitted to match textarea default */
 }
-.code-textarea {
-    display:block; width:100%; height:100% !important;
-    background:transparent !important;
-    padding: var(--ed-pad-top) var(--ed-pad-x) !important;
-    outline:none !important; border:none !important;
-    font-family: var(--ed-font);
-    font-size: var(--ed-fs);
-    line-height: var(--ed-lh);
-    letter-spacing:-.01em;
-    resize:none; color:transparent !important; caret-color:#aeafad !important;
-    white-space:pre; overflow:auto; z-index:20; position:relative; tab-size:4;
+.code-textarea{
+    display:block;width:100%;height:100%!important;
+    background:transparent!important;
+    padding:var(--ed-pad-top) var(--ed-pad-x)!important;
+    outline:none!important;border:none!important;
+    font-family:var(--ed-font);
+    font-size:var(--ed-fs);
+    line-height:var(--ed-lh);
+    resize:none;color:transparent!important;caret-color:#aeafad!important;
+    white-space:pre;overflow:auto;z-index:20;position:relative;tab-size:4;
+    /* no letter-spacing — matches hl-layer */
 }
 
-/* ─── Prism token colours ─── */
-.token.keyword { color:#569cd6; font-weight:600; }
-.token.string { color:#ce9178; }
-.token.comment { color:#6a9955; font-style:italic; }
-.token.function { color:#dcdcaa; }
-.token.number { color:#b5cea8; }
-.token.class-name { color:#4ec9b0; }
-.token.operator, .token.punctuation { color:#d4d4d4; }
-.token.builtin { color:#569cd6; }
-.token.tag .token.tag { color:#4ec9b0; }
-.token.tag .token.attr-name { color:#9cdcfe; }
-.token.attr-value { color:#ce9178; }
-.token.property { color:#9cdcfe; }
-.token.selector { color:#d7ba7d; }
+/* Prism tokens */
+.token.keyword{color:#569cd6;font-weight:600}
+.token.string{color:#ce9178}
+.token.comment{color:#6a9955;font-style:italic}
+.token.function{color:#dcdcaa}
+.token.number{color:#b5cea8}
+.token.class-name{color:#4ec9b0}
+.token.operator,.token.punctuation{color:#d4d4d4}
+.token.builtin{color:#569cd6}
+.token.tag .token.tag{color:#4ec9b0}
+.token.tag .token.attr-name{color:#9cdcfe}
+.token.attr-value{color:#ce9178}
+.token.property{color:#9cdcfe}
+.token.selector{color:#d7ba7d}
 
-/* ─── Status bar ─── */
-.statusbar { height:22px; display:flex; align-items:center; padding:0 6px; flex-shrink:0; z-index:20; font-size:11px; user-select:none; background:#007acc; color:rgba(255,255,255,.9); }
-.status-pill { padding:0 6px; height:22px; display:inline-flex; align-items:center; gap:3px; cursor:pointer; border-radius:2px; transition:background var(--anim-fast); white-space:nowrap; }
-.status-pill:hover { background:rgba(255,255,255,.15); }
+/* Status bar */
+.statusbar{height:22px;display:flex;align-items:center;padding:0 6px;flex-shrink:0;z-index:20;font-size:11px;user-select:none;background:#007acc;color:rgba(255,255,255,.9)}
+.status-pill{padding:0 6px;height:22px;display:inline-flex;align-items:center;gap:3px;cursor:pointer;border-radius:2px;transition:background var(--af);white-space:nowrap}
+.status-pill:hover{background:rgba(255,255,255,.15)}
 
-/* ─── Find/Replace panel ─── */
-.find-panel {
-    position:fixed; z-index:400; right:20px; top:56px; width:420px;
-    background:#252526; border:1px solid #3a3a3a; border-radius:8px;
-    box-shadow:0 12px 40px rgba(0,0,0,.6);
-    animation: findSlideIn var(--anim-med) var(--ease-out) both;
-    overflow:hidden;
-}
-@keyframes findSlideIn { from { opacity:0; transform:translateY(-10px) } to { opacity:1; transform:translateY(0) } }
-.find-panel.closing { animation: findSlideOut var(--anim-fast) ease both; }
-@keyframes findSlideOut { to { opacity:0; transform:translateY(-8px) } }
+/* Find/Replace */
+.find-panel{position:fixed;z-index:400;right:20px;top:56px;width:420px;background:#252526;border:1px solid #3a3a3a;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.6);overflow:hidden}
+.find-panel.entering{animation:findIn var(--am) var(--ease-out) both}
+.find-panel.leaving{animation:findOut var(--af) ease both}
+@keyframes findIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes findOut{to{opacity:0;transform:translateY(-8px)}}
+.find-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:1px solid #333}
+.find-body{padding:10px 12px;display:flex;flex-direction:column;gap:7px}
+.find-input-wrap{position:relative;display:flex;align-items:center;flex:1;background:#1e1e1e;border:1px solid #3c3c3c;border-radius:4px;transition:border-color var(--af);overflow:hidden}
+.find-input-wrap:focus-within{border-color:#007acc;box-shadow:0 0 0 2px rgba(0,122,204,.2)}
+.find-input-icon{position:absolute;left:9px;color:#555;font-size:11px;pointer-events:none}
+.find-input{flex:1;background:transparent;border:none;outline:none;padding:7px 8px 7px 28px;font-size:12px;color:#cccccc;font-family:inherit}
+.find-input::placeholder{color:#555}
+.find-toggles{display:flex;align-items:center;gap:1px;padding:0 4px;border-left:1px solid #333}
+.find-tog{background:none;border:none;border-radius:3px;padding:3px 6px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#858585;cursor:pointer;transition:background var(--af),color var(--af)}
+.find-tog:hover{background:#3c3c3c;color:#cccccc}
+.find-tog.active{background:#07438c;color:#9cdcfe}
+.find-row{display:flex;align-items:center;gap:6px}
+.find-nav-btns{display:flex;gap:3px;flex-shrink:0}
+.find-icon-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid transparent;border-radius:4px;color:#858585;cursor:pointer;font-size:12px;transition:all var(--af)}
+.find-icon-btn:hover{background:#3c3c3c;color:#cccccc;border-color:#555}
+.find-action-btn{padding:4px 10px;font-size:11px;background:#3c3c3c;border:1px solid #555;border-radius:4px;color:#cccccc;cursor:pointer;transition:background var(--af);white-space:nowrap;font-family:inherit}
+.find-action-btn:hover{background:#4a4a4a}
+.find-action-btn-all{background:#07438c;border-color:#0e5bb5;color:#9cdcfe}
+.find-action-btn-all:hover{background:#0e5bb5}
+.find-status{font-size:11px;color:#858585;font-family:'JetBrains Mono',monospace;min-height:16px;padding:0 2px}
+.find-status.no-results{color:#f48771}
+.find-status.has-results{color:#4ec9b0}
 
-.find-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px 8px; border-bottom:1px solid #333; }
-.find-body { padding:10px 12px; display:flex; flex-direction:column; gap:7px; }
+/* Command palette — FIX 3: scrollbar on cmd-list */
+.cmd-box{background:#1f1f1f;border:1px solid #3a3a3a;border-radius:10px;box-shadow:0 24px 60px rgba(0,0,0,.7);width:100%;max-width:540px;overflow:hidden;animation:slideUp var(--am) var(--ease-out) both}
+.cmd-input-row{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #2a2a2a}
+.cmd-input{flex:1;background:transparent;border:none;outline:none;font-size:14px;color:#cccccc;font-family:inherit}
+.cmd-input::placeholder{color:#555}
+.cmd-esc-badge{font-size:9px;color:#858585;background:#3c3c3c;padding:2px 6px;border-radius:3px;border:1px solid #555;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+/* FIX 3 — cmd-list gets scrollbar via global ::-webkit-scrollbar + overflow-y:auto */
+.cmd-list{max-height:320px;overflow-y:auto}
+.cmd-item{padding:9px 16px;font-size:13px;color:#cccccc;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a2a;transition:background var(--af)}
+.cmd-item:hover,.cmd-item.selected{background:#04395e;color:#fff}
+.cmd-item i{width:16px;text-align:center;color:#858585;font-size:13px;flex-shrink:0}
+.cmd-item.selected i{color:#9cdcfe}
+.cmd-kbd{margin-left:auto;font-size:10px;color:#858585;font-family:'JetBrains Mono',monospace}
+.cmd-footer{display:flex;gap:16px;padding:8px 16px;border-top:1px solid #2a2a2a;font-size:10px;color:#858585}
+.cmd-footer kbd{background:#3c3c3c;border:1px solid #555;border-radius:3px;padding:1px 5px;font-family:'JetBrains Mono',monospace;margin-right:4px}
 
-.find-input-wrap { position:relative; display:flex; align-items:center; flex:1; background:#1e1e1e; border:1px solid #3c3c3c; border-radius:4px; transition:border-color var(--anim-fast); overflow:hidden; }
-.find-input-wrap:focus-within { border-color:#007acc; box-shadow: 0 0 0 2px rgba(0,122,204,.2); }
-.find-input-icon { position:absolute; left:9px; color:#555; font-size:11px; pointer-events:none; }
-.find-input { flex:1; background:transparent; border:none; outline:none; padding:7px 8px 7px 28px; font-size:12px; color:#cccccc; font-family:inherit; }
-.find-input::placeholder { color:#555; }
+/* Shortcuts */
+.shortcuts-panel{position:fixed;z-index:400;right:16px;bottom:30px;width:300px;background:#1f1f1f;border:1px solid #3a3a3a;border-radius:10px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.6);animation:slideUp var(--am) var(--ease-out) both}
+.shortcuts-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #2a2a2a;background:#252526}
+.shortcuts-body{padding:8px 12px 12px;max-height:400px;overflow-y:auto}
+.shortcut-group-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;padding:8px 0 4px;border-top:1px solid #2a2a2a;margin-top:4px}
+.shortcut-group-label:first-child{border-top:none;margin-top:0}
+.shortcut-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.shortcut-row span{font-size:12px;color:#858585}
+.kbd-group{display:flex;gap:2px}
+kbd{background:#3c3c3c;border:1px solid #555;border-radius:3px;padding:1px 6px;font-size:10px;font-family:'JetBrains Mono',monospace;color:#cccccc}
 
-.find-toggles { display:flex; align-items:center; gap:1px; padding:0 4px; border-left:1px solid #333; }
-.find-tog { background:none; border:none; border-radius:3px; padding:3px 6px; font-size:11px; font-family:'JetBrains Mono',monospace; color:#858585; cursor:pointer; transition:background var(--anim-fast), color var(--anim-fast); }
-.find-tog:hover { background:#3c3c3c; color:#cccccc; }
-.find-tog.active { background:#07438c; color:#9cdcfe; }
+/* ═══ PREVIEW SYSTEM ═══ */
+.preview-overlay{position:fixed;inset:0;z-index:300;background:#141414;display:flex;flex-direction:column;animation:fadeIn var(--af) ease both}
+.preview-overlay.hidden{display:none!important}
 
-.find-row { display:flex; align-items:center; gap:6px; }
-.find-nav-btns { display:flex; gap:3px; flex-shrink:0; }
-.find-icon-btn { width:26px; height:26px; display:flex; align-items:center; justify-content:center; background:none; border:1px solid transparent; border-radius:4px; color:#858585; cursor:pointer; font-size:12px; transition:all var(--anim-fast); }
-.find-icon-btn:hover { background:#3c3c3c; color:#cccccc; border-color:#555; }
-.find-action-btn { padding:4px 10px; font-size:11px; background:#3c3c3c; border:1px solid #555; border-radius:4px; color:#cccccc; cursor:pointer; transition:background var(--anim-fast); white-space:nowrap; font-family:inherit; }
-.find-action-btn:hover { background:#4a4a4a; }
-.find-action-btn-all { background:#07438c; border-color:#0e5bb5; color:#9cdcfe; }
-.find-action-btn-all:hover { background:#0e5bb5; }
-.find-status { font-size:11px; color:#858585; font-family:'JetBrains Mono',monospace; min-height:16px; padding:0 2px; }
-.find-status.no-results { color:#f48771; }
-.find-status.has-results { color:#4ec9b0; }
+/* Chrome bar */
+.preview-chrome{height:46px;background:#1f1f1f;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;gap:12px;padding:0 14px;flex-shrink:0}
+.preview-chrome-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.preview-chrome-center{display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.preview-chrome-right{display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end}
 
-/* ─── Command palette ─── */
-.cmd-box { background:#1f1f1f; border:1px solid #3a3a3a; border-radius:10px; box-shadow:0 24px 60px rgba(0,0,0,.7); width:100%; max-width:540px; overflow:hidden; animation:slideUp var(--anim-med) var(--ease-out) both; }
-.cmd-input-row { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid #2a2a2a; }
-.cmd-input { flex:1; background:transparent; border:none; outline:none; font-size:14px; color:#cccccc; font-family:inherit; }
-.cmd-input::placeholder { color:#555; }
-.cmd-list { max-height:320px; overflow-y:auto; }
-.cmd-item { padding:9px 16px; font-size:13px; color:#cccccc; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #2a2a2a; transition:background var(--anim-fast); }
-.cmd-item:hover, .cmd-item.selected { background:#04395e; color:#fff; }
-.cmd-item i { width:16px; text-align:center; color:#858585; font-size:13px; flex-shrink:0; }
-.cmd-item.selected i { color:#9cdcfe; }
-.cmd-kbd { margin-left:auto; font-size:10px; color:#858585; font-family:'JetBrains Mono',monospace; }
-.cmd-footer { display:flex; gap:16px; padding:8px 16px; border-top:1px solid #2a2a2a; font-size:10px; color:#858585; }
-.cmd-footer kbd { background:#3c3c3c; border:1px solid #555; border-radius:3px; padding:1px 5px; font-family:'JetBrains Mono',monospace; margin-right:4px; }
+/* Traffic lights */
+.preview-lights{display:flex;gap:7px;flex-shrink:0}
+.light{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;transition:filter var(--af);flex-shrink:0}
+.light:hover{filter:brightness(1.3)}
+.light-red{background:#ff5f57}
+.light-yellow{background:#febc2e}
+.light-green{background:#28c840}
 
-/* ─── Shortcuts panel ─── */
-.shortcuts-panel { position:fixed; z-index:400; right:16px; bottom:30px; width:300px; background:#1f1f1f; border:1px solid #3a3a3a; border-radius:10px; overflow:hidden; box-shadow:0 16px 48px rgba(0,0,0,.6); animation:slideUp var(--anim-med) var(--ease-out) both; }
-.shortcuts-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid #2a2a2a; background:#252526; }
-.shortcuts-body { padding:8px 12px 12px; max-height:400px; overflow-y:auto; }
-.shortcut-group-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#555; padding:8px 0 4px; border-top:1px solid #2a2a2a; margin-top:4px; }
-.shortcut-group-label:first-child { border-top:none; margin-top:0; }
-.shortcut-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; }
-.shortcut-row span { font-size:12px; color:#858585; }
-.kbd-group { display:flex; gap:2px; }
-kbd { background:#3c3c3c; border:1px solid #555; border-radius:3px; padding:1px 6px; font-size:10px; font-family:'JetBrains Mono',monospace; color:#cccccc; }
+/* URL bar */
+.preview-url-bar{flex:1;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:6px;height:26px;display:flex;align-items:center;gap:7px;padding:0 10px;min-width:0;overflow:hidden}
+.preview-reload-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:5px;color:#858585;cursor:pointer;transition:all var(--af);flex-shrink:0}
+.preview-reload-btn:hover{background:#3a3a3a;color:#cccccc}
+.preview-reload-btn.spinning i{animation:spin .5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ─── Preview ─── */
-.preview-toolbar { display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:#252526; border:1px solid #333; border-bottom:none; border-radius:8px 8px 0 0; }
-.viewport-switcher { display:flex; background:#1e1e1e; border:1px solid #3c3c3c; border-radius:4px; overflow:hidden; }
-.vp-btn { padding:5px 12px; font-size:12px; background:transparent; border:none; color:#858585; cursor:pointer; transition:all var(--anim-fast); }
-.vp-btn:hover { color:#cccccc; }
-.vp-btn.active { background:#3c3c3c; color:#fff; }
-.console-panel { background:#0c0c0c; border:1px solid #2a2a2a; border-top:none; border-radius:0 0 8px 8px; }
-.console-header { display:flex; align-items:center; justify-content:space-between; padding:6px 14px; border-bottom:1px solid #2a2a2a; font-size:10px; font-family:'JetBrains Mono',monospace; color:#555; text-transform:uppercase; letter-spacing:.08em; }
+/* Viewport switcher in chrome */
+.vp-switcher{display:flex;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:6px;overflow:hidden}
+.vp-btn{display:flex;align-items:center;gap:5px;padding:5px 14px;font-size:11px;background:transparent;border:none;color:#858585;cursor:pointer;transition:all var(--af);white-space:nowrap}
+.vp-btn:hover{color:#cccccc;background:#333}
+.vp-btn.active{background:#007acc;color:#fff}
+.vp-btn span{font-size:11px}
+.vp-btn i{font-size:12px}
+
+.preview-toolbar-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:5px;color:#858585;cursor:pointer;transition:all var(--af)}
+.preview-toolbar-btn:hover{background:#3a3a3a;color:#cccccc}
+.preview-toolbar-btn.active{background:#007acc;color:#fff;border-color:#0088ee}
+
+.preview-load-status{font-size:10px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:4px;font-weight:600;letter-spacing:.03em}
+.preview-load-status.loading{color:#febc2e;background:rgba(254,188,46,.1)}
+.preview-load-status.ready{color:#28c840;background:rgba(40,200,64,.1)}
+.preview-load-status.error{color:#ff5f57;background:rgba(255,95,87,.1)}
+
+/* Stage (holds the device frame) */
+.preview-stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:20px;transition:padding var(--am)}
+.preview-device-wrap{display:flex;flex-direction:column;width:100%;height:100%;max-width:100%;max-height:100%;transition:max-width var(--am) var(--ease-out),max-height var(--am) var(--ease-out);position:relative}
+
+/* Device chrome (tablet/mobile only) */
+.preview-device-chrome{position:absolute;inset:-12px;border:12px solid #2a2a2a;border-radius:20px;pointer-events:none;z-index:5}
+.preview-device-chrome.show{display:block!important}
+.device-notch{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:80px;height:20px;background:#1a1a1a;border-radius:0 0 12px 12px;z-index:6}
+.device-home{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);width:120px;height:4px;background:#3a3a3a;border-radius:2px}
+
+.preview-iframe-wrap{flex:1;position:relative;overflow:hidden;border-radius:4px}
+.preview-iframe{width:100%;height:100%;border:none;background:#fff;display:block}
+.preview-loading-overlay{position:absolute;inset:0;background:#1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity var(--am)}
+.preview-loading-overlay.done{opacity:0;pointer-events:none}
+.preview-spinner{width:28px;height:28px;border:2px solid #3a3a3a;border-top-color:#007acc;border-radius:50%;animation:spin .7s linear infinite}
+
+/* Terminal drawer */
+.preview-terminal{height:180px;background:#0c0c0c;border-top:1px solid #2a2a2a;flex-shrink:0;display:flex;flex-direction:column;animation:termIn var(--am) var(--ease-out) both}
+.preview-terminal.hidden{display:none!important}
+@keyframes termIn{from{height:0}to{height:180px}}
+.terminal-header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.terminal-body{flex:1;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;overflow-y:auto;line-height:1.6}
+.terminal-line{padding:1px 0}
+.terminal-line.info{color:#4ec9b0}
+.terminal-line.warn{color:#febc2e}
+.terminal-line.err{color:#ff5f57}
+.terminal-line.muted{color:#858585}
 </style>
 
 <script>
-/* ═══════════════════════ STATE ═══════════════════════ */
-const LS_KEY = 'node-editor-settings';
-let currentMode = 'py';
-let isDirty      = false;
-let fontSize     = 13;
-let lineHeight   = 1.6;
-let wordWrap     = false;
-let findMatches  = [];
-let findIndex    = 0;
-let findOpts     = { case:false, word:false, regex:false };
+/* ═══════════ STATE ═══════════ */
+const LS_KEY = 'node-editor-v4';
+let currentMode = 'py', isDirty = false;
+let fontSize = 13, lineHeight = 1.6, wordWrap = false;
+let findMatches = [], findIndex = 0, findOpts = {case:false,word:false,regex:false};
+let previewOpen = false;
 
 const LANG_MAP   = {py:'python',html:'markup',css:'css',js:'javascript'};
 const LANG_LABEL = {py:'Python',html:'HTML',css:'CSS',js:'JavaScript'};
 const FILE_NAME  = {py:'{{ slug }}.py',html:'{{ slug }}.html',css:'{{ slug }}.css',js:'{{ slug }}.js'};
 
-/* ═══════════════════════ LOCALSTORAGE SETTINGS ═══════════════════════ */
-function saveSettings(){
-    try {
-        localStorage.setItem(LS_KEY, JSON.stringify({ fontSize, wordWrap }));
-    } catch(e){}
-}
-
+/* ═══════════ LOCALSTORAGE ═══════════ */
+function saveSettings(){ try{ localStorage.setItem(LS_KEY, JSON.stringify({fontSize,wordWrap})); }catch(e){} }
 function loadSettings(){
-    try {
-        const raw = localStorage.getItem(LS_KEY);
-        if(!raw) return;
-        const s = JSON.parse(raw);
-        if(s.fontSize && s.fontSize >= 10 && s.fontSize <= 24) fontSize = s.fontSize;
-        if(typeof s.wordWrap === 'boolean') wordWrap = s.wordWrap;
-    } catch(e){}
+    try{
+        const s = JSON.parse(localStorage.getItem(LS_KEY)||'{}');
+        if(s.fontSize>=10&&s.fontSize<=24) fontSize=s.fontSize;
+        if(typeof s.wordWrap==='boolean') wordWrap=s.wordWrap;
+    }catch(e){}
 }
 
-/* ═══════════════════════ CSS VARIABLE SYNC ═══════════════════════
-   The single source of truth for editor font/size/lh.
-   Line numbers, highlight layer, and textarea all read CSS vars.
-══════════════════════════════════════════════════════════════════ */
+/* ═══════════ APPLY EDITOR STYLE ═══════════ */
 function applyEditorStyle(){
     const root = document.documentElement;
-    root.style.setProperty('--ed-fs', fontSize + 'px');
-    root.style.setProperty('--ed-lh', lineHeight.toString());
+    root.style.setProperty('--ed-fs', fontSize+'px');
+    root.style.setProperty('--ed-lh', String(lineHeight));
 
-    /* Keep line gutter width adequate */
-    const ta = activeTextarea();
-    if(ta){
-        const lines = (ta.value+'\n').split('\n').length - 1;
-        const digits = String(Math.max(lines, 99)).length;
-        const gutterW = Math.max(44, digits * (fontSize * 0.6) + 24);
-        document.getElementById('line-numbers').style.minWidth = gutterW + 'px';
-    }
+    document.getElementById('font-size-label').textContent = fontSize+'px';
+    const pct = ((fontSize-10)/14)*100;
+    document.getElementById('font-fill').style.width = pct+'%';
+    document.getElementById('font-thumb').style.left = 'calc('+pct+'% - 6px)';
 
-    document.getElementById('font-size-label').textContent = fontSize + 'px';
-
-    /* Slider track fill: range 10–24 */
-    const pct = ((fontSize - 10) / 14) * 100;
-    document.getElementById('font-fill').style.width  = pct + '%';
-    document.getElementById('font-thumb').style.left  = 'calc(' + pct + '% - 6px)';
-
-    /* Word wrap state */
-    document.querySelectorAll('.code-textarea').forEach(t => {
-        t.style.whiteSpace  = wordWrap ? 'pre-wrap' : 'pre';
-        t.style.overflowX   = wordWrap ? 'hidden'   : 'auto';
+    document.querySelectorAll('.code-textarea').forEach(t=>{
+        t.style.whiteSpace  = wordWrap?'pre-wrap':'pre';
+        t.style.overflowX   = wordWrap?'hidden':'auto';
     });
     const hl = document.getElementById('highlight-layer');
-    if(hl) hl.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
-
-    const tog  = document.getElementById('wrap-toggle');
+    if(hl) hl.style.whiteSpace = wordWrap?'pre-wrap':'pre';
+    const tog = document.getElementById('wrap-toggle');
     if(tog) tog.classList.toggle('on', wordWrap);
 
     syncHighlight();
 }
 
-/* ═══════════════════════ EDITOR CORE ═══════════════════════ */
-function activeTextarea(){
-    return document.querySelector('.editor-panel:not(.hidden) textarea');
-}
+/* ═══════════ CORE ═══════════ */
+function activeTextarea(){ return document.querySelector('.editor-panel:not(.hidden) textarea'); }
 
 function syncHighlight(){
-    const ta = activeTextarea();
-    const hl = document.getElementById('highlight-layer');
-    if(!ta || !hl) return;
-
+    const ta = activeTextarea(), hl = document.getElementById('highlight-layer');
+    if(!ta||!hl) return;
     const grammar = Prism.languages[LANG_MAP[currentMode]];
     hl.innerHTML = (grammar
         ? Prism.highlight(ta.value, grammar, LANG_MAP[currentMode])
         : ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    ) + '\n';
-
-    syncScroll(ta);
-    updateLineNumbers(ta);
-    updateStats(ta);
+    )+'\n';
+    syncScroll(ta); updateLineNumbers(ta); updateStats(ta);
 }
 
 function syncScroll(el){
-    const hl = document.getElementById('highlight-layer');
-    const ln = document.getElementById('line-numbers');
-    if(hl){ hl.scrollTop = el.scrollTop; hl.scrollLeft = el.scrollLeft; }
-    if(ln)   ln.scrollTop = el.scrollTop;
+    const hl=document.getElementById('highlight-layer'), ln=document.getElementById('line-numbers');
+    if(hl){hl.scrollTop=el.scrollTop; hl.scrollLeft=el.scrollLeft;}
+    if(ln) ln.scrollTop=el.scrollTop;
 }
 
-/* ─── Line numbers: must match textarea padding & line-height exactly ─── */
+/* ═══════════ LINE NUMBERS — FIX 2 (word-wrap aware) ═══════════
+   When word-wrap is off: each source line → 1 span, height = lineHeight em.
+   When word-wrap is on:  we measure the pixel height of each wrapped line
+   by using a hidden offscreen canvas to estimate character count per visual
+   row, then multiply by line-height to get the span's pixel height.
+   This keeps the gutter 1-number-per-source-line while still tracking scroll.
+═══════════════════════════════════════════════════════════════ */
 function updateLineNumbers(ta){
-    const before = ta.value.substring(0, ta.selectionStart);
+    const before     = ta.value.substring(0, ta.selectionStart);
     const activeLine = before.split('\n').length;
-    const totalLines = (ta.value + '\n').split('\n').length - 1;
+    const lines      = ta.value.split('\n');
     const container  = document.getElementById('line-numbers');
     if(!container) return;
 
-    /* Sync gutter padding-top to match textarea — both use CSS var --ed-pad-top */
-    /* already handled by CSS var; just build numbers */
+    const lineH = fontSize * lineHeight; // px per visual row
+
     let html = '';
-    for(let i = 1; i <= totalLines; i++){
-        html += `<span class="line-number${i === activeLine ? ' active-line' : ''}">${i}</span>`;
+    if(!wordWrap){
+        /* simple 1:1 mode */
+        for(let i=0; i<lines.length; i++){
+            html += `<span class="line-number${i+1===activeLine?' active-line':''}" style="height:${lineH}px;line-height:${lineH}px">${i+1}</span>`;
+        }
+    } else {
+        /* Word-wrap: compute how many visual rows each source line takes.
+           Use the textarea's clientWidth minus padding to estimate chars/row. */
+        const padX    = 16; /* --ed-pad-x */
+        const charW   = fontSize * 0.601; /* JetBrains Mono is ~0.6× em wide per char */
+        const colW    = Math.max(1, Math.floor((ta.clientWidth - padX*2) / charW));
+        for(let i=0; i<lines.length; i++){
+            const visual = Math.max(1, Math.ceil((lines[i].length||1) / colW));
+            const h      = visual * lineH;
+            html += `<span class="line-number${i+1===activeLine?' active-line':''}" style="height:${h}px;line-height:${lineH}px;display:flex;align-items:flex-start;justify-content:flex-end">${i+1}</span>`;
+        }
     }
     container.innerHTML = html;
     container.scrollTop = ta.scrollTop;
 
-    /* Widen gutter if needed */
-    const digits  = String(totalLines).length;
+    /* Widen gutter based on digit count */
+    const digits  = String(lines.length).length;
     const gutterW = Math.max(44, digits * Math.ceil(fontSize * 0.62) + 22);
-    container.style.minWidth = gutterW + 'px';
+    container.style.minWidth = gutterW+'px';
 }
 
 function updateCursorMetadata(ta){
-    const before = ta.value.substring(0, ta.selectionStart);
+    const before = ta.value.substring(0,ta.selectionStart);
     const lines  = before.split('\n');
     document.getElementById('pos-indicator').textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length+1}`;
-    const selLen = ta.selectionEnd - ta.selectionStart;
-    const selEl  = document.getElementById('sel-indicator');
-    if(selLen > 0){ selEl.textContent = `${selLen} sel`; selEl.style.display = 'inline-flex'; }
-    else selEl.style.display = 'none';
+    const selLen = ta.selectionEnd-ta.selectionStart;
+    const sel    = document.getElementById('sel-indicator');
+    if(selLen>0){sel.textContent=`${selLen} sel`;sel.style.display='inline-flex';}
+    else sel.style.display='none';
     updateLineNumbers(ta);
 }
 
 function updateStats(ta){
-    const val = ta.value;
-    const lines = val.split('\n').length;
-    const chars = val.length;
-    const words = val.trim() === '' ? 0 : val.trim().split(/\s+/).length;
-    const bytes  = new Blob([val]).size;
-    const sz     = bytes < 1024 ? bytes+'B' : bytes < 1048576 ? (bytes/1024).toFixed(1)+'K' : (bytes/1048576).toFixed(1)+'M';
-    document.getElementById('stat-lines').textContent = lines;
-    document.getElementById('stat-chars').textContent = chars;
-    document.getElementById('stat-words').textContent = words;
-    document.getElementById('stat-size').textContent  = sz;
+    const v=ta.value, l=v.split('\n').length, ch=v.length;
+    const w=v.trim()===''?0:v.trim().split(/\s+/).length;
+    const b=new Blob([v]).size;
+    const sz=b<1024?b+'B':b<1048576?(b/1024).toFixed(1)+'K':(b/1048576).toFixed(1)+'M';
+    document.getElementById('stat-lines').textContent=l;
+    document.getElementById('stat-chars').textContent=ch;
+    document.getElementById('stat-words').textContent=w;
+    document.getElementById('stat-size').textContent=sz;
 }
 
-/* ═══════════════════════ TAB SWITCHING ═══════════════════════ */
+/* ═══════════ TAB SWITCHING ═══════════ */
 function switchTab(type){
-    currentMode = type;
-    document.querySelectorAll('.editor-panel').forEach(p => p.classList.add('hidden'));
-    document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.sidebar-file').forEach(f => f.classList.remove('active'));
+    currentMode=type;
+    document.querySelectorAll('.editor-panel').forEach(p=>p.classList.add('hidden'));
+    document.querySelectorAll('.editor-tab,.sidebar-file').forEach(el=>el.classList.remove('active'));
     document.getElementById(`panel-${type}`).classList.remove('hidden');
     document.getElementById(`tab-${type}`).classList.add('active');
     document.getElementById(`side-tab-${type}`).classList.add('active');
-    document.getElementById('lang-label').textContent       = LANG_LABEL[type];
-    document.getElementById('breadcrumb-file').textContent  = FILE_NAME[type];
+    document.getElementById('lang-label').textContent=LANG_LABEL[type];
+    document.getElementById('breadcrumb-file').textContent=FILE_NAME[type];
     requestAnimationFrame(()=>{
         syncHighlight();
-        const ta = activeTextarea();
-        if(ta){ updateCursorMetadata(ta); ta.focus(); }
+        const ta=activeTextarea(); if(ta){updateCursorMetadata(ta);ta.focus();}
     });
 }
 
-/* ═══════════════════════ FONT SIZE ═══════════════════════ */
-function changeFontSize(delta){
-    fontSize = Math.max(10, Math.min(24, fontSize + delta));
-    applyEditorStyle();
-    saveSettings();
-}
-
+/* ═══════════ FONT / WRAP ═══════════ */
+function changeFontSize(d){ fontSize=Math.max(10,Math.min(24,fontSize+d)); applyEditorStyle(); saveSettings(); }
 function fontTrackClick(e){
-    const track = document.getElementById('font-track');
-    const rect  = track.getBoundingClientRect();
-    const pct   = (e.clientX - rect.left) / rect.width;
-    fontSize    = Math.round(10 + pct * 14);
-    applyEditorStyle();
-    saveSettings();
+    const r=document.getElementById('font-track').getBoundingClientRect();
+    fontSize=Math.round(10+((e.clientX-r.left)/r.width)*14);
+    applyEditorStyle(); saveSettings();
 }
+function toggleWordWrap(){ wordWrap=!wordWrap; applyEditorStyle(); saveSettings(); }
 
-/* ═══════════════════════ WORD WRAP ═══════════════════════ */
-function toggleWordWrap(){
-    wordWrap = !wordWrap;
-    applyEditorStyle();
-    saveSettings();
-}
-
-/* ═══════════════════════ FIND & REPLACE ═══════════════════════ */
+/* ═══════════ FIND & REPLACE ═══════════ */
 function openFind(){
-    const panel = document.getElementById('find-panel');
-    panel.classList.remove('closing');
-    panel.style.display = 'block';
-    const ta = activeTextarea();
-    if(ta && ta.selectionStart !== ta.selectionEnd){
-        document.getElementById('find-input').value = ta.value.substring(ta.selectionStart, ta.selectionEnd);
-    }
-    document.getElementById('find-input').focus();
-    doFind();
+    const p=document.getElementById('find-panel');
+    p.style.display='block'; p.classList.remove('leaving'); p.classList.add('entering');
+    const ta=activeTextarea();
+    if(ta&&ta.selectionStart!==ta.selectionEnd) document.getElementById('find-input').value=ta.value.substring(ta.selectionStart,ta.selectionEnd);
+    document.getElementById('find-input').focus(); doFind();
 }
-
 function closeFindPanel(){
-    const panel = document.getElementById('find-panel');
-    panel.classList.add('closing');
-    setTimeout(()=>{ panel.style.display='none'; panel.classList.remove('closing'); }, 120);
-    findMatches = [];
-    document.getElementById('find-status').textContent = '';
-    document.getElementById('find-count').textContent  = '';
+    const p=document.getElementById('find-panel');
+    p.classList.remove('entering'); p.classList.add('leaving');
+    setTimeout(()=>{p.style.display='none';p.classList.remove('leaving');},120);
+    findMatches=[]; document.getElementById('find-status').textContent=''; document.getElementById('find-count').textContent='';
     syncHighlight();
 }
-
-function toggleFindOpt(opt){
-    findOpts[opt] = !findOpts[opt];
-    document.getElementById('tog-' + opt).classList.toggle('active', findOpts[opt]);
-    doFind();
+function toggleFindOpt(opt){ findOpts[opt]=!findOpts[opt]; document.getElementById('tog-'+opt).classList.toggle('active',findOpts[opt]); doFind(); }
+function buildRegex(q){
+    let p=findOpts.regex?q:q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    if(findOpts.word&&!findOpts.regex) p=`\\b${p}\\b`;
+    return new RegExp(p, findOpts.case?'g':'gi');
 }
-
-function buildRegex(query){
-    let pattern = findOpts.regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    if(findOpts.word && !findOpts.regex) pattern = `\\b${pattern}\\b`;
-    const flags = findOpts.case ? 'g' : 'gi';
-    return new RegExp(pattern, flags);
-}
-
 function doFind(){
-    const query  = document.getElementById('find-input').value;
-    const status = document.getElementById('find-status');
-    const count  = document.getElementById('find-count');
-    const ta     = activeTextarea();
-    findMatches  = [];
-    if(!ta || !query){ status.textContent=''; count.textContent=''; return; }
-    try {
-        const re = buildRegex(query);
-        let m;
-        while((m = re.exec(ta.value)) !== null) findMatches.push({start:m.index, end:m.index+m[0].length});
-        if(findMatches.length === 0){
-            status.className = 'find-status no-results';
-            status.textContent = 'No results';
-            count.textContent  = '';
-        } else {
-            findIndex = Math.min(findIndex, findMatches.length - 1);
-            status.className = 'find-status has-results';
-            status.textContent = `${findMatches.length} match${findMatches.length>1?'es':''}`;
-            count.textContent  = `${findIndex+1} / ${findMatches.length}`;
-            jumpToMatch(false);
-        }
-    } catch(e){
-        status.className = 'find-status no-results';
-        status.textContent = 'Invalid expression';
-    }
+    const q=document.getElementById('find-input').value, st=document.getElementById('find-status'), cnt=document.getElementById('find-count'), ta=activeTextarea();
+    findMatches=[];
+    if(!ta||!q){st.textContent='';cnt.textContent='';return;}
+    try{
+        const re=buildRegex(q); let m;
+        while((m=re.exec(ta.value))!==null) findMatches.push({start:m.index,end:m.index+m[0].length});
+        if(!findMatches.length){st.className='find-status no-results';st.textContent='No results';cnt.textContent='';}
+        else{findIndex=Math.min(findIndex,findMatches.length-1);st.className='find-status has-results';st.textContent=`${findMatches.length} match${findMatches.length>1?'es':''}`;cnt.textContent=`${findIndex+1} / ${findMatches.length}`;jumpToMatch(false);}
+    }catch(e){st.className='find-status no-results';st.textContent='Invalid expression';}
 }
-
-function findNext(){ if(!findMatches.length) return; findIndex=(findIndex+1)%findMatches.length; jumpToMatch(true); }
-function findPrev(){ if(!findMatches.length) return; findIndex=(findIndex-1+findMatches.length)%findMatches.length; jumpToMatch(true); }
-
-function jumpToMatch(updateCount=true){
-    const ta = activeTextarea();
-    if(!ta || !findMatches[findIndex]) return;
-    const m = findMatches[findIndex];
-    ta.focus();
-    ta.setSelectionRange(m.start, m.end);
-    if(updateCount) document.getElementById('find-count').textContent = `${findIndex+1} / ${findMatches.length}`;
-    /* Scroll into view */
-    const lineH  = fontSize * lineHeight;
-    const before = ta.value.substring(0, m.start);
-    const lineNo = before.split('\n').length - 1;
-    ta.scrollTop = Math.max(0, (lineNo - 4) * lineH);
-    syncHighlight();
+function findNext(){ if(!findMatches.length)return; findIndex=(findIndex+1)%findMatches.length; jumpToMatch(true); }
+function findPrev(){ if(!findMatches.length)return; findIndex=(findIndex-1+findMatches.length)%findMatches.length; jumpToMatch(true); }
+function jumpToMatch(upd=true){
+    const ta=activeTextarea(); if(!ta||!findMatches[findIndex])return;
+    const m=findMatches[findIndex]; ta.focus(); ta.setSelectionRange(m.start,m.end);
+    if(upd) document.getElementById('find-count').textContent=`${findIndex+1} / ${findMatches.length}`;
+    const lH=fontSize*lineHeight, ln=ta.value.substring(0,m.start).split('\n').length-1;
+    ta.scrollTop=Math.max(0,(ln-4)*lH); syncHighlight();
 }
-
 function doReplaceOne(){
-    const ta = activeTextarea();
-    if(!ta || !findMatches.length) return;
-    const replacement = document.getElementById('replace-input').value;
-    const m = findMatches[findIndex];
-    ta.value = ta.value.substring(0,m.start) + replacement + ta.value.substring(m.end);
-    isDirty = true; markDirty();
-    doFind(); syncHighlight();
+    const ta=activeTextarea(); if(!ta||!findMatches.length)return;
+    const m=findMatches[findIndex], r=document.getElementById('replace-input').value;
+    ta.value=ta.value.substring(0,m.start)+r+ta.value.substring(m.end);
+    isDirty=true;markDirty();doFind();syncHighlight();
 }
-
 function doReplaceAll(){
-    const ta = activeTextarea();
-    if(!ta || !findMatches.length) return;
-    const query = document.getElementById('find-input').value;
-    const replacement = document.getElementById('replace-input').value;
-    try {
-        ta.value = ta.value.replace(buildRegex(query), replacement);
-        isDirty = true; markDirty();
-        doFind(); syncHighlight();
-    } catch(e){}
+    const ta=activeTextarea(); if(!ta||!findMatches.length)return;
+    try{ ta.value=ta.value.replace(buildRegex(document.getElementById('find-input').value),document.getElementById('replace-input').value); isDirty=true;markDirty();doFind();syncHighlight();}catch(e){}
 }
 
-/* ═══════════════════════ COMMAND PALETTE ═══════════════════════ */
-const COMMANDS = [
-    {label:'Save file',              icon:'fa-floppy-disk',              kbd:'Ctrl+S',        fn:()=>handleSave()},
-    {label:'Toggle preview',         icon:'fa-eye',                      kbd:'Ctrl+Shift+P',  fn:()=>togglePreview()},
-    {label:'Find & replace',         icon:'fa-magnifying-glass',         kbd:'Ctrl+F',        fn:()=>openFind()},
-    {label:'Toggle sidebar',         icon:'fa-sidebar',                  kbd:'Ctrl+B',        fn:()=>togglePanel('explorer')},
-    {label:'Switch to Python',       icon:'fa-python',                   kbd:'',              fn:()=>switchTab('py')},
-    {label:'Switch to HTML',         icon:'fa-html5',                    kbd:'',              fn:()=>switchTab('html')},
-    {label:'Switch to CSS',          icon:'fa-css3-alt',                 kbd:'',              fn:()=>switchTab('css')},
-    {label:'Switch to JavaScript',   icon:'fa-js',                       kbd:'',              fn:()=>switchTab('js')},
-    {label:'Increase font size',     icon:'fa-text-height',              kbd:'Ctrl++',        fn:()=>changeFontSize(1)},
-    {label:'Decrease font size',     icon:'fa-text-height',              kbd:'Ctrl+-',        fn:()=>changeFontSize(-1)},
-    {label:'Toggle word wrap',       icon:'fa-text-width',               kbd:'',              fn:()=>toggleWordWrap()},
-    {label:'Show shortcuts',         icon:'fa-keyboard',                 kbd:'',              fn:()=>document.getElementById('shortcuts-panel').classList.toggle('hidden')},
-    {label:'Delete page',            icon:'fa-trash-can',                kbd:'',              fn:()=>confirmDeletion()},
-    {label:'Exit editor',            icon:'fa-arrow-right-from-bracket', kbd:'',              fn:()=>handleExit()},
+/* ═══════════ COMMAND PALETTE ═══════════ */
+const COMMANDS=[
+    {l:'Save file',          i:'fa-floppy-disk',              k:'Ctrl+S',       fn:()=>handleSave()},
+    {l:'Toggle preview',     i:'fa-eye',                      k:'Ctrl+Shift+P', fn:()=>togglePreview()},
+    {l:'Find & replace',     i:'fa-magnifying-glass',         k:'Ctrl+F',       fn:()=>openFind()},
+    {l:'Toggle sidebar',     i:'fa-bars',                     k:'Ctrl+B',       fn:()=>togglePanel('explorer')},
+    {l:'Python file',        i:'fa-python',                   k:'',             fn:()=>switchTab('py')},
+    {l:'HTML file',          i:'fa-html5',                    k:'',             fn:()=>switchTab('html')},
+    {l:'CSS file',           i:'fa-css3-alt',                 k:'',             fn:()=>switchTab('css')},
+    {l:'JavaScript file',    i:'fa-js',                       k:'',             fn:()=>switchTab('js')},
+    {l:'Increase font size', i:'fa-text-height',              k:'Ctrl++',       fn:()=>changeFontSize(1)},
+    {l:'Decrease font size', i:'fa-text-height',              k:'Ctrl+-',       fn:()=>changeFontSize(-1)},
+    {l:'Toggle word wrap',   i:'fa-align-left',               k:'',             fn:()=>toggleWordWrap()},
+    {l:'Keyboard shortcuts', i:'fa-keyboard',                 k:'',             fn:()=>document.getElementById('shortcuts-panel').classList.toggle('hidden')},
+    {l:'Delete page',        i:'fa-trash-can',                k:'',             fn:()=>confirmDeletion()},
+    {l:'Exit editor',        i:'fa-arrow-right-from-bracket', k:'',             fn:()=>handleExit()},
 ];
-
-let cmdSelected = 0;
-function openCmdPalette(){
-    document.getElementById('cmd-palette').classList.remove('hidden');
-    document.getElementById('cmd-input').value = '';
-    filterCommands();
-    document.getElementById('cmd-input').focus();
-}
+let cmdSel=0;
+function openCmdPalette(){ document.getElementById('cmd-palette').classList.remove('hidden'); document.getElementById('cmd-input').value=''; filterCommands(); document.getElementById('cmd-input').focus(); }
 function closeCmdPalette(){ document.getElementById('cmd-palette').classList.add('hidden'); }
-
 function filterCommands(){
-    const q = document.getElementById('cmd-input').value.toLowerCase();
-    const filtered = COMMANDS.filter(c => c.label.toLowerCase().includes(q));
-    cmdSelected = 0;
-    document.getElementById('cmd-list').innerHTML = filtered.map((c,i) =>
-        `<div class="cmd-item${i===0?' selected':''}" onclick="runCmd(${COMMANDS.indexOf(c)})">
-            <i class="fa-solid ${c.icon}"></i>
-            <span>${c.label}</span>
-            ${c.kbd ? `<span class="cmd-kbd">${c.kbd}</span>` : ''}
-        </div>`
-    ).join('');
+    const q=document.getElementById('cmd-input').value.toLowerCase();
+    const f=COMMANDS.filter(c=>c.l.toLowerCase().includes(q)); cmdSel=0;
+    document.getElementById('cmd-list').innerHTML=f.map((c,i)=>`<div class="cmd-item${i===0?' selected':''}" onclick="runCmd(${COMMANDS.indexOf(c)})"><i class="fa-solid ${c.i}"></i><span>${c.l}</span>${c.k?`<span class="cmd-kbd">${c.k}</span>`:''}</div>`).join('');
 }
-
 function cmdKeydown(e){
-    const items = document.querySelectorAll('.cmd-item');
-    if(e.key==='ArrowDown'){ e.preventDefault(); cmdSelected=Math.min(cmdSelected+1,items.length-1); }
-    else if(e.key==='ArrowUp'){ e.preventDefault(); cmdSelected=Math.max(cmdSelected-1,0); }
-    else if(e.key==='Enter'){ e.preventDefault(); items[cmdSelected]?.click(); return; }
-    else if(e.key==='Escape'){ closeCmdPalette(); return; }
-    items.forEach((el,i) => el.classList.toggle('selected', i===cmdSelected));
-    items[cmdSelected]?.scrollIntoView({block:'nearest'});
+    const items=document.querySelectorAll('.cmd-item');
+    if(e.key==='ArrowDown'){e.preventDefault();cmdSel=Math.min(cmdSel+1,items.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();cmdSel=Math.max(cmdSel-1,0);}
+    else if(e.key==='Enter'){e.preventDefault();items[cmdSel]?.click();return;}
+    else if(e.key==='Escape'){closeCmdPalette();return;}
+    items.forEach((el,i)=>el.classList.toggle('selected',i===cmdSel));
+    items[cmdSel]?.scrollIntoView({block:'nearest'});
 }
-function runCmd(idx){ COMMANDS[idx]?.fn(); closeCmdPalette(); }
+function runCmd(i){ COMMANDS[i]?.fn(); closeCmdPalette(); }
 
-/* ═══════════════════════ SAVE / EXIT ═══════════════════════ */
+/* ═══════════ SAVE / EXIT ═══════════ */
 async function handleSave(){
-    const btn = document.getElementById('act-save');
-    btn.style.animation = 'none';
-    const form = document.getElementById('cms-form');
-    const fd   = new FormData(form);
-    fd.set('python_logic', document.querySelector('textarea[name="python_logic"]').value);
-    fd.set('content',      document.querySelector('textarea[name="content"]').value);
-    fd.set('css_content',  document.querySelector('textarea[name="css_content"]').value);
-    fd.set('js_content',   document.querySelector('textarea[name="js_content"]').value);
-    try {
-        const r = await fetch(window.location.pathname, {method:'POST', body:fd});
-        if(r.ok){
-            showToast(); isDirty = false;
-            document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d => d.style.display='none');
-        }
-    } catch(err){ console.error('Save failed:', err); }
+    const fd=new FormData(document.getElementById('cms-form'));
+    fd.set('python_logic',document.querySelector('textarea[name="python_logic"]').value);
+    fd.set('content',document.querySelector('textarea[name="content"]').value);
+    fd.set('css_content',document.querySelector('textarea[name="css_content"]').value);
+    fd.set('js_content',document.querySelector('textarea[name="js_content"]').value);
+    try{
+        const r=await fetch(window.location.pathname,{method:'POST',body:fd});
+        if(r.ok){ showToast(); isDirty=false; document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d=>d.style.display='none'); }
+    }catch(err){console.error('Save failed:',err);}
 }
-
-function showToast(){
-    const t = document.getElementById('save-toast');
-    t.classList.add('show');
-    setTimeout(()=> t.classList.remove('show'), 3000);
-}
-
-function handleExit(){ if(isDirty) toggleExitModal(); else window.location.href='/admin'; }
+function showToast(){ const t=document.getElementById('save-toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+function handleExit(){ if(isDirty)toggleExitModal(); else window.location.href='/admin'; }
 function toggleExitModal(){ document.getElementById('exit-modal').classList.toggle('hidden'); }
 async function saveAndExit(){ await handleSave(); window.location.href='/admin'; }
-
 function markDirty(){
-    const td = document.querySelector(`#tab-${currentMode} .tab-dirty`);
-    const sd = document.querySelector(`#side-tab-${currentMode} .dirty-dot`);
-    if(td) td.style.display='block';
-    if(sd) sd.style.display='block';
+    const td=document.querySelector(`#tab-${currentMode} .tab-dirty`);
+    const sd=document.querySelector(`#side-tab-${currentMode} .dirty-dot`);
+    if(td)td.style.display='block'; if(sd)sd.style.display='block';
 }
-
-/* ═══════════════════════ SIDEBAR ═══════════════════════ */
-function togglePanel(name){
-    if(name==='explorer'){
-        const sb = document.getElementById('sidebar');
-        sb.classList.toggle('collapsed');
-        document.getElementById('act-explorer').classList.toggle('active', !sb.classList.contains('collapsed'));
+function togglePanel(n){
+    if(n==='explorer'){
+        const sb=document.getElementById('sidebar'); sb.classList.toggle('collapsed');
+        document.getElementById('act-explorer').classList.toggle('active',!sb.classList.contains('collapsed'));
     }
 }
 
-/* ═══════════════════════ PREVIEW ═══════════════════════ */
+/* ═══════════ PREVIEW SYSTEM (rebuilt) ═══════════ */
+let previewSrcdoc = '';
+let previewCurrentSlug = '{{ slug }}';
+
 async function togglePreview(){
-    const modal      = document.getElementById('preview-modal');
-    const consoleOut = document.getElementById('console-output');
-    if(!modal.classList.contains('hidden')){ modal.classList.add('hidden'); return; }
-    consoleOut.innerHTML = '<span style="color:#858585">Compiling…</span>';
-    const fd = new URLSearchParams();
+    const overlay=document.getElementById('preview-overlay');
+    if(previewOpen){ overlay.classList.add('hidden'); previewOpen=false; document.getElementById('act-preview-btn').classList.remove('previewing'); return; }
+    await loadPreview();
+    overlay.classList.remove('hidden'); previewOpen=true;
+    document.getElementById('act-preview-btn').classList.add('previewing');
+}
+
+async function loadPreview(slugOverride){
+    const slug = slugOverride || previewCurrentSlug;
+    setLoadStatus('loading','Rendering…');
+    document.getElementById('preview-loading').classList.remove('done');
+    const termLine = addTermLine('info','$ Compiling node: '+slug);
+    const fd=new URLSearchParams();
     fd.append('content',      document.querySelector('textarea[name="content"]').value);
     fd.append('css',          document.querySelector('textarea[name="css_content"]').value);
     fd.append('js',           document.querySelector('textarea[name="js_content"]').value);
     fd.append('python_logic', document.querySelector('textarea[name="python_logic"]').value);
-    try {
-        const res  = await fetch('/_preview', {method:'POST', body:fd});
-        const text = await res.text();
-        document.getElementById('preview-frame').srcdoc = text;
-        modal.classList.remove('hidden');
-        consoleOut.innerHTML = '<span style="color:#4ec9b0">✓ Rendered successfully</span>';
-    } catch(e){
-        consoleOut.innerHTML = `<span style="color:#f48771">Error: ${e}</span>`;
+    try{
+        const endpoint = slugOverride ? `/_preview?target_slug=${slugOverride}` : '/_preview';
+        const method   = slugOverride ? 'GET' : 'POST';
+        const res = slugOverride
+            ? await fetch(`/_preview?target_slug=${slugOverride}`)
+            : await fetch('/_preview',{method:'POST',body:fd});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const html = await res.text();
+        previewSrcdoc = html;
+        const frame = document.getElementById('preview-frame');
+        frame.srcdoc = html;
+        document.getElementById('preview-url-display').textContent = 'localhost / '+slug;
+        previewCurrentSlug = slug;
+        addTermLine('info','✓ Rendered successfully ('+new Blob([html]).size+' bytes)');
+        setLoadStatus('ready','Ready');
+    }catch(e){
+        addTermLine('err','✗ Error: '+e.message);
+        setLoadStatus('error','Error');
     }
+}
+
+function setLoadStatus(type, text){
+    const el=document.getElementById('preview-load-status');
+    el.className='preview-load-status '+type; el.textContent=text;
+    if(type!=='loading') setTimeout(()=>el.textContent='',3000);
+}
+
+function addTermLine(cls, text){
+    const out=document.getElementById('console-output');
+    const d=document.createElement('div'); d.className='terminal-line '+cls; d.textContent=text; out.appendChild(d);
+    out.scrollTop=out.scrollHeight; return d;
+}
+
+function reloadPreview(){
+    const btn=document.querySelector('.preview-reload-btn');
+    btn.classList.add('spinning'); loadPreview().finally(()=>{ setTimeout(()=>btn.classList.remove('spinning'),400); });
+}
+
+function popoutPreview(){
+    const w=window.open('','_blank'); if(!w)return;
+    w.document.write(previewSrcdoc); w.document.close();
 }
 
 function setViewport(mode){
-    const c    = document.getElementById('preview-container');
-    const sizes = {desktop:'100%', tablet:'768px', mobile:'390px'};
-    c.style.maxWidth = sizes[mode] || '100%';
-    document.querySelectorAll('.vp-btn').forEach((b,_,arr)=> b.classList.remove('active'));
-    document.getElementById('view-' + mode).classList.add('active');
+    const wrap=document.getElementById('preview-device-wrap');
+    const chrome=document.getElementById('device-chrome');
+    const sizes={desktop:{w:'100%',h:'100%',device:false},tablet:{w:'768px',h:'1024px',device:false},mobile:{w:'390px',h:'844px',device:true}};
+    const s=sizes[mode];
+    wrap.style.maxWidth=s.w; wrap.style.maxHeight=s.h;
+    wrap.style.width=s.device?s.w:'100%';
+    wrap.style.height=s.device?s.h:'100%';
+    chrome.classList.toggle('show',s.device);
+    document.querySelectorAll('.vp-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('vp-'+mode).classList.add('active');
 }
 
-function toggleConsole(){ document.getElementById('logic-console').classList.toggle('hidden'); }
+function toggleTerminal(){
+    const t=document.getElementById('preview-terminal');
+    t.classList.toggle('hidden');
+    document.getElementById('terminal-toggle-btn').classList.toggle('active',!t.classList.contains('hidden'));
+}
 
-/* ═══════════════════════ KEYBOARD SHORTCUTS ═══════════════════════ */
-function handleEditorKeydown(e, ta){
-    const key   = e.key;
-    const ctrl  = e.ctrlKey || e.metaKey;
-    const shift = e.shiftKey;
-    const alt   = e.altKey;
+/* ─── iframe onload: hide spinner + wire link interception ─── */
+document.getElementById('preview-frame').addEventListener('load',function(){
+    document.getElementById('preview-loading').classList.add('done');
+    setLoadStatus('ready','Ready');
+    try{ wirePreviewLinks(this.contentDocument||this.contentWindow.document); }catch(e){}
+});
 
-    if(ctrl && key==='s'){ e.preventDefault(); handleSave(); return; }
-    if(ctrl && key==='f'){ e.preventDefault(); openFind(); return; }
-    if(ctrl && !shift && key==='p'){ e.preventDefault(); openCmdPalette(); return; }
-    if(ctrl && shift  && key==='P'){ e.preventDefault(); togglePreview(); return; }
-    if(ctrl && (key==='='||key==='+')){ e.preventDefault(); changeFontSize(1); return; }
-    if(ctrl && key==='-'){ e.preventDefault(); changeFontSize(-1); return; }
-    if(ctrl && key==='b'){ e.preventDefault(); togglePanel('explorer'); return; }
-    if(key==='Escape'){ closeFindPanel(); closeCmdPalette(); return; }
+/* ═══════════ LINK INTERCEPTION (FIX 5) ═══════════ */
+function wirePreviewLinks(doc){
+    doc.addEventListener('click', function(e){
+        const a=e.target.closest('a');
+        if(!a) return;
+        const href=a.getAttribute('href');
+        if(!href||href.startsWith('#')||href.startsWith('javascript:')) return;
+        e.preventDefault();
+        const isExternal = /^https?:\/\//i.test(href) && !href.includes(window.location.hostname);
+        const isInternal = !isExternal;
+        showLinkModal(href, a.href, isInternal);
+    });
+}
 
-    /* Tab / Shift+Tab */
+function showLinkModal(href, fullUrl, isInternal){
+    const modal   = document.getElementById('link-modal');
+    const iconW   = document.getElementById('link-icon-wrap');
+    const icon    = document.getElementById('link-icon');
+    const title   = document.getElementById('link-modal-title');
+    const urlEl   = document.getElementById('link-modal-url');
+    const desc    = document.getElementById('link-modal-desc');
+    const actions = document.getElementById('link-modal-actions');
+
+    urlEl.textContent = href;
+
+    if(isInternal){
+        /* Strip leading slash to get slug */
+        const targetSlug = href.replace(/^\/+/,'').split('?')[0]||'home';
+        iconW.style.background = 'rgba(0,122,204,.15)'; icon.style.color='#007acc'; icon.className='fa-solid fa-house text-sm';
+        title.textContent = 'Internal link';
+        desc.textContent  = 'This link points to another page in your project. Open it in the viewer or a new tab?';
+        actions.innerHTML = `
+            <button onclick="loadPreview('${targetSlug}');closeLinkModal()" class="modal-btn-primary">Open in Viewer</button>
+            <button onclick="window.open('${fullUrl}','_blank');closeLinkModal()" class="modal-btn-secondary">Open in New Tab</button>
+            <button onclick="closeLinkModal()" class="modal-btn-ghost">Cancel</button>`;
+    } else {
+        iconW.style.background='rgba(254,188,46,.15)'; icon.style.color='#febc2e'; icon.className='fa-solid fa-arrow-up-right-from-square text-sm';
+        title.textContent = 'External link';
+        desc.textContent  = 'This link points to an external website. Open it in a new tab?';
+        actions.innerHTML = `
+            <button onclick="window.open('${fullUrl}','_blank');closeLinkModal()" class="modal-btn-primary">Open in New Tab</button>
+            <button onclick="closeLinkModal()" class="modal-btn-secondary">No, stay here</button>`;
+    }
+
+    modal.classList.remove('hidden');
+}
+
+function closeLinkModal(){ document.getElementById('link-modal').classList.add('hidden'); }
+
+/* ═══════════ KEYBOARD SHORTCUTS ═══════════ */
+function handleEditorKeydown(e,ta){
+    const ctrl=e.ctrlKey||e.metaKey, shift=e.shiftKey, alt=e.altKey, key=e.key;
+    if(ctrl&&key==='s'){e.preventDefault();handleSave();return;}
+    if(ctrl&&key==='f'){e.preventDefault();openFind();return;}
+    if(ctrl&&!shift&&key==='p'){e.preventDefault();openCmdPalette();return;}
+    if(ctrl&&shift&&key==='P'){e.preventDefault();togglePreview();return;}
+    if(ctrl&&(key==='='||key==='+')){e.preventDefault();changeFontSize(1);return;}
+    if(ctrl&&key==='-'){e.preventDefault();changeFontSize(-1);return;}
+    if(ctrl&&key==='b'){e.preventDefault();togglePanel('explorer');return;}
+    if(key==='Escape'){closeFindPanel();closeCmdPalette();return;}
     if(key==='Tab'){
         e.preventDefault();
-        const s=ta.selectionStart, en=ta.selectionEnd;
-        if(!shift){
-            ta.value = ta.value.substring(0,s)+'    '+ta.value.substring(en);
-            ta.selectionStart = ta.selectionEnd = s+4;
-        } else {
-            const lineStart = ta.value.lastIndexOf('\n',s-1)+1;
-            const spaces    = ta.value.substring(lineStart,s).match(/^ {1,4}/)?.[0]?.length||0;
-            if(spaces>0){
-                ta.value = ta.value.substring(0,lineStart)+ta.value.substring(lineStart+spaces);
-                ta.selectionStart = ta.selectionEnd = Math.max(lineStart, s-spaces);
-            }
-        }
-        syncHighlight(); updateCursorMetadata(ta); return;
+        const s=ta.selectionStart,en=ta.selectionEnd;
+        if(!shift){ ta.value=ta.value.substring(0,s)+'    '+ta.value.substring(en); ta.selectionStart=ta.selectionEnd=s+4; }
+        else{ const ls=ta.value.lastIndexOf('\n',s-1)+1,sp=ta.value.substring(ls,s).match(/^ {1,4}/)?.[0]?.length||0; if(sp>0){ta.value=ta.value.substring(0,ls)+ta.value.substring(ls+sp);ta.selectionStart=ta.selectionEnd=Math.max(ls,s-sp);} }
+        syncHighlight();updateCursorMetadata(ta);return;
     }
-
-    /* Ctrl+/ toggle comment */
-    if(ctrl && key==='/'){
+    if(ctrl&&key==='/'){
         e.preventDefault();
-        const pos = ta.selectionStart;
-        const ls  = ta.value.lastIndexOf('\n',pos-1)+1;
-        const le  = (ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
-        const line = ta.value.substring(ls,le);
-        const pre  = {py:'# ',html:'<!-- ',css:'/* ',js:'// '}[currentMode]||'// ';
-        let newLine, offset;
-        if(line.trimStart().startsWith(pre.trim())){
-            const idx = line.indexOf(pre.trim());
-            newLine = line.substring(0,idx)+line.substring(idx+pre.length);
-            offset  = -pre.length;
-        } else {
-            newLine = pre+line; offset = pre.length;
-        }
-        ta.value = ta.value.substring(0,ls)+newLine+ta.value.substring(le);
-        ta.selectionStart = ta.selectionEnd = pos+offset;
-        syncHighlight(); updateCursorMetadata(ta); return;
+        const pos=ta.selectionStart,ls=ta.value.lastIndexOf('\n',pos-1)+1,le=(ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
+        const line=ta.value.substring(ls,le),pre={py:'# ',html:'<!-- ',css:'/* ',js:'// '}[currentMode]||'// ';
+        let nl,off;
+        if(line.trimStart().startsWith(pre.trim())){const idx=line.indexOf(pre.trim());nl=line.substring(0,idx)+line.substring(idx+pre.length);off=-pre.length;}
+        else{nl=pre+line;off=pre.length;}
+        ta.value=ta.value.substring(0,ls)+nl+ta.value.substring(le);ta.selectionStart=ta.selectionEnd=pos+off;
+        syncHighlight();updateCursorMetadata(ta);return;
     }
-
-    /* Shift+Alt+D duplicate line */
-    if(shift && alt && key.toLowerCase()==='d'){
+    if(shift&&alt&&key.toLowerCase()==='d'){
         e.preventDefault();
-        const pos = ta.selectionStart;
-        const ls  = ta.value.lastIndexOf('\n',pos-1)+1;
-        const le  = (ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
-        const line = ta.value.substring(ls,le);
-        ta.value = ta.value.substring(0,le)+'\n'+line+ta.value.substring(le);
-        ta.selectionStart = ta.selectionEnd = pos+(le-ls+1);
-        syncHighlight(); updateCursorMetadata(ta); return;
+        const pos=ta.selectionStart,ls=ta.value.lastIndexOf('\n',pos-1)+1,le=(ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
+        const line=ta.value.substring(ls,le);
+        ta.value=ta.value.substring(0,le)+'\n'+line+ta.value.substring(le);ta.selectionStart=ta.selectionEnd=pos+(le-ls+1);
+        syncHighlight();updateCursorMetadata(ta);return;
     }
-
-    /* Ctrl+Shift+K delete line */
-    if(ctrl && shift && key==='K'){
+    if(ctrl&&shift&&key==='K'){
         e.preventDefault();
-        const pos = ta.selectionStart;
-        const ls  = ta.value.lastIndexOf('\n',pos-1)+1;
-        let   le  = ta.value.indexOf('\n',pos);
-        if(le===-1) le=ta.value.length; else le++;
-        ta.value = ta.value.substring(0,ls)+ta.value.substring(le);
-        ta.selectionStart = ta.selectionEnd = ls;
-        syncHighlight(); updateCursorMetadata(ta); return;
+        const pos=ta.selectionStart,ls=ta.value.lastIndexOf('\n',pos-1)+1;
+        let le=ta.value.indexOf('\n',pos);if(le===-1)le=ta.value.length;else le++;
+        ta.value=ta.value.substring(0,ls)+ta.value.substring(le);ta.selectionStart=ta.selectionEnd=ls;
+        syncHighlight();updateCursorMetadata(ta);return;
     }
-
-    /* Alt+↑↓ move line */
-    if(alt && (key==='ArrowUp'||key==='ArrowDown')){
+    if(alt&&(key==='ArrowUp'||key==='ArrowDown')){
         e.preventDefault();
-        const pos = ta.selectionStart;
-        const ls  = ta.value.lastIndexOf('\n',pos-1)+1;
-        const le  = (ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
-        const line= ta.value.substring(ls,le);
-        if(key==='ArrowUp' && ls>0){
-            const pls = ta.value.lastIndexOf('\n',ls-2)+1;
-            const pl  = ta.value.substring(pls,ls-1);
-            ta.value  = ta.value.substring(0,pls)+line+'\n'+pl+ta.value.substring(le);
-            ta.selectionStart = ta.selectionEnd = pls+(pos-ls);
-        } else if(key==='ArrowDown' && le<ta.value.length){
-            const nle = (ta.value.indexOf('\n',le+1)+1||ta.value.length+1)-1;
-            const nl  = ta.value.substring(le+1,nle);
-            ta.value  = ta.value.substring(0,ls)+nl+'\n'+line+ta.value.substring(nle);
-            ta.selectionStart = ta.selectionEnd = ls+nl.length+1+(pos-ls);
-        }
-        syncHighlight(); updateCursorMetadata(ta); return;
+        const pos=ta.selectionStart,ls=ta.value.lastIndexOf('\n',pos-1)+1,le=(ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
+        const line=ta.value.substring(ls,le);
+        if(key==='ArrowUp'&&ls>0){const pls=ta.value.lastIndexOf('\n',ls-2)+1,pl=ta.value.substring(pls,ls-1);ta.value=ta.value.substring(0,pls)+line+'\n'+pl+ta.value.substring(le);ta.selectionStart=ta.selectionEnd=pls+(pos-ls);}
+        else if(key==='ArrowDown'&&le<ta.value.length){const nle=(ta.value.indexOf('\n',le+1)+1||ta.value.length+1)-1,nl=ta.value.substring(le+1,nle);ta.value=ta.value.substring(0,ls)+nl+'\n'+line+ta.value.substring(nle);ta.selectionStart=ta.selectionEnd=ls+nl.length+1+(pos-ls);}
+        syncHighlight();updateCursorMetadata(ta);return;
     }
-
-    /* Auto-close brackets/quotes */
-    const PAIRS = {'(':')','{':'}','[':']','"':'"',"'":"'",'`':'`'};
-    if(PAIRS[key] && !ctrl){
+    const PAIRS={'(':')','{':'}','[':']','"':'"',"'":"'",'`':'`'};
+    if(PAIRS[key]&&!ctrl){
         e.preventDefault();
-        const s=ta.selectionStart, en=ta.selectionEnd;
-        const sel = ta.value.substring(s,en);
-        ta.value = ta.value.substring(0,s)+key+sel+PAIRS[key]+ta.value.substring(en);
-        ta.selectionStart = ta.selectionEnd = s+1+(sel.length>0?sel.length:0);
-        syncHighlight(); updateCursorMetadata(ta); return;
+        const s=ta.selectionStart,en=ta.selectionEnd,sel=ta.value.substring(s,en);
+        ta.value=ta.value.substring(0,s)+key+sel+PAIRS[key]+ta.value.substring(en);
+        ta.selectionStart=ta.selectionEnd=s+1+(sel.length>0?sel.length:0);
+        syncHighlight();updateCursorMetadata(ta);return;
     }
 }
 
-/* ═══════════════════════ DELETE ═══════════════════════ */
-let deleteConfirm = false;
+/* ═══════════ DELETE ═══════════ */
+let delConfirm=false;
 function confirmDeletion(){
-    const btn = document.getElementById('delete-btn');
-    const txt = document.getElementById('delete-text');
-    if(!deleteConfirm){
-        deleteConfirm = true; txt.textContent = 'Confirm Delete?';
-        btn.style.background='rgba(239,68,68,.2)'; btn.style.color='#f87171'; btn.style.borderColor='rgba(239,68,68,.4)';
-        setTimeout(()=>{
-            deleteConfirm=false; txt.textContent='Delete Page';
-            btn.style.background=''; btn.style.color=''; btn.style.borderColor='';
-        },3000);
-    } else { window.location.href = '/admin/delete/{{ slug }}'; }
+    const btn=document.getElementById('delete-btn'),txt=document.getElementById('delete-text');
+    if(!delConfirm){ delConfirm=true;txt.textContent='Confirm Delete?';btn.style.cssText='background:rgba(239,68,68,.2);color:#f87171;border-color:rgba(239,68,68,.4)'; setTimeout(()=>{ delConfirm=false;txt.textContent='Delete Page';btn.style.cssText=''; },3000); }
+    else window.location.href='/admin/delete/{{ slug }}';
 }
 
-/* ═══════════════════════ WIRE UP ═══════════════════════ */
+/* ═══════════ WIRE UP ═══════════ */
 document.querySelectorAll('.code-textarea').forEach(ta=>{
-    ta.addEventListener('input', ()=>{ isDirty=true; markDirty(); syncHighlight(); updateCursorMetadata(ta); });
-    ta.addEventListener('scroll', ()=>syncScroll(ta));
-    ta.addEventListener('click',  ()=>updateCursorMetadata(ta));
+    ta.addEventListener('input',()=>{ isDirty=true;markDirty();syncHighlight();updateCursorMetadata(ta); });
+    ta.addEventListener('scroll',()=>syncScroll(ta));
+    ta.addEventListener('click', ()=>updateCursorMetadata(ta));
     ta.addEventListener('keyup',  ()=>updateCursorMetadata(ta));
-    ta.addEventListener('keydown', e=>handleEditorKeydown(e,ta));
+    ta.addEventListener('keydown',e=>handleEditorKeydown(e,ta));
 });
-document.querySelectorAll('.sidebar-field').forEach(el=>{
-    el.addEventListener('input',()=>{ isDirty=true; markDirty(); });
-});
-document.getElementById('find-input').addEventListener('keydown',e=>{
-    if(e.key==='Enter'){ e.shiftKey?findPrev():findNext(); }
-    if(e.key==='Escape') closeFindPanel();
-});
+document.querySelectorAll('.sidebar-field').forEach(el=>el.addEventListener('input',()=>{ isDirty=true;markDirty(); }));
+document.getElementById('find-input').addEventListener('keydown',e=>{ if(e.key==='Enter'){e.shiftKey?findPrev():findNext();} if(e.key==='Escape')closeFindPanel(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&previewOpen){ togglePreview(); e.preventDefault(); } });
 
-/* ═══════════════════════ INIT ═══════════════════════ */
-window.addEventListener('load', ()=>{
-    loadSettings();
-    setTimeout(()=>{
-        applyEditorStyle();
-        switchTab('py');
-    }, 80);
-});
+/* ═══════════ INIT ═══════════ */
+window.addEventListener('load',()=>{ loadSettings(); setTimeout(()=>{ applyEditorStyle(); switchTab('py'); },80); });
 </script>
 {% endblock %}
