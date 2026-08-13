@@ -188,6 +188,7 @@
                 <div class="section-header"><i class="fa-solid fa-sliders" style="font-size:10px"></i> Configuration</div>
                 <div class="px-3 pb-3 space-y-3">
                     <form id="cms-form" method="POST" class="space-y-3">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="space-y-1">
                             <label class="sidebar-label">Page Title</label>
                             <input type="text" name="title" value="{{ page.title if page else '' }}" required class="sidebar-field" placeholder="Untitled Page">
@@ -282,50 +283,71 @@
     </div>
 </div>
 
-<!-- ═══ PREVIEW SYSTEM (completely rebuilt) ═══ -->
+<!-- ═══ PREVIEW SYSTEM (Microsoft Edge / Windows 11 Style) ═══ -->
 <div id="preview-overlay" class="preview-overlay hidden">
-    <!-- Top chrome bar -->
-    <div class="preview-chrome">
-        <div class="preview-chrome-left">
-            <!-- Traffic lights -->
-            <div class="preview-lights">
-                <button class="light light-red"    onclick="togglePreview()" title="Close preview"></button>
-                <button class="light light-yellow" onclick="reloadPreview()" title="Reload"></button>
-                <button class="light light-green"  onclick="popoutPreview()" title="Open in new tab"></button>
+    <!-- Edge Title Bar & Window Controls -->
+    <div class="edge-titlebar">
+        <div class="edge-tab-strip">
+            <div class="edge-tab active">
+                <i class="fa-solid fa-globe edge-tab-icon"></i>
+                <span class="edge-tab-title">/{{ slug }} — Live Preview</span>
+                <button class="edge-tab-close" onclick="togglePreview()" title="Close Tab (Esc)">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-            <div class="preview-url-bar">
-                <i class="fa-solid fa-lock" style="font-size:9px;color:#858585;flex-shrink:0"></i>
-                <span id="preview-url-display" style="font-size:11px;color:#cccccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">localhost / {{ slug }}</span>
-            </div>
-            <button onclick="reloadPreview()" class="preview-reload-btn" title="Reload (Ctrl+R)">
-                <i class="fa-solid fa-rotate-right" style="font-size:11px"></i>
-            </button>
         </div>
-        <div class="preview-chrome-center">
+
+        <div class="edge-chrome-center">
             <div class="vp-switcher">
-                <button onclick="setViewport('desktop')" id="vp-desktop" class="vp-btn active" title="Desktop"><i class="fa-solid fa-display"></i><span>Desktop</span></button>
-                <button onclick="setViewport('tablet')"  id="vp-tablet"  class="vp-btn"        title="Tablet"><i class="fa-solid fa-tablet-screen-button"></i><span>Tablet</span></button>
-                <button onclick="setViewport('mobile')"  id="vp-mobile"  class="vp-btn"        title="Mobile"><i class="fa-solid fa-mobile-screen"></i><span>Mobile</span></button>
+                <button onclick="setViewport('desktop')" id="vp-desktop" class="vp-btn active" title="Desktop View"><i class="fa-solid fa-display"></i><span>Desktop</span></button>
+                <button onclick="setViewport('tablet')"  id="vp-tablet"  class="vp-btn" title="Tablet View"><i class="fa-solid fa-tablet-screen-button"></i><span>Tablet</span></button>
+                <button onclick="setViewport('mobile')"  id="vp-mobile"  class="vp-btn" title="Mobile View"><i class="fa-solid fa-mobile-screen"></i><span>Mobile</span></button>
             </div>
         </div>
-        <div class="preview-chrome-right">
-            <span id="preview-load-status" class="preview-load-status"></span>
-            <button onclick="toggleTerminal()" id="terminal-toggle-btn" class="preview-toolbar-btn" title="Toggle Terminal">
-                <i class="fa-solid fa-terminal" style="font-size:11px"></i>
+
+        <!-- Windows 11 Window Controls -->
+        <div class="win-controls">
+            <button class="win-btn win-minimize" onclick="togglePreview()" title="Minimize (Esc)">
+                <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
             </button>
-            <button onclick="togglePreview()" class="preview-toolbar-btn" title="Close (Esc)">
-                <i class="fa-solid fa-xmark" style="font-size:13px"></i>
+            <button class="win-btn win-maximize" onclick="popoutPreview()" title="Maximize in New Tab">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="9" height="9"/></svg>
+            </button>
+            <button class="win-btn win-close" onclick="togglePreview()" title="Close Window (Esc)">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M1 1L9 9M9 1L1 9"/></svg>
             </button>
         </div>
     </div>
 
-    <!-- Device frame + iframe -->
+    <!-- Edge Address Bar -->
+    <div class="edge-address-bar font-mono">
+        <div class="edge-nav-controls">
+            <button class="edge-icon-btn disabled" title="Back"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="edge-icon-btn disabled" title="Forward"><i class="fa-solid fa-arrow-right"></i></button>
+            <button onclick="reloadPreview()" class="edge-icon-btn" title="Refresh (Ctrl+R)">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+
+        <div class="edge-url-input">
+            <i class="fa-solid fa-lock text-emerald-400 text-xs shrink-0"></i>
+            <span class="edge-url-text">https://klhportfolio.vercel.app/{{ slug }}</span>
+        </div>
+
+        <div class="edge-actions">
+            <span id="preview-load-status" class="preview-load-status">Ready</span>
+            <button onclick="popoutPreview()" class="edge-icon-btn" title="Open in New Tab">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+            <button onclick="toggleTerminal()" id="terminal-toggle-btn" class="edge-icon-btn" title="Toggle Terminal Output">
+                <i class="fa-solid fa-terminal"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Viewport frame + iframe -->
     <div class="preview-stage" id="preview-stage">
-        <div class="preview-device-wrap" id="preview-device-wrap">
-            <div class="preview-device-chrome hidden" id="device-chrome">
-                <div class="device-notch"></div>
-                <div class="device-home"></div>
-            </div>
+        <div class="preview-device-wrap desktop-mode" id="preview-device-wrap">
             <div class="preview-iframe-wrap">
                 <div id="preview-loading" class="preview-loading-overlay">
                     <div class="preview-spinner"></div>
@@ -574,19 +596,180 @@ kbd{background:#3c3c3c;border:1px solid #555;border-radius:3px;padding:1px 6px;f
 .preview-overlay{position:fixed;inset:0;z-index:300;background:#141414;display:flex;flex-direction:column;animation:fadeIn var(--af) ease both}
 .preview-overlay.hidden{display:none!important}
 
-/* Chrome bar */
-.preview-chrome{height:46px;background:#1f1f1f;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;gap:12px;padding:0 14px;flex-shrink:0}
-.preview-chrome-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-.preview-chrome-center{display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.preview-chrome-right{display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end}
+/* ═══ EDGE / WINDOWS 11 TITLE BAR STYLES ═══ */
+.edge-titlebar {
+    height: 38px;
+    background: #18181b;
+    border-bottom: 1px solid #27272a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 0 8px;
+    user-select: none;
+    flex-shrink: 0;
+}
 
-/* Traffic lights */
-.preview-lights{display:flex;gap:7px;flex-shrink:0}
-.light{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;transition:filter var(--af);flex-shrink:0}
-.light:hover{filter:brightness(1.3)}
-.light-red{background:#ff5f57}
-.light-yellow{background:#febc2e}
-.light-green{background:#28c840}
+.edge-tab-strip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    padding-top: 4px;
+}
+
+.edge-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #09090b;
+    border: 1px solid #27272a;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 0 12px;
+    height: 34px;
+    color: #f4f4f5;
+    font-size: 11px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    max-width: 240px;
+}
+
+.edge-tab-icon {
+    color: #6366f1;
+    font-size: 12px;
+}
+
+.edge-tab-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.edge-tab-close {
+    background: transparent;
+    border: none;
+    color: #71717a;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    transition: all 0.15s ease;
+}
+
+.edge-tab-close:hover {
+    background: rgba(255,255,255,0.15);
+    color: #ffffff;
+}
+
+.edge-chrome-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.win-controls {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.win-btn {
+    width: 46px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.win-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #ffffff;
+}
+
+.win-close:hover {
+    background: #e11d48 !important;
+    color: #ffffff !important;
+}
+
+/* Edge Address Bar */
+.edge-address-bar {
+    height: 42px;
+    background: #09090b;
+    border-bottom: 1px solid #27272a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    flex-shrink: 0;
+}
+
+.edge-nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.edge-icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.edge-icon-btn:hover:not(.disabled) {
+    background: #27272a;
+    color: #ffffff;
+}
+
+.edge-icon-btn.disabled {
+    color: #3f3f46;
+    cursor: not-allowed;
+}
+
+.edge-url-input {
+    flex: 1;
+    height: 28px;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    overflow: hidden;
+}
+
+.edge-url-text {
+    font-size: 11px;
+    color: #d4d4d8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.edge-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
 /* URL bar */
 .preview-url-bar{flex:1;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:6px;height:26px;display:flex;align-items:center;gap:7px;padding:0 10px;min-width:0;overflow:hidden}
@@ -613,16 +796,78 @@ kbd{background:#3c3c3c;border:1px solid #555;border-radius:3px;padding:1px 6px;f
 .preview-load-status.error{color:#ff5f57;background:rgba(255,95,87,.1)}
 
 /* Stage (holds the device frame) */
-.preview-stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:20px;transition:padding var(--am)}
-.preview-device-wrap{display:flex;flex-direction:column;width:100%;height:100%;max-width:100%;max-height:100%;transition:max-width var(--am) var(--ease-out),max-height var(--am) var(--ease-out);position:relative}
+.preview-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 16px;
+    background: #09090b;
+}
 
-/* Device chrome (tablet/mobile only) */
-.preview-device-chrome{position:absolute;inset:-12px;border:12px solid #2a2a2a;border-radius:20px;pointer-events:none;z-index:5}
-.preview-device-chrome.show{display:block!important}
-.device-notch{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:80px;height:20px;background:#1a1a1a;border-radius:0 0 12px 12px;z-index:6}
-.device-home{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);width:120px;height:4px;background:#3a3a3a;border-radius:2px}
+.preview-device-wrap {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    position: relative;
+    margin: 0 auto;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
 
-.preview-iframe-wrap{flex:1;position:relative;overflow:hidden;border-radius:4px}
+.preview-device-wrap.desktop-mode {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.preview-device-wrap.mobile-mode {
+    width: 390px;
+    height: 100%;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 110px);
+    background: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
+    padding: 0;
+    overflow: hidden;
+}
+
+.preview-device-wrap.tablet-mode {
+    width: 768px;
+    height: 100%;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 110px);
+    background: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
+    padding: 0;
+    overflow: hidden;
+}
+
+.preview-iframe-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    height: 100%;
+}
+
+.mobile-mode .preview-iframe-wrap,
+.tablet-mode .preview-iframe-wrap {
+    border-radius: 11px;
+}
 .preview-iframe{width:100%;height:100%;border:none;background:#fff;display:block}
 .preview-loading-overlay{position:absolute;inset:0;background:#1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity var(--am)}
 .preview-loading-overlay.done{opacity:0;pointer-events:none}
@@ -978,16 +1223,22 @@ function popoutPreview(){
 }
 
 function setViewport(mode){
-    const wrap=document.getElementById('preview-device-wrap');
-    const chrome=document.getElementById('device-chrome');
-    const sizes={desktop:{w:'100%',h:'100%',device:false},tablet:{w:'768px',h:'1024px',device:false},mobile:{w:'390px',h:'844px',device:true}};
-    const s=sizes[mode];
-    wrap.style.maxWidth=s.w; wrap.style.maxHeight=s.h;
-    wrap.style.width=s.device?s.w:'100%';
-    wrap.style.height=s.device?s.h:'100%';
-    chrome.classList.toggle('show',s.device);
-    document.querySelectorAll('.vp-btn').forEach(b=>b.classList.remove('active'));
-    document.getElementById('vp-'+mode).classList.add('active');
+    const wrap = document.getElementById('preview-device-wrap');
+    if(!wrap) return;
+    wrap.removeAttribute('style');
+    wrap.classList.remove('mobile-mode', 'tablet-mode', 'desktop-mode');
+    
+    if (mode === 'mobile') {
+        wrap.classList.add('mobile-mode');
+    } else if (mode === 'tablet') {
+        wrap.classList.add('tablet-mode');
+    } else {
+        wrap.classList.add('desktop-mode');
+    }
+    
+    document.querySelectorAll('.vp-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('vp-' + mode);
+    if(btn) btn.classList.add('active');
 }
 
 function toggleTerminal(){

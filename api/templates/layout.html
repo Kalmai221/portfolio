@@ -215,7 +215,7 @@
                 <div class="flex flex-col justify-center border-l border-zinc-800 pl-3 py-1 transition-colors duration-500 group-hover:border-brand/30">
                     <div class="flex items-baseline">
                         <span class="text-zinc-100 font-bold text-[15px] tracking-tight leading-none transition-colors duration-300 group-hover:text-white">
-                            Kurtis-Lee<span class="text-brand">.</span>Hopewell
+                            {{ settings.site_name_first if settings and settings.site_name_first else 'Kurtis-Lee' }}<span class="text-brand">.</span>{{ settings.site_name_last if settings and settings.site_name_last else 'Hopewell' }}
                         </span>
                     </div>
 
@@ -223,9 +223,9 @@
                         <span class="text-zinc-300 font-mono text-[10px] font-medium uppercase tracking-wider leading-none whitespace-nowrap">
                             IT Portfolio
                         </span>
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                        <span class="w-1.5 h-1.5 rounded-full {{ 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]' if is_trial or request.path.startswith('/trial') else 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' }}"></span>
                         <span class="text-zinc-500 font-mono text-[9px] font-medium uppercase tracking-wide leading-none">
-                            v2.0.26
+                            {{ 'Trial Mode' if is_trial or request.path.startswith('/trial') else 'v2.0.26' }}
                         </span>
                     </div>
                 </div>
@@ -239,13 +239,15 @@
                         {% endfor %}
                     {% endif %}
                 </div>
-                <div class="flex items-center gap-4 pl-4 border-l border-zinc-800">
-                    {% if session.get('user') %}
-                        <div class="flex items-center gap-3">
-                            <a href="/admin" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Admin</a>
-                            <a href="/logout" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest !bg-zinc-800 !text-zinc-100 hover:!bg-red-500 hover:!text-white transition-colors">Sign out</a>
-                        </div>
+                <div class="flex items-center gap-3 pl-4 border-l border-zinc-800">
+                    {% if is_trial or request.path.startswith('/trial') %}
+                        <a href="/trial" class="btn btn-primary !bg-brand !text-white !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest hover:!bg-brand/90 transition-all">Trial Panel</a>
+                        <a href="/" class="btn !bg-zinc-800 !text-zinc-300 !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest hover:!text-white transition-all">Exit Trial</a>
+                    {% elif session.get('user') %}
+                        <a href="/admin" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Admin</a>
+                        <a href="/logout" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest !bg-zinc-800 !text-zinc-100 hover:!bg-red-500 hover:!text-white transition-colors">Sign out</a>
                     {% else %}
+                        <a href="/trial" class="btn !bg-zinc-900 border border-zinc-700 !text-zinc-200 hover:!border-brand/50 hover:!text-white !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest transition-all">Trial Sandbox</a>
                         <a href="/login" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Sign In</a>
                     {% endif %}
                 </div>

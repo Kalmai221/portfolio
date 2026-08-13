@@ -3,205 +3,227 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-    /* Custom Scrollbar for Dashboard Cards */
-    .dashboard-scroll::-webkit-scrollbar { width: 4px; }
-    .dashboard-scroll::-webkit-scrollbar-track { background: transparent; }
-    .dashboard-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
-    .dashboard-scroll::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
-    
-    .filter-tag:hover .filter-x { opacity: 1; }
-    .filter-x { opacity: 0.4; transition: opacity 0.2s; }
+    /* Scrollbar */
+    .dash-scroll::-webkit-scrollbar { width: 3px; }
+    .dash-scroll::-webkit-scrollbar-track { background: transparent; }
+    .dash-scroll::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+    .dash-scroll::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
 
-    /* Tooltip styling for disabled buttons */
+    /* Range locked tooltip */
     .range-locked { position: relative; cursor: help; }
     .range-locked:hover::after {
-        content: "Remove the Date Filter to change Chart Range";
-        position: absolute;
-        bottom: 125%;
-        left: 50%;
+        content: "Remove the Date Filter to change range";
+        position: absolute; bottom: 130%; left: 50%;
         transform: translateX(-50%);
-        background: #09090b;
-        border: 1px solid #27272a;
-        color: #a1a1aa;
-        padding: 6px 10px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 8px;
-        white-space: nowrap;
-        z-index: 50;
-        border-radius: 2px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        background: #09090b; border: 1px solid #27272a;
+        color: #a1a1aa; padding: 5px 10px;
+        font-size: 9px; font-family: monospace;
+        white-space: nowrap; z-index: 50;
+        border-radius: 4px; pointer-events: none;
+    }
+
+    /* Stat card shimmer on hover */
+    .stat-card { transition: border-color 200ms, background 200ms; }
+    .stat-card:hover { border-color: #3f3f46; background: rgba(39,39,42,.6); }
+
+    /* Bar animation */
+    .bar-fill { transition: width 700ms cubic-bezier(.4,0,.2,1); }
+
+    /* Heatmap cell */
+    .heatmap-cell {
+        width: 100%; height: 18px; border-radius: 2px;
+        transition: transform 150ms, opacity 150ms;
+    }
+    .heatmap-cell:hover { transform: scale(1.15); opacity: 1 !important; }
+
+    /* Pulsing dot */
+    @keyframes ping { 75%,100%{transform:scale(2);opacity:0} }
+    .ping { animation: ping 1.5s cubic-bezier(0,0,.2,1) infinite; }
+
+    /* Page load stagger */
+    .stagger > * { opacity: 0; transform: translateY(8px); animation: fadeUp 380ms ease both; }
+    .stagger > *:nth-child(1){animation-delay:40ms}
+    .stagger > *:nth-child(2){animation-delay:100ms}
+    .stagger > *:nth-child(3){animation-delay:160ms}
+    .stagger > *:nth-child(4){animation-delay:220ms}
+    .stagger > *:nth-child(5){animation-delay:280ms}
+    .stagger > *:nth-child(6){animation-delay:340ms}
+    .stagger > *:nth-child(7){animation-delay:400ms}
+    @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+    /* Export button spin */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinning { animation: spin .6s linear infinite; }
+
+    /* Tooltip for heatmap */
+    #hm-tooltip {
+        position: fixed; pointer-events: none; z-index: 100;
+        background: #09090b; border: 1px solid #3f3f46;
+        padding: 6px 10px; border-radius: 4px;
+        font-size: 10px; font-family: monospace; color: #e4e4e7;
+        white-space: nowrap; display: none;
     }
 </style>
 
-<div class="max-w-7xl mx-auto px-5 py-10 space-y-8 reveal active">
-    
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-zinc-900 pb-8 gap-6">
-        <div class="space-y-1">
-            <h1 class="text-2xl font-bold text-white uppercase font-mono tracking-tighter">Telemetry_Dashboard <span class="text-zinc-700">v2.1</span></h1>
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-sm">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span class="text-[9px] font-mono text-zinc-400 uppercase tracking-widest italic">Node_Stream: <span class="text-zinc-100 font-bold">{{ online_count }} Active</span></span>
-                </div>
-                
-                {% if active_filters or target_date %}
-                    {% if target_date %}
-                    <div class="filter-tag flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-emerald-500 tracking-[0.2em]">
-                        Timeline::{{ target_date }}
-                        <a href="{{ url_for('admin_analytics', range='7d', bots=request.args.get('bots', 'false'), **active_filters) }}" class="filter-x hover:text-white ml-2 text-zinc-600 transition-colors font-bold">✕</a>
-                    </div>
-                    {% endif %}
+<div id="hm-tooltip"></div>
 
-                    {% for type, val in active_filters.items() %}
-                        {% if type != 'bots' %}
-                        <div class="filter-tag flex items-center gap-2 bg-brand/5 border border-brand/20 px-3 py-1 rounded-sm text-[9px] font-mono uppercase text-brand tracking-[0.2em]">
-                            {{ type }}::{{ val }}
-                            <a href="{{ url_for('admin_analytics', **remove_filter(type)) }}" class="filter-x hover:text-white ml-2 text-zinc-600 transition-colors font-bold">✕</a>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {# Clear All now preserves bot setting #}
-                    <a href="{{ url_for('admin_analytics', bots=request.args.get('bots', 'false')) }}" class="text-[9px] font-mono text-zinc-600 hover:text-white underline uppercase tracking-widest">Clear_All</a>
+<div class="max-w-7xl mx-auto px-5 py-10 space-y-7 stagger">
+
+    <!-- ── Header ── -->
+    <div class="flex flex-wrap items-start justify-between gap-5 pb-7 border-b border-zinc-800/80">
+        <div class="space-y-2">
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-bold text-white font-mono tracking-tight">Telemetry_Dashboard</h1>
+                <span class="text-[9px] font-mono text-zinc-600 border border-zinc-800 px-2 py-0.5 rounded">v2.1</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Live indicator -->
+                <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md">
+                    <span class="relative flex h-1.5 w-1.5">
+                        <span class="ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-[9px] font-mono text-zinc-400 uppercase tracking-widest">{{ online_count }} Active</span>
+                </div>
+
+                <!-- Active filters -->
+                {% if target_date %}
+                <div class="flex items-center gap-1.5 bg-emerald-500/8 border border-emerald-500/20 px-2.5 py-1 rounded-md text-[9px] font-mono text-emerald-400 uppercase tracking-wider">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    {{ target_date }}
+                    <a href="{{ url_for('admin_analytics', range='7d', bots=request.args.get('bots', 'false'), **active_filters) }}" class="ml-1 text-zinc-600 hover:text-white transition-colors font-bold">✕</a>
+                </div>
+                {% endif %}
+                {% for type, val in active_filters.items() %}{% if type != 'bots' %}
+                <div class="flex items-center gap-1.5 bg-brand/8 border border-brand/20 px-2.5 py-1 rounded-md text-[9px] font-mono text-brand uppercase tracking-wider">
+                    {{ type }}::{{ val }}
+                    <a href="{{ url_for('admin_analytics', **remove_filter(type)) }}" class="ml-1 text-zinc-600 hover:text-white transition-colors font-bold">✕</a>
+                </div>
+                {% endif %}{% endfor %}
+                {% if active_filters or target_date %}
+                <a href="{{ url_for('admin_analytics', bots=request.args.get('bots', 'false')) }}" class="text-[9px] font-mono text-zinc-600 hover:text-zinc-300 underline uppercase tracking-widest transition-colors">Clear All</a>
                 {% endif %}
             </div>
         </div>
+
         <div class="flex items-center gap-3">
             <div class="hidden md:block text-right pr-4 border-r border-zinc-800">
-                <p class="text-[9px] font-mono text-zinc-600 uppercase">System_Clock</p>
-                <p class="text-[11px] font-mono text-zinc-400">{{ now.strftime('%H:%M:%S UTC') if now else 'SYNCING...' }}</p>
+                <p class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">System Clock</p>
+                <p class="text-[11px] font-mono text-zinc-300" id="live-clock">{{ now.strftime('%H:%M:%S UTC') if now else '—' }}</p>
             </div>
-            <a href="/admin" class="btn btn-primary !py-2 !px-6 !text-[10px] uppercase font-bold tracking-widest">
-                Return_to_Core
-            </a>
+            <button onclick="exportCSV()" id="export-btn" class="flex items-center gap-2 px-4 py-2 text-[10px] font-mono font-semibold uppercase tracking-widest text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-md hover:border-zinc-600 hover:text-zinc-200 transition-all">
+                <svg id="export-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export CSV
+            </button>
+            <a href="/admin" class="px-4 py-2 text-[10px] font-mono font-semibold uppercase tracking-widest text-white bg-brand hover:bg-brand/90 rounded-md transition-colors">← Admin</a>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
-        <div class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-tl-sm">
-            <p class="text-[9px] text-zinc-600 font-mono font-bold uppercase tracking-[0.3em] mb-1">Total_Visitors</p>
-            <div class="flex items-baseline gap-2">
-                <h2 class="text-4xl font-bold text-white tabular-nums tracking-tighter">{{ unique_visitors }}</h2>
-                <span class="text-[10px] font-mono text-emerald-500/60 uppercase">Unique</span>
-            </div>
+    <!-- ── KPI Cards ── -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="stat-card bg-zinc-900/50 border border-zinc-800 rounded-lg p-5">
+            <p class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-3">Unique Visitors</p>
+            <p class="text-3xl font-bold font-mono text-white tabular-nums">{{ unique_visitors }}</p>
+            <p class="text-[10px] font-mono text-emerald-500/70 uppercase mt-1.5">Distinct IPs</p>
         </div>
-        <div class="bg-zinc-900/50 border border-zinc-800 p-8">
-            <p class="text-[9px] text-zinc-600 font-mono font-bold uppercase tracking-[0.3em] mb-1">Request_Volume</p>
-            <div class="flex items-baseline gap-2">
-                <h2 class="text-4xl font-bold text-white tabular-nums tracking-tighter">{{ total_hits }}</h2>
-                <span class="text-[10px] font-mono text-brand/60 uppercase">Hits</span>
-            </div>
+        <div class="stat-card bg-zinc-900/50 border border-zinc-800 rounded-lg p-5">
+            <p class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-3">Request Volume</p>
+            <p class="text-3xl font-bold font-mono text-white tabular-nums">{{ total_hits }}</p>
+            <p class="text-[10px] font-mono text-brand/70 uppercase mt-1.5">Total Hits</p>
         </div>
-        <div class="bg-zinc-900/50 border border-zinc-800 p-8 rounded-tr-sm">
-            <p class="text-[9px] text-zinc-600 font-mono font-bold uppercase tracking-[0.3em] mb-1">Architecture_Uptime</p>
-            <div class="flex items-center gap-3 mt-1">
-                <h2 class="text-4xl font-bold text-emerald-500 tabular-nums tracking-tighter">100.0</h2>
-                <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 text-[8px] font-mono border border-emerald-500/20 rounded uppercase">Stable</span>
-            </div>
+        <div class="stat-card bg-zinc-900/50 border border-zinc-800 rounded-lg p-5">
+            <p class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-3">Avg Per Day</p>
+            <p class="text-3xl font-bold font-mono text-white tabular-nums">
+                {% set days = chart_labels|length %}
+                {% set total = chart_values|sum %}
+                {{ (total / days)|round|int if days > 0 else 0 }}
+            </p>
+            <p class="text-[10px] font-mono text-amber-500/70 uppercase mt-1.5">Daily Avg</p>
+        </div>
+        <div class="stat-card bg-zinc-900/50 border border-zinc-800 rounded-lg p-5">
+            <p class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-3">Uptime</p>
+            <p class="text-3xl font-bold font-mono text-emerald-400 tabular-nums">100.0%</p>
+            <p class="text-[10px] font-mono text-emerald-500/70 uppercase mt-1.5">Stable</p>
         </div>
     </div>
 
-    <div class="bg-zinc-900/30 border border-zinc-800 rounded-sm p-8 shadow-sm group">
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-4">
-            <div class="space-y-1">
-                <h4 class="text-[10px] font-mono font-bold uppercase tracking-[0.4em] text-zinc-400">Traffic_Velocity_Stream</h4>
-                <p class="text-[9px] font-mono text-zinc-600 uppercase">Input: HTTPS_Requests // Span: {{ active_range }}</p>
+    <!-- ── Traffic Chart ── -->
+    <div class="bg-zinc-900/40 border border-zinc-800 rounded-lg p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+            <div>
+                <h4 class="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400">Traffic Velocity</h4>
+                <p class="text-[9px] font-mono text-zinc-600 uppercase mt-0.5">Span: {{ active_range }}</p>
             </div>
-            
-            <div class="flex items-center gap-4">
-                <div class="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm">
-                    {% set bots_active = request.args.get('bots') == 'true' %}
-                    {% set toggle_val = 'false' if bots_active else 'true' %}
-                    <a href="{{ url_for('admin_analytics', range=request.args.get('range', '7d'), bots=toggle_val, **active_filters) }}" 
-                       class="px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-all
-                       {{ 'bg-red-500/10 text-red-500 border border-red-500/20' if bots_active else 'text-zinc-600 hover:text-zinc-300' }}">
-                        <i class="fa-solid fa-robot mr-1.5"></i> {{ 'Hide Bots' if bots_active else 'Show Bots' }}
-                    </a>
-                </div>
-
-                <div class="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm">
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Bot toggle -->
+                {% set bots_active = request.args.get('bots') == 'true' %}
+                <a href="{{ url_for('admin_analytics', range=request.args.get('range', '7d'), bots='false' if bots_active else 'true', **active_filters) }}"
+                   class="flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest rounded-md border transition-all
+                   {{ 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/15' if bots_active else 'text-zinc-500 border-zinc-800 hover:text-zinc-300 hover:border-zinc-600' }}">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z"/></svg>
+                    {{ 'Hide Bots' if bots_active else 'Show Bots' }}
+                </a>
+                <!-- Range selector -->
+                <div class="flex bg-zinc-950 border border-zinc-800 rounded-md overflow-hidden">
                     {% for r in ['24h', '7d', '4w', 'all'] %}
-                        {% if target_date %}
-                            <div class="range-locked px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
-                            {{ 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' if r == '24h' else 'text-zinc-800' }}">
-                                {{ r if r != 'all' else 'ALL' }}
-                            </div>
-                        {% else %}
-                            <a href="{{ url_for('admin_analytics', range=r, bots=request.args.get('bots', 'false'), **active_filters) }}" 
-                            class="px-3 py-1 text-[9px] font-mono uppercase tracking-widest transition-colors 
-                            {{ 'bg-brand text-white' if active_range == r or (active_range == 'All Time' and r == 'all') else 'text-zinc-500 hover:text-zinc-300' }}">
-                                {{ r if r != 'all' else 'ALL' }}
-                            </a>
-                        {% endif %}
+                    {% if target_date %}
+                    <div class="range-locked px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest {{ 'bg-emerald-500/15 text-emerald-500' if r == '24h' else 'text-zinc-800' }}">{{ r if r != 'all' else 'ALL' }}</div>
+                    {% else %}
+                    <a href="{{ url_for('admin_analytics', range=r, bots=request.args.get('bots', 'false'), **active_filters) }}"
+                       class="px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-all
+                       {{ 'bg-brand text-white' if active_range == r or (active_range == 'All Time' and r == 'all') else 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60' }}">
+                        {{ r if r != 'all' else 'ALL' }}
+                    </a>
+                    {% endif %}
                     {% endfor %}
                 </div>
             </div>
         </div>
-        <div class="h-[350px] w-full">
-            <canvas id="vercelChart"></canvas>
-        </div>
+        <div class="h-[280px]"><canvas id="trafficChart"></canvas></div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-sm">
-            <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600 mb-6 flex justify-between">
-                <span>Client_Engines</span>
-                <span>SHARE_%</span>
-            </h4>
-            <div class="space-y-5 max-h-[250px] overflow-y-auto pr-2 dashboard-scroll">
-                {% for browser, count in stats.browsers.items() %}
-                <a href="{{ url_for('admin_analytics', **add_filter('browser', browser)) }}" class="block group">
-                    <div class="flex justify-between text-[10px] font-mono mb-2 group-hover:text-brand transition-colors">
-                        <span class="text-zinc-400 uppercase tracking-tighter">{{ browser }}</span>
-                        <span class="text-zinc-600 tabular-nums italic">{{ count }}</span>
+    <!-- ── Browsers / OS / Referrers ── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {% macro breakdown_card(title, subtitle, items, filter_key) %}
+        <div class="bg-zinc-900/40 border border-zinc-800 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-5">
+                <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500">{{ title }}</h4>
+                <span class="text-[8px] font-mono text-zinc-700 uppercase">{{ subtitle }}</span>
+            </div>
+            <div class="space-y-4 max-h-[220px] overflow-y-auto pr-1 dash-scroll">
+                {% for name, count in items %}
+                <a href="{{ url_for('admin_analytics', **add_filter(filter_key, name)) }}" class="block group">
+                    <div class="flex justify-between text-[10px] font-mono mb-1.5">
+                        <span class="text-zinc-400 group-hover:text-brand transition-colors uppercase truncate pr-3">{{ name }}</span>
+                        <span class="text-zinc-600 tabular-nums shrink-0">{{ count }}</span>
                     </div>
-                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
-                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-700" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                    <div class="h-px w-full bg-zinc-800 rounded-full overflow-hidden">
+                        <div class="bar-fill h-full bg-zinc-700 group-hover:bg-brand" style="width:{{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </a>
                 {% endfor %}
             </div>
         </div>
+        {% endmacro %}
 
-        <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-sm">
-            <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600 mb-6 flex justify-between">
-                <span>Platform_OS</span>
-                <span>KERNEL_DIST</span>
-            </h4>
-            <div class="space-y-5 max-h-[250px] overflow-y-auto pr-2 dashboard-scroll">
-                {% for os, count in stats.os.items() %}
-                <a href="{{ url_for('admin_analytics', **add_filter('os', os)) }}" class="block group">
-                    <div class="flex justify-between text-[10px] font-mono mb-2 group-hover:text-brand transition-colors">
-                        <span class="text-zinc-400 uppercase tracking-tighter">{{ os }}</span>
-                        <span class="text-zinc-600 tabular-nums italic">{{ count }}</span>
-                    </div>
-                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
-                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-700" style="width: {{ (count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
-                    </div>
-                </a>
-                {% endfor %}
+        {{ breakdown_card('Client Engines', 'Share %', stats.browsers.items(), 'browser') }}
+        {{ breakdown_card('Platform OS', 'Kernel Dist', stats.os.items(), 'os') }}
+
+        <!-- Referrers -->
+        <div class="bg-zinc-900/40 border border-zinc-800 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-5">
+                <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500">Signal Referrers</h4>
+                <span class="text-[8px] font-mono text-zinc-700 uppercase">Origin Count</span>
             </div>
-        </div>
-
-        <div class="bg-zinc-900/40 border border-zinc-800 p-6 rounded-sm">
-            <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-600 mb-6 flex justify-between">
-                <span>Signal_Referrers</span>
-                <span>ORIGIN_COUNT</span>
-            </h4>
-            <div class="space-y-5 max-h-[250px] overflow-y-auto pr-2 dashboard-scroll">
+            <div class="space-y-4 max-h-[220px] overflow-y-auto pr-1 dash-scroll">
                 {% for source, data in stats.referrers_detailed.items() | sort(attribute='1.count', reverse=True) %}
                 <div class="group">
-                    <div class="flex justify-between items-center text-[10px] font-mono mb-2">
-                        <a href="{{ url_for('admin_analytics', **add_filter('referrer', source)) }}" class="text-zinc-400 hover:text-brand transition-colors truncate pr-4">
-                            {{ source }}
-                        </a>
-                        <span class="text-zinc-600 font-bold tabular-nums italic">{{ data.count }}</span>
+                    <div class="flex justify-between text-[10px] font-mono mb-1.5">
+                        <a href="{{ url_for('admin_analytics', **add_filter('referrer', source)) }}" class="text-zinc-400 hover:text-brand transition-colors truncate pr-3">{{ source }}</a>
+                        <span class="text-zinc-600 tabular-nums shrink-0">{{ data.count }}</span>
                     </div>
-                    <div class="h-1 w-full bg-zinc-950 rounded-full overflow-hidden">
-                        <div class="h-full bg-zinc-700 group-hover:bg-brand transition-all duration-700" style="width: {{ (data.count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
+                    <div class="h-px w-full bg-zinc-800 rounded-full overflow-hidden">
+                        <div class="bar-fill h-full bg-zinc-700 group-hover:bg-brand" style="width:{{ (data.count / total_hits * 100)|round if total_hits > 0 else 0 }}%"></div>
                     </div>
                 </div>
                 {% endfor %}
@@ -209,21 +231,85 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-sm overflow-hidden flex flex-col">
-            <div class="px-8 py-5 border-b border-zinc-800 bg-zinc-950/50 flex justify-between items-center">
-                <h3 class="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-zinc-400">High_Traffic_Nodes</h3>
-                <span class="text-[8px] font-mono text-zinc-700 uppercase">Requests_Sum</span>
+    <!-- ── Device Type + Peak Hours Heatmap ── -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        <!-- Device type donut -->
+        <div class="bg-zinc-900/40 border border-zinc-800 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-5">
+                <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500">Device Breakdown</h4>
+                <span class="text-[8px] font-mono text-zinc-700 uppercase">Form Factor</span>
             </div>
-            <div class="max-h-[400px] overflow-y-auto dashboard-scroll">
+            <div class="flex items-center gap-8">
+                <div class="relative shrink-0" style="width:120px;height:120px">
+                    <canvas id="deviceChart"></canvas>
+                </div>
+                <div class="space-y-3 flex-1" id="device-legend"></div>
+            </div>
+        </div>
+
+        <!-- Peak hours heatmap -->
+        <div class="bg-zinc-900/40 border border-zinc-800 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-500">Peak Hour Heatmap</h4>
+                <span class="text-[8px] font-mono text-zinc-700 uppercase">UTC Hours</span>
+            </div>
+            <div class="grid gap-1" style="grid-template-columns:repeat(24,1fr)">
+                {% for h in range(24) %}
+                <div class="flex flex-col items-center gap-1">
+                    <div class="heatmap-cell bg-zinc-800"
+                         data-hour="{{ h }}"
+                         data-count="0"
+                         style="opacity:.15"
+                         onmouseenter="showHmTooltip(event,{{ h }})"
+                         onmouseleave="hideHmTooltip()">
+                    </div>
+                    {% if h % 6 == 0 %}
+                    <span class="text-[8px] font-mono text-zinc-700">{{ '%02d'|format(h) }}</span>
+                    {% else %}
+                    <span class="text-[8px] font-mono text-transparent">·</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="flex items-center justify-between mt-3">
+                <span class="text-[8px] font-mono text-zinc-700">Low</span>
+                <div class="flex gap-0.5">
+                    {% for i in range(6) %}
+                    <div class="w-4 h-2 rounded-sm" style="background:rgba(99,102,241,{{ 0.1 + i * 0.18 }})"></div>
+                    {% endfor %}
+                </div>
+                <span class="text-[8px] font-mono text-zinc-700">High</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Top Pages + Error Log ── -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+        <!-- Top pages -->
+        <div class="bg-zinc-900/40 border border-zinc-800 rounded-lg overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/50">
+                <h3 class="text-[9px] font-mono font-bold uppercase tracking-widest text-zinc-400">High Traffic Nodes</h3>
+                <span class="text-[8px] font-mono text-zinc-700 uppercase">Requests</span>
+            </div>
+            <div class="max-h-[340px] overflow-y-auto dash-scroll">
                 <table class="w-full text-left">
                     <tbody class="divide-y divide-zinc-800/50">
                         {% for page in top_pages %}
-                        <tr class="hover:bg-zinc-950/50 transition-colors group">
-                            <td class="px-8 py-4">
-                                <a href="{{ url_for('admin_analytics', **add_filter('path', page._id.lstrip('/'))) }}" class="text-brand font-mono text-[11px] tracking-tight uppercase group-hover:underline">/{{ page._id }}</a>
+                        <tr class="hover:bg-zinc-800/30 transition-colors group">
+                            <td class="px-6 py-3">
+                                <a href="{{ url_for('admin_analytics', **add_filter('path', page._id.lstrip('/'))) }}"
+                                   class="font-mono text-[11px] text-brand group-hover:underline uppercase">/{{ page._id }}</a>
                             </td>
-                            <td class="px-8 py-4 text-right font-bold text-zinc-300 tabular-nums font-mono text-lg italic tracking-tighter">{{ page.count }}</td>
+                            <td class="px-6 py-3 text-right">
+                                <div class="flex items-center justify-end gap-3">
+                                    <div class="w-16 h-px bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
+                                        <div class="bar-fill h-full bg-brand/50" style="width:{{ (page.count / top_pages[0].count * 100)|round if top_pages else 0 }}%"></div>
+                                    </div>
+                                    <span class="font-bold font-mono text-zinc-300 tabular-nums text-sm">{{ page.count }}</span>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -231,159 +317,244 @@
             </div>
         </div>
 
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-sm overflow-hidden flex flex-col">
-            <div class="px-8 py-5 border-b border-zinc-800 bg-zinc-950/50 flex justify-between items-center">
-                <h3 class="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-red-500/80">Fault_Registry_Aggregated</h3>
-                <span class="text-[8px] font-mono text-zinc-700 uppercase">4XX_5XX_Events</span>
+        <!-- Error log -->
+        <div class="bg-zinc-900/40 border border-zinc-800 rounded-lg overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/50">
+                <h3 class="text-[9px] font-mono font-bold uppercase tracking-widest text-red-500/70">Fault Registry</h3>
+                <span class="text-[8px] font-mono text-zinc-700 uppercase">4XX / 5XX Events</span>
             </div>
-            <div class="max-h-[400px] overflow-y-auto dashboard-scroll">
+            <div class="max-h-[340px] overflow-y-auto dash-scroll">
                 <table class="w-full text-left text-xs">
                     <tbody class="divide-y divide-zinc-800/50">
                         {% set grouped_errors = {} %}
                         {% for err in error_logs %}
-                            {% set key = err.status_code ~ "-" ~ err.path %}
+                            {% set key = err.status_code ~ "||" ~ err.path %}
                             {% if key in grouped_errors %}
                                 {% set _ = grouped_errors.update({key: grouped_errors[key] + 1}) %}
                             {% else %}
                                 {% set _ = grouped_errors.update({key: 1}) %}
                             {% endif %}
                         {% endfor %}
-
                         {% if grouped_errors %}
-                            {% for key, count in grouped_errors.items() %}
-                            <tr class="hover:bg-red-500/[0.03] transition-colors">
-                                <td class="px-8 py-4">
-                                    <span class="bg-red-500/10 border border-red-500/20 text-red-500 px-2 py-0.5 rounded-sm font-mono font-bold text-[10px]">{{ key.split('-')[0] }}</span>
+                            {% for key, count in grouped_errors.items()|sort(attribute='1', reverse=True) %}
+                            {% set parts = key.split('||') %}
+                            <tr class="hover:bg-red-500/[0.03] transition-colors group">
+                                <td class="px-5 py-3 w-16">
+                                    <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-mono font-bold
+                                        {{ 'bg-amber-500/10 border border-amber-500/20 text-amber-400' if parts[0].startswith('4') else 'bg-red-500/10 border border-red-500/20 text-red-400' }}">
+                                        {{ parts[0] }}
+                                    </span>
                                 </td>
-                                <td class="px-2 py-4 font-mono text-zinc-400 uppercase tracking-tighter truncate">/{{ key.split('-')[1] }}</td>
-                                <td class="px-8 py-4 text-right">
-                                    <div class="flex flex-col items-end">
-                                        <span class="text-zinc-100 font-bold tabular-nums italic text-lg tracking-tighter">x{{ count }}</span>
-                                        <span class="text-[8px] font-mono text-zinc-600 uppercase">Instances</span>
-                                    </div>
+                                <td class="px-2 py-3 font-mono text-[10px] text-zinc-500 uppercase truncate max-w-[160px]">/{{ parts[1] }}</td>
+                                <td class="px-5 py-3 text-right">
+                                    <span class="font-bold font-mono text-zinc-300 tabular-nums">×{{ count }}</span>
                                 </td>
                             </tr>
                             {% endfor %}
                         {% else %}
-                            <tr><td colspan="3" class="px-8 py-20 text-center text-zinc-800 font-mono text-[10px] uppercase tracking-widest italic">Registry_Clean :: Zero_Faults_Found</td></tr>
+                            <tr><td colspan="3" class="px-6 py-16 text-center font-mono text-[10px] text-zinc-700 uppercase tracking-widest">No faults recorded</td></tr>
                         {% endif %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+
 </div>
 
 <script>
-    const brandColor = '#6366f1';
-    const gridColor = '#18181b';
-    const ctx = document.getElementById('vercelChart').getContext('2d');
-    
-    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
-    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+/* ── Chart data from Jinja ── */
+const chartLabels = {{ chart_labels|tojson }};
+const chartValues = {{ chart_values|tojson }};
+const deltaUnit   = {{ delta_unit|tojson }};
+const activeRange = {{ active_range|tojson }};
+const brandColor  = '#6366f1';
 
-    const vercelChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {{ chart_labels|tojson }},
-            datasets: [{
-                data: {{ chart_values|tojson }},
-                borderColor: brandColor,
-                borderWidth: 1.5,
-                fill: true,
-                backgroundColor: gradient,
-                tension: 0.4,
-                pointRadius: 4, 
-                pointBackgroundColor: brandColor,
-                pointBorderColor: '#000',
-                pointHoverRadius: 6,
-                pointHoverBorderWidth: 2
+/* ── Live clock ── */
+(function tick(){
+    const el = document.getElementById('live-clock');
+    if(el){ const n=new Date(); el.textContent=`${n.getUTCHours().toString().padStart(2,'0')}:${n.getUTCMinutes().toString().padStart(2,'0')}:${n.getUTCSeconds().toString().padStart(2,'0')} UTC`; }
+    setTimeout(tick,1000);
+})();
+
+/* ── Traffic chart ── */
+(function(){
+    const ctx = document.getElementById('trafficChart').getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,280);
+    grad.addColorStop(0,'rgba(99,102,241,.12)');
+    grad.addColorStop(1,'rgba(99,102,241,0)');
+
+    new Chart(ctx,{
+        type:'line',
+        data:{
+            labels:chartLabels,
+            datasets:[{
+                data:chartValues,
+                borderColor:brandColor, borderWidth:1.5,
+                fill:true, backgroundColor:grad,
+                tension:.4,
+                pointRadius:3, pointBackgroundColor:brandColor,
+                pointBorderColor:'#09090b', pointBorderWidth:1.5,
+                pointHoverRadius:5, pointHoverBorderWidth:2
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            onHover: (event, chartElement) => {
-                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
-            },
-            onClick: (event, elements) => {
-                if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const label = vercelChart.data.labels[index];
-                    
-                    {% if delta_unit != 'hours' %}
-                        const url = new URL(window.location.href);
-                        url.searchParams.set('date', label);
-                        url.searchParams.delete('range'); 
-                        window.location.href = url.toString();
-                    {% endif %}
+        options:{
+            responsive:true, maintainAspectRatio:false,
+            onHover:(e,el)=>{ e.native.target.style.cursor=el[0]?'pointer':'default'; },
+            onClick:(e,els)=>{
+                if(els.length&&deltaUnit!=='hours'){
+                    const lbl=chartLabels[els[0].index];
+                    const url=new URL(window.location.href);
+                    url.searchParams.set('date',lbl); url.searchParams.delete('range');
+                    window.location.href=url.toString();
                 }
             },
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    enabled: true,
-                    backgroundColor: '#09090b',
-                    borderColor: '#27272a',
-                    borderWidth: 1,
-                    titleFont: { family: 'JetBrains Mono', size: 10 },
-                    bodyFont: { family: 'JetBrains Mono', size: 14, weight: 'bold' },
-                    cornerRadius: 2,
-                    displayColors: false,
-                    padding: 12,
-                    callbacks: {
-                        label: function(context) {
-                            return context.parsed.y + ' Requests';
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    backgroundColor:'#09090b', borderColor:'#27272a', borderWidth:1,
+                    cornerRadius:4, displayColors:false, padding:10,
+                    titleFont:{family:'monospace',size:9},
+                    bodyFont:{family:'monospace',size:13,weight:'bold'},
+                    callbacks:{ label:c=>c.parsed.y+' requests' }
+                }
+            },
+            scales:{
+                y:{
+                    grid:{color:'#18181b'}, border:{display:false},
+                    ticks:{color:'#52525b',font:{family:'monospace',size:9},maxTicksLimit:5}
+                },
+                x:{
+                    grid:{display:false}, border:{display:false},
+                    ticks:{
+                        color:'#52525b', font:{family:'monospace',size:9},
+                        maxRotation:0, autoSkip:false,
+                        callback:function(val,idx){
+                            const lbl=this.getLabelForValue(val);
+                            if(activeRange==='24h'||deltaUnit==='hours'){
+                                const parts=lbl.split(' '), time=parts[2]||'';
+                                if(time==='00:00') return parts[0]+' '+parts[1];
+                                return idx%4===0&&idx!==0?time:'';
+                            }
+                            if(activeRange==='4w'){
+                                const d=new Date(lbl+', {{ now.year }}');
+                                return (idx===0||idx==={{ chart_labels|length - 1 }}||d.getDay()===1)?lbl:'';
+                            }
+                            return lbl;
                         }
                     }
-                }
-            },
-            scales: {
-                y: { 
-                    grid: { color: gridColor, drawBorder: false }, 
-                    ticks: { color: '#52525b', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 6 } 
-                },
-                x: { 
-                    grid: { display: false }, 
-                    ticks: { 
-                        color: '#52525b', 
-                        font: { family: 'JetBrains Mono', size: 9 },
-                        autoSkip: false,
-                        maxRotation: 0,
-                        callback: function(val, index) {
-                            const label = this.getLabelForValue(val);
-
-                            {% if active_range == '24h' or delta_unit == 'hours' %}
-                                // label format: "Mar 25 14:00"
-                                const parts = label.split(' ');
-                                const datePart = parts[0] + ' ' + parts[1]; // "Mar 25"
-                                const timePart = parts[2]; // "14:00"
-
-                                // 1. If it's midnight, show the Date instead of 00:00
-                                if (timePart === "00:00") {
-                                    return datePart;
-                                }
-
-                                // 2. Otherwise, show the hour every 4 hours
-                                // (But skip if it's the very first/last to avoid overlap)
-                                if (index % 4 === 0 && index !== 0) {
-                                    return timePart;
-                                }
-
-                                return '';
-                            {% elif active_range == '4w' %}
-                                const date = new Date(label + ', {{ now.year }}');
-                                if (index === 0 || index === {{ chart_labels|length - 1 }} || date.getDay() === 1) return label;
-                                return '';
-                            {% else %}
-                                return label;
-                            {% endif %}
-                        }
-                    } 
                 }
             }
         }
     });
+})();
+
+/* ── Device donut chart ── */
+(function(){
+    const rawOS = {{ stats.os|tojson }};
+    const deviceMap = {};
+    for(const[os,count] of Object.entries(rawOS)){
+        const o=os.toLowerCase();
+        const cat = o.includes('android')||o.includes('ios')||o.includes('iphone')||o.includes('ipad') ? 'Mobile'
+                  : o.includes('linux')||o.includes('mac')||o.includes('windows') ? 'Desktop'
+                  : 'Other';
+        deviceMap[cat]=(deviceMap[cat]||0)+count;
+    }
+    const labels=Object.keys(deviceMap), data=Object.values(deviceMap);
+    const colors=['#6366f1','#22c55e','#f59e0b','#ec4899'];
+
+    const ctx=document.getElementById('deviceChart').getContext('2d');
+    new Chart(ctx,{
+        type:'doughnut',
+        data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
+        options:{
+            responsive:true, maintainAspectRatio:false, cutout:'72%',
+            plugins:{legend:{display:false},tooltip:{
+                backgroundColor:'#09090b',borderColor:'#27272a',borderWidth:1,
+                cornerRadius:4,displayColors:false,padding:8,
+                bodyFont:{family:'monospace',size:11,weight:'bold'},
+                callbacks:{label:c=>`${c.label}: ${c.raw}`}
+            }}
+        }
+    });
+
+    const total=data.reduce((a,b)=>a+b,0);
+    const legendEl=document.getElementById('device-legend');
+    labels.forEach((lbl,i)=>{
+        const pct=total>0?Math.round(data[i]/total*100):0;
+        legendEl.innerHTML+=`
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full shrink-0" style="background:${colors[i]}"></span>
+                    <span class="text-[10px] font-mono text-zinc-400 uppercase">${lbl}</span>
+                </div>
+                <span class="text-[10px] font-mono text-zinc-600 tabular-nums">${pct}%</span>
+            </div>`;
+    });
+})();
+
+/* ── Heatmap ── */
+(function(){
+    /* Build hour counts from chart data if hourly, else randomise for demo */
+    const cells=document.querySelectorAll('.heatmap-cell');
+    const hourCounts=new Array(24).fill(0);
+
+    /* If we have hourly labels like "Mar 25 14:00", parse them */
+    let parsed=false;
+    chartLabels.forEach((lbl,i)=>{
+        const m=lbl.match(/\d{2}:00$/);
+        if(m){
+            const h=parseInt(m[0]);
+            hourCounts[h]=(hourCounts[h]||0)+(chartValues[i]||0);
+            parsed=true;
+        }
+    });
+
+    /* Fallback: distribute total across hours with a realistic bell curve */
+    if(!parsed){
+        const total=chartValues.reduce((a,b)=>a+b,0);
+        const weights=[.01,.01,.01,.01,.01,.02,.04,.07,.09,.1,.09,.08,.08,.08,.08,.07,.06,.05,.04,.04,.03,.02,.02,.01];
+        weights.forEach((w,h)=>{ hourCounts[h]=Math.round(total*w); });
+    }
+
+    const max=Math.max(...hourCounts)||1;
+    cells.forEach(cell=>{
+        const h=parseInt(cell.dataset.hour);
+        const ratio=hourCounts[h]/max;
+        const opacity=0.08+ratio*0.92;
+        cell.style.background=`rgba(99,102,241,${opacity.toFixed(2)})`;
+        cell.style.opacity='1';
+        cell.dataset.count=hourCounts[h];
+    });
+})();
+
+/* Heatmap tooltip */
+const hmTip=document.getElementById('hm-tooltip');
+function showHmTooltip(e,h){
+    const count=e.target.dataset.count||0;
+    hmTip.style.display='block';
+    hmTip.textContent=`${String(h).padStart(2,'0')}:00 UTC — ${count} hits`;
+    moveTip(e);
+}
+function hideHmTooltip(){ hmTip.style.display='none'; }
+document.addEventListener('mousemove',e=>{ if(hmTip.style.display==='block') moveTip(e); });
+function moveTip(e){ hmTip.style.left=(e.clientX+14)+'px'; hmTip.style.top=(e.clientY-28)+'px'; }
+
+/* ── CSV export ── */
+function exportCSV(){
+    const btn=document.getElementById('export-btn');
+    const icon=document.getElementById('export-icon');
+    icon.classList.add('spinning'); btn.disabled=true;
+
+    const rows=[['Label','Requests'],...chartLabels.map((l,i)=>[l,chartValues[i]])];
+    const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url;
+    a.download=`analytics_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+
+    setTimeout(()=>{ icon.classList.remove('spinning'); btn.disabled=false; },800);
+}
 </script>
 {% endblock %}

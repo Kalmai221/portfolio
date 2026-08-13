@@ -15,6 +15,7 @@
 
         <div class="bg-zinc-900 border border-zinc-800 p-8 shadow-xl rounded-md">
             <form method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="space-y-2">
                     <label class="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest ml-1">Username</label>
                     <input type="text" name="username" required placeholder="name@example.com"
@@ -44,10 +45,17 @@
             </form>
         </div>
 
-        <div class="mt-8 text-center">
-            <a href="/" class="text-[10px] font-mono text-zinc-600 hover:text-zinc-300 uppercase tracking-widest transition-colors">
-                Back to site
-            </a>
+        <div class="mt-8 text-center space-y-3">
+            <div>
+                <a href="/trial" class="inline-flex items-center gap-2 px-4 py-2 bg-brand/10 border border-brand/20 text-brand rounded text-xs font-mono font-bold uppercase tracking-widest hover:bg-brand/20 transition-all">
+                    <i class="fa-solid fa-flask"></i> Try Interactive Sandbox Mode
+                </a>
+            </div>
+            <div>
+                <a href="/" class="text-[10px] font-mono text-zinc-600 hover:text-zinc-300 uppercase tracking-widest transition-colors">
+                    Back to public site
+                </a>
+            </div>
         </div>
     </div>
 </div>
