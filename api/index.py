@@ -43,6 +43,42 @@ app.config.update(
     MAX_CONTENT_LENGTH=2 * 1024 * 1024,    # 2 MB max upload
 )
 
+class VercelPathMiddleware:
+    """WSGI middleware to handle Vercel serverless path rewrites.
+    
+    Vercel rewrites all routes (source: "/(.*)") to "/api/index".
+    This causes PATH_INFO to be received as "/api/index" and SCRIPT_NAME as "/api/index".
+    This middleware extracts the original requested path from Vercel proxy headers 
+    (HTTP_X_MATCHED_PATH / HTTP_X_FORWARDED_URI / REQUEST_URI / RAW_URI) 
+    and updates SCRIPT_NAME to "" and PATH_INFO to the clean original URL path.
+    """
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        matched_path = (
+            environ.get("HTTP_X_MATCHED_PATH")
+            or environ.get("HTTP_X_FORWARDED_URI")
+            or environ.get("HTTP_X_INVOKE_PATH")
+            or environ.get("HTTP_X_REWRITE_URL")
+            or environ.get("REQUEST_URI")
+            or environ.get("RAW_URI")
+        )
+        if matched_path:
+            clean_path = matched_path.split("?")[0]
+            if clean_path in ("/api/index", "/api/index.py"):
+                clean_path = "/"
+            environ["PATH_INFO"] = clean_path
+            environ["SCRIPT_NAME"] = ""
+        elif environ.get("PATH_INFO") in ("/api/index", "/api/index.py"):
+            environ["PATH_INFO"] = "/"
+            environ["SCRIPT_NAME"] = ""
+
+        return self.app(environ, start_response)
+
+app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
+
+
 # ─────────────────────────────────────────
 #  LOGGING
 # ─────────────────────────────────────────
@@ -933,6 +969,8 @@ def preview_node():
 def cms_router(path):
     if path == "admin":
         return redirect(url_for("admin_dashboard"))
+    if path == "trial":
+        return redirect(url_for("trial_dashboard"))
 
     is_admin  = "user" in session
     has_bypass = session.get("maintenance_bypass", False)
