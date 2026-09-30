@@ -27,3 +27,5 @@ ENV/
 *.pyc
 .cache/
 .local/
+
+backups/
