@@ -44,7 +44,7 @@
 #trial input:focus, #trial textarea:focus { border-color: var(--brand); outline: none; }
 #trial .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 #trial .row > div { flex: 1 1 160px; }
-#trial .row > .fixed { flex: 0 0 auto; }
+#trial .row > .btn-cell { flex: 0 0 auto; }
 #trial .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
 #trial .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 760px) { #trial .grid2 { grid-template-columns: 1fr; }}
@@ -197,17 +197,17 @@
                 '<section><header><h1>Pages</h1></header>' +
                 (slugs.length ? '<table class="pages"><thead><tr><th>Title</th><th>URL</th><th>Updated</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p class="empty">No pages yet.</p>') +
                 '<form data-form="new-page" class="row" style="margin-top:16px"><div><label for="np">New page URL</label><input id="np" type="text" name="slug" placeholder="e.g. blog" required></div>' +
-                '<div class="fixed"><button class="btn primary" type="submit">Create and edit</button></div></form></section>' +
+                '<div class="btn-cell"><button class="btn primary" type="submit">Create and edit</button></div></form></section>' +
 
                 '<div class="grid2"><section><header><h2>Navigation</h2></header>' +
                 (state.nav.length ? '<table><tbody>' + nav + '</tbody></table>' : '<p class="empty">No links.</p>') +
                 '<form data-form="add-nav" class="row" style="margin-top:14px"><div><label for="nl">Label</label><input id="nl" type="text" name="label" maxlength="30" required></div>' +
                 '<div><label for="nu">Link</label><input id="nu" type="text" name="url" placeholder="#/view/about or https://..." required></div>' +
-                '<div class="fixed"><button class="btn" type="submit"' + (state.nav.length >= 8 ? ' disabled' : '') + '>Add</button></div></form></section>' +
+                '<div class="btn-cell"><button class="btn" type="submit"' + (state.nav.length >= 8 ? ' disabled' : '') + '>Add</button></div></form></section>' +
 
                 '<section><header><h2>Site</h2></header><form data-form="settings" class="card"><div class="row"><div><label for="sf">First name</label><input id="sf" type="text" name="first" maxlength="40" value="' + esc(state.settings.first) + '"></div>' +
                 '<div><label for="sl">Last name</label><input id="sl" type="text" name="last" maxlength="40" value="' + esc(state.settings.last) + '"></div>' +
-                '<div class="fixed"><button class="btn" type="submit">Save</button></div></div>' +
+                '<div class="btn-cell"><button class="btn" type="submit">Save</button></div></div>' +
                 '<p style="margin:18px 0 8px"><strong style="color:var(--strong)">Maintenance mode:</strong> ' + (state.maintenance ? 'on' : 'off') + '</p>' +
                 '<p class="muted" style="margin:0 0 12px;font-size:14px">When on, visitors see a maintenance page instead of your content.</p>' +
                 '<button class="btn" type="button" data-act="maint">' + (state.maintenance ? 'Turn off' : 'Turn on') + '</button></form></section></div>');
