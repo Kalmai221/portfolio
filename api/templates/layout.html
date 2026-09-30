@@ -143,11 +143,20 @@
         </div>
     </footer>
 
-    <aside id="privacy-notice" role="dialog" aria-labelledby="privacy-title" class="hidden fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-sm z-50 bg-zinc-900 border border-zinc-800 rounded-lg p-5 shadow-lg">
-        <h2 id="privacy-title" class="text-zinc-100 font-semibold text-sm">About analytics</h2>
-        <p class="text-zinc-400 text-sm leading-relaxed mt-2">
+    <aside id="privacy-notice" role="dialog" aria-labelledby="privacy-title" class="hidden fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md z-50 max-h-[80vh] overflow-y-auto bg-zinc-900 border border-zinc-800 rounded-lg p-5 shadow-lg">
+        <h2 id="privacy-title" class="text-zinc-100 font-semibold text-sm">Privacy</h2>
+
+        <h3 class="text-zinc-200 text-sm font-medium mt-3">Visiting the site</h3>
+        <p class="text-zinc-400 text-sm leading-relaxed mt-1">
             I count page views with my own server-side counter. Your IP address is hashed together with your browser string and the date, so it can't be traced back to you or linked across days. There are no cookies for visitors and no third-party trackers.
         </p>
+
+        <h3 class="text-zinc-200 text-sm font-medium mt-3">Using the contact form</h3>
+        <p class="text-zinc-400 text-sm leading-relaxed mt-1">
+            I store your name, email address, message and IP address. I use them to reply and to limit spam. New messages are also posted to a private Discord channel so I get a notification. I keep messages until I delete them, and you can ask me to remove yours by
+            <a href="mailto:hkurtislee@outlook.com" class="underline underline-offset-4 decoration-zinc-600 hover:decoration-brand text-zinc-200">emailing me</a>.
+        </p>
+
         <button type="button" id="privacy-ok" class="btn btn-primary mt-4 !py-1.5 !min-h-0 text-sm">Got it</button>
     </aside>
 
@@ -181,9 +190,9 @@
             var notice = document.getElementById('privacy-notice');
             var isBot = /bot|crawler|spider|preview|lighthouse/i.test(navigator.userAgent) ||
                         new URLSearchParams(location.search).get('isBot') === 'true';
-            if (!store.get('privacy-notice-seen') && !isBot) notice.classList.remove('hidden');
+            if (!store.get('privacy-notice-v2') && !isBot) notice.classList.remove('hidden');
             document.getElementById('privacy-ok').addEventListener('click', function () {
-                store.set('privacy-notice-seen', '1');
+                store.set('privacy-notice-v2', '1');
                 notice.classList.add('hidden');
             });
             document.getElementById('privacy-link').addEventListener('click', function () {
