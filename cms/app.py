@@ -86,8 +86,9 @@ class VercelPathMiddleware:
                 qs_path = unquote(param.split("=", 1)[1])
                 break
 
-        candidates = [
-            qs_path,
+        # The header and URI candidates are still percent-encoded ("my%20page"), unlike
+        # PATH_INFO and the __path parameter above, so decode them once here.
+        header_candidates = [
             environ.get("HTTP_X_INVOKE_PATH"),
             environ.get("HTTP_X_FORWARDED_URI"),
             environ.get("HTTP_X_FORWARDED_PATH"),
@@ -97,6 +98,7 @@ class VercelPathMiddleware:
             environ.get("RAW_URI"),
             environ.get("HTTP_X_MATCHED_PATH"),
         ]
+        candidates = [qs_path] + [unquote(c) if c else c for c in header_candidates]
         real_path = None
         for candidate in candidates:
             if candidate:

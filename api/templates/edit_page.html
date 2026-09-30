@@ -7,7 +7,7 @@
         <i class="fa-solid fa-desktop text-brand text-2xl"></i>
     </div>
     <h2 class="text-white font-bold text-xl mb-2 uppercase tracking-tight">Desktop Required</h2>
-    <p class="text-zinc-500 text-sm max-w-xs leading-relaxed mb-8">The Node Editor is optimised for large displays.</p>
+    <p class="text-zinc-500 text-sm max-w-xs leading-relaxed mb-8">The page editor is designed for larger screens.</p>
     <a href="/admin" class="px-6 py-2 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded hover:text-white transition-all">Return to Dashboard</a>
 </div>
 
@@ -19,7 +19,7 @@
         </div>
         <div class="flex flex-col">
             <span class="text-[11px] font-bold text-white uppercase tracking-wider">Saved</span>
-            <span class="text-[9px] font-mono text-emerald-400/80 tracking-wider">Node synced to database</span>
+            <span class="text-[9px] font-mono text-emerald-400/80 tracking-wider">Saved to the database</span>
         </div>
     </div>
 </div>
@@ -1142,7 +1142,7 @@ async function handleSave(){
     fd.set('js_content',document.querySelector('textarea[name="js_content"]').value);
     try{
         const r=await fetch(window.location.pathname,{method:'POST',body:fd});
-        if(r.ok){ showToast(); isDirty=false; document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d=>d.style.display='none'); }
+        if(r.ok){ const f=document.querySelector('input[name="slug"]'); const clean=f.value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\/._-]/g,'').replace(/-{2,}/g,'-').replace(/\/{2,}/g,'/').replace(/^[\/-]+|[\/-]+$/g,''); if(clean){ f.value=clean; history.replaceState(null,'','/admin/edit/'+clean); } showToast(); isDirty=false; document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d=>d.style.display='none'); }
     }catch(err){console.error('Save failed:',err);}
 }
 function showToast(){ const t=document.getElementById('save-toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
@@ -1177,7 +1177,7 @@ async function loadPreview(slugOverride){
     const slug = slugOverride || previewCurrentSlug;
     setLoadStatus('loading','Rendering…');
     document.getElementById('preview-loading').classList.remove('done');
-    const termLine = addTermLine('info','$ Compiling node: '+slug);
+    const termLine = addTermLine('info','$ Rendering preview of /'+slug);
     const fd=new URLSearchParams();
     fd.append('content',      document.querySelector('textarea[name="content"]').value);
     fd.append('css',          document.querySelector('textarea[name="css_content"]').value);

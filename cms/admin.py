@@ -1,4 +1,6 @@
 """Login, admin dashboard, settings, navigation and the page editor."""
+import re
+
 from flask import g, jsonify, redirect, render_template, request, session, url_for
 from pymongo import DESCENDING
 
@@ -217,6 +219,15 @@ RESERVED_SLUGS = {
 }
 
 
+def normalise_slug(raw: str) -> str:
+    """Lowercase, turn spaces into hyphens and drop characters that can't live in a URL."""
+    slug = re.sub(r"\s+", "-", (raw or "").strip().lower())
+    slug = re.sub(r"[^a-z0-9/._-]", "", slug)
+    slug = re.sub(r"-{2,}", "-", slug)
+    slug = re.sub(r"/{2,}", "/", slug)
+    return slug.strip("/-_.")
+
+
 @app.route("/admin/edit/<path:slug>", methods=["GET", "POST"])
 @login_required
 def edit_page(slug):
@@ -226,11 +237,16 @@ def edit_page(slug):
 
     if request.method == "POST":
         validate_csrf()
-        new_slug = request.form.get("slug", slug).strip("/").lower()
+        new_slug = normalise_slug(request.form.get("slug", slug))
         if not new_slug or new_slug in RESERVED_SLUGS:
             return redirect(url_for("edit_page", slug=slug))
-        if new_slug != slug and g.pages.find_one({"slug": new_slug}):
+
+        # The URL can be stale after a rename, so `slug` may no longer exist. In that case
+        # the editor is really working on `new_slug`, and saving must not create a duplicate.
+        current = g.pages.find_one({"slug": slug})
+        if new_slug != slug and current and g.pages.find_one({"slug": new_slug}):
             return redirect(url_for("edit_page", slug=slug))
+        target = slug if current else new_slug
 
         data = {
             "slug": new_slug,
@@ -244,7 +260,7 @@ def edit_page(slug):
         }
         if "description" in request.form:
             data["description"] = request.form.get("description", "").strip()[:200]
-        g.pages.update_one({"slug": slug}, {"$set": data}, upsert=True)
+        g.pages.update_one({"slug": target}, {"$set": data}, upsert=True)
         audit("page_save", f"slug={new_slug}")
         return redirect(url_for("admin_dashboard"))
 
