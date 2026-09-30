@@ -1,8 +1,7 @@
-Flask
-pymongo
-python-dotenv
-certifi
-gunicorn
-user_agents
-requests
-pytz
+Flask~=3.1
+pymongo~=4.18
+python-dotenv~=1.2
+certifi>=2025.1.31
+gunicorn>=23.0
+user-agents~=2.2
+requests~=2.32

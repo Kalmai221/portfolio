@@ -1,60 +1,75 @@
-# 🌐 Custom NoSQL CMS & Portfolio | Kalmai221
+# Portfolio CMS
 
-This is a custom-built Content Management System (CMS) designed to run on modern serverless infrastructure. It powers my professional portfolio, allowing for real-time updates and live code editing without ever touching the source code files.
+The source for my portfolio site, [klhportfolio.vercel.app](https://klhportfolio.vercel.app). It is a small Flask + MongoDB content management system I wrote so I can change pages, navigation and settings from the browser instead of redeploying.
 
----
+**[Try the editor in a sandbox](https://klhportfolio.vercel.app/trial)**. No account needed. Your edits stay in your own browser and are deleted after 24 hours.
 
-## 🛠️ The Tech Stack
+## What I built, and why
 
-* **Backend:** Python (Flask) — Handles all the logic and routing.
-* **Database:** MongoDB Atlas — Stores all page content, settings, and stats.
-* **Hosting:** Vercel — Provides fast, global serverless deployment.
-* **Frontend:** Tailwind CSS — Clean, professional, and responsive design.
+- **Pages live in the database.** Each page is HTML, CSS, JS and an optional Python snippet stored in MongoDB and routed by slug, so publishing is a save button, not a deploy.
+- **An in-browser editor.** Tabs for each language, a live preview, and an audit log of every change.
+- **Privacy-first analytics.** Page views are counted server-side. Visitor IPs are hashed with the user agent and the date, so they can't be linked across days. There are no cookies for visitors and no third-party scripts. Data expires after a year by default.
+- **A safe public demo.** The `/trial` sandbox runs entirely client-side. Visitor code executes in a sandboxed iframe with no access to the site's origin, and the server never stores or runs it. The real editor's Python and Jinja execution is admin-only.
+- **Maintenance mode** for the whole site or a single page, with an admin bypass.
 
----
+## Stack
 
-## ✨ Key Features
+Python 3.12, Flask, MongoDB Atlas (PyMongo), Tailwind (Play CDN), deployed on Vercel.
 
-* **Live Node Editor:** A built-in IDE that uses **JetBrains Mono** for a professional coding experience. I can write HTML, CSS, JS, and Python logic directly in the browser and see changes instantly.
-* **Proprietary Analytics:** A custom dashboard that tracks visitors, devices, and traffic sources without using heavy third-party cookies or scripts.
-* **Smart Maintenance Mode:** I can lock the site for updates globally. It includes an **Admin Bypass** feature that lets me view the live site while it's hidden from the public.
-* **Dynamic Routing:** The system automatically maps database documents to URLs (e.g., `/projects`), making the site fully scalable without a redeploy.
+Tailwind runs in the browser on purpose. Page content is written in the CMS and can use any utility class, so a build step that scans the repo would miss classes that only exist in the database.
 
----
-
-## 📁 Project Layout
+## Layout
 
 ```text
-portfolio/
-├── api/
-│   ├── static/         # Images, CSS, and JS files
-│   ├── templates/      # HTML layouts and page components
-│   └── index.py        # The "Brain" of the CMS
-├── requirements.txt    # Necessary Python libraries
-└── README.md           # You are here
+api/
+  index.py          Vercel entrypoint (imports the cms package)
+  (see cms/ at the repo root)
+    app.py          Flask app, config, Vercel path shim
+    db.py           Mongo client, indexes, per-request handles
+    security.py     CSRF, rate limiting, auth helpers, headers
+    services.py     Settings, maintenance flag, audit log, visit tracking
+    admin.py        Login, dashboard, navigation, editor
+    analytics.py    Admin analytics
+    trial.py        Serves the client-side sandbox
+    public.py       Page router, preview, robots, sitemap, OG image
+  templates/        Jinja templates (trial.html is the whole sandbox app)
+  static/
 ```
 
----
+## Running locally
 
-## 🚀 Getting Started
+```bash
+python -m venv .venv
+.venv\Scripts\activate        # macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env          # then fill in MONGODB_URI and credentials
+python api/index.py
+```
 
-1. **Clone the project:** `git clone https://github.com/Kalmai221/portfolio.git`
-2. **Install dependencies:** `pip install -r requirements.txt`
-3. **Setup environment:** Copy `.env.example` to a new file named `.env` and fill in your MongoDB URI and credentials.
-4. **Run locally:** `python api/index.py`
+The site is at <http://localhost:5000>. Without `MONGODB_URI` it starts, but pages return 503 and `/trial` still works.
 
----
+## Configuration
 
-## 🤖 AI Acknowledgment
-This project was built using a "Human-in-the-loop" approach. I acted as the lead architect, using **Artificial Intelligence** to accelerate the development of complex database queries, optimize CSS, and refine technical documentation.
+| Variable | Purpose |
+| --- | --- |
+| `MONGODB_URI` | MongoDB connection string (database `my_portfolio`) |
+| `SECRET_KEY` | Signs sessions. **Required in production.** |
+| `ADMIN_USERNAME` | Admin login name |
+| `ADMIN_PASSWORD_HASH` | Werkzeug password hash (preferred) |
+| `ADMIN_PASSWORD` | Plain-text fallback for local development |
+| `SITE_URL` | Public URL for canonical links, sitemap and robots.txt |
+| `ANALYTICS_RETENTION_DAYS` | How long analytics are kept (default 365) |
 
----
+On Vercel the admin panel stays locked until a real `SECRET_KEY` and admin password are configured. Generate a hash with:
 
-## 📫 Connect
+```bash
+python -c "from werkzeug.security import generate_password_hash as g; print(g('your-password'))"
+```
 
-* **Live Portfolio:** [klhportfolio.vercel.app](https://klhportfolio.vercel.app)
-* **LinkedIn:** [kurtishopewell](https://www.linkedin.com/in/kurtishopewell/)
-* **GitHub:** [@Kalmai221](https://github.com/Kalmai221)
+## AI acknowledgment
 
----
-*Built with precision by Kurtis-Lee Hopewell*
+I used AI tools for parts of this project, including query drafting, CSS and reviews. I chose the architecture, wrote the data model and decided the security trade-offs myself, and I review and test everything before it ships.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

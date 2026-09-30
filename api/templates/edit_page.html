@@ -197,6 +197,10 @@
                             <label class="sidebar-label">URL Segment</label>
                             <input type="text" name="slug" value="{{ slug }}" required class="sidebar-field font-mono" style="color:#9cdcfe" placeholder="index">
                         </div>
+                        <div class="space-y-1">
+                            <label class="sidebar-label">Meta Description</label>
+                            <input type="text" name="description" maxlength="200" value="{{ page.description if page and page.description else '' }}" class="sidebar-field" placeholder="Shown in search results">
+                        </div>
                     </form>
                     <div class="space-y-1.5 pt-2 border-t border-[#1e1e1e]">
                         <label class="sidebar-label">Editor Font Size</label>
@@ -1368,7 +1372,7 @@ let delConfirm=false;
 function confirmDeletion(){
     const btn=document.getElementById('delete-btn'),txt=document.getElementById('delete-text');
     if(!delConfirm){ delConfirm=true;txt.textContent='Confirm Delete?';btn.style.cssText='background:rgba(239,68,68,.2);color:#f87171;border-color:rgba(239,68,68,.4)'; setTimeout(()=>{ delConfirm=false;txt.textContent='Delete Page';btn.style.cssText=''; },3000); }
-    else window.location.href='/admin/delete/{{ slug }}';
+    else{ const f=document.createElement('form'); f.method='POST'; f.action='/admin/delete/{{ slug }}'; f.innerHTML='<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">'; document.body.appendChild(f); f.submit(); }
 }
 
 /* ═══════════ WIRE UP ═══════════ */

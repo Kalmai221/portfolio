@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CMS sandbox | Kurtis-Lee Hopewell</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Try the portfolio CMS in your browser. Nothing is sent to a server.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0c0d; --panel: #171719; --line: #26262a; --line-2: #3f3f46;
+            --text: #d4d4d8; --muted: #8b8b94; --strong: #f4f4f5; --brand: #d6a15c; --danger: #f87171;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 "IBM Plex Sans", system-ui, sans-serif; }
+        a { color: var(--strong); text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+        a:hover { text-decoration-color: var(--brand); }
+        h1, h2 { font-family: Newsreader, Georgia, serif; font-weight: 500; color: var(--strong); margin: 0; }
+        h1 { font-size: 30px; } h2 { font-size: 21px; }
+        button, input, textarea, select { font: inherit; color: inherit; }
+        :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+        .bar { border-bottom: 1px solid var(--line); }
+        .bar-in { max-width: 1040px; margin: 0 auto; padding: 0 20px; min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .brand { font: 500 19px Newsreader, Georgia, serif; color: var(--strong); text-decoration: none; }
+        .tag { font: 12px "IBM Plex Mono", monospace; color: var(--brand); margin-left: 10px; }
+        .tabs { display: flex; gap: 20px; font-size: 14px; }
+        .tabs a { color: var(--muted); text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; }
+        .tabs a.on, .tabs a:hover { color: var(--strong); border-color: var(--brand); }
+        main { max-width: 1040px; margin: 0 auto; padding: 28px 20px 80px; }
+        .notice { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; color: var(--muted); font-size: 14px; display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 28px; }
+        section { margin-bottom: 36px; }
+        section > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .muted { color: var(--muted); } .mono { font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-weight: 500; color: var(--muted); font-size: 13px; }
+        th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        td.act { text-align: right; white-space: nowrap; }
+
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line-2); background: transparent; cursor: pointer; text-decoration: none; font-size: 14px; }
+        .btn:hover { border-color: var(--muted); }
+        .btn.primary { background: var(--strong); color: #0c0c0d; border-color: var(--strong); font-weight: 500; }
+        .btn.primary:hover { background: #fff; }
+        .btn.small { padding: 3px 10px; font-size: 13px; }
+        .btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+        .btn:disabled { opacity: .4; cursor: default; }
+
+        label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+        input[type=text], input[type=url], textarea, select { width: 100%; background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 8px 10px; }
+        input:focus, textarea:focus { border-color: var(--brand); outline: none; }
+        .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+        .row > div { flex: 1 1 160px; }
+        .row > .fixed { flex: 0 0 auto; }
+        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+
+        .editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: calc(100vh - 250px); min-height: 460px; }
+        @media (max-width: 900px) { .editor { grid-template-columns: 1fr; height: auto; } .editor textarea { height: 340px; } .editor iframe { height: 420px; } }
+        .editor .col { display: flex; flex-direction: column; min-height: 0; }
+        .editor textarea { flex: 1; resize: none; font: 13px/1.6 "IBM Plex Mono", monospace; tab-size: 2; white-space: pre; overflow: auto; }
+        .editor .ttabs { display: flex; gap: 2px; margin-bottom: 8px; }
+        .ttabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 4px 12px; cursor: pointer; color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+        .ttabs button.on { color: var(--strong); border-color: var(--brand); }
+        iframe.preview { flex: 1; width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #000; min-height: 300px; }
+
+        .bars { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding-top: 8px; }
+        .bars div { flex: 1; background: var(--line-2); border-radius: 3px 3px 0 0; position: relative; min-height: 2px; }
+        .bars div:last-child { background: var(--brand); }
+        .bars span { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--muted); white-space: nowrap; }
+        .meter { display: grid; grid-template-columns: 110px 1fr 40px; gap: 10px; align-items: center; font-size: 14px; margin: 6px 0; }
+        .meter i { display: block; height: 8px; background: var(--brand); border-radius: 4px; }
+        .stat { font: 500 30px Newsreader, Georgia, serif; color: var(--strong); }
+
+        .site-nav { border-bottom: 1px solid var(--line); background: var(--panel); }
+        .site-nav-in { max-width: 1040px; margin: 0 auto; padding: 12px 20px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+        .site-nav a { text-decoration: none; color: var(--muted); font-size: 14px; }
+        .site-nav a:hover { color: var(--strong); }
+        .site-nav .name { font: 500 18px Newsreader, Georgia, serif; color: var(--strong); margin-right: auto; }
+        .site-frame { width: 100%; height: calc(100vh - 190px); min-height: 400px; border: 0; background: #000; display: block; }
+        .empty { color: var(--muted); padding: 24px 0; }
+        .log-warn td:first-child { color: var(--danger); }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <noscript><p style="padding:24px">The sandbox runs entirely in your browser, so it needs JavaScript.</p></noscript>
+
+    <script>
+    (function () {
+        'use strict';
+
+        var KEY = 'kh-trial-v2';
+        var TTL_MS = 24 * 60 * 60 * 1000;
+        var app = document.getElementById('app');
+
+        // ── Storage (localStorage, with an in-memory fallback for private windows) ──
+        var memoryOnly = false, memoryCopy = null;
+        function read() {
+            try { var raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : null; }
+            catch (e) { memoryOnly = true; return memoryCopy; }
+        }
+        function write(s) {
+            memoryCopy = s;
+            try { localStorage.setItem(KEY, JSON.stringify(s)); }
+            catch (e) { memoryOnly = true; }
+        }
+
+        function defaults() {
+            var now = Date.now();
+            return {
+                started: now, expires: now + TTL_MS, seed: Math.floor(Math.random() * 1e9),
+                settings: { first: 'Kurtis-Lee', last: 'Hopewell' },
+                maintenance: false,
+                nav: [
+                    { label: 'Home', url: '#/view/home' }, { label: 'About', url: '#/view/about' },
+                    { label: 'Projects', url: '#/view/projects' }, { label: 'Contact', url: '#/view/contact' }
+                ],
+                pages: {
+                    home: { title: 'Home', updated: now, css: '', js: '',
+                        html: '<section class="max-w-3xl mx-auto px-6 py-20">\n  <h1 class="text-4xl font-semibold text-zinc-100">Hi, I\'m a sandbox visitor.</h1>\n  <p class="mt-4 text-zinc-400 leading-relaxed">This page was saved in your browser. Open the editor from the dashboard, change anything, and it updates here. Nothing you write leaves your machine, and it disappears after 24 hours.</p>\n  <p class="mt-8"><a class="underline" href="#" onclick="return false">A link that goes nowhere</a></p>\n</section>' },
+                    about: { title: 'About', updated: now, css: '', js: '',
+                        html: '<section class="max-w-3xl mx-auto px-6 py-16 space-y-4">\n  <h1 class="text-3xl font-semibold text-zinc-100">About</h1>\n  <p class="text-zinc-400 leading-relaxed">Write about yourself here. Pages are plain HTML with Tailwind classes, plus optional CSS and JavaScript tabs.</p>\n</section>' },
+                    projects: { title: 'Projects', updated: now, css: '', js: '',
+                        html: '<section class="max-w-3xl mx-auto px-6 py-16 space-y-6">\n  <h1 class="text-3xl font-semibold text-zinc-100">Projects</h1>\n  <article class="border border-zinc-800 rounded-lg p-5">\n    <h2 class="text-lg text-zinc-100">Project name</h2>\n    <p class="text-zinc-400 mt-1">The problem it solved, what you built, and the result.</p>\n    <p class="text-sm text-zinc-500 mt-3">Python, Flask, MongoDB</p>\n  </article>\n</section>' },
+                    contact: { title: 'Contact', updated: now, css: '', js: '',
+                        html: '<section class="max-w-3xl mx-auto px-6 py-16 space-y-4">\n  <h1 class="text-3xl font-semibold text-zinc-100">Contact</h1>\n  <p class="text-zinc-400">Email me at <span class="text-zinc-100">you@example.com</span>.</p>\n</section>' }
+                },
+                audit: [{ t: now, action: 'sandbox_created', detail: 'Started with 4 sample pages', level: 'info' }]
+            };
+        }
+
+        var state = read();
+        if (!state || Date.now() > state.expires) { state = defaults(); write(state); }
+        function save() { write(state); }
+        function log(action, detail, level) {
+            state.audit.unshift({ t: Date.now(), action: action, detail: detail || '', level: level || 'info' });
+            state.audit = state.audit.slice(0, 100);
+            save();
+        }
+
+        // ── Helpers ──
+        function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function slugify(s) { return String(s).toLowerCase().trim().replace(/[^a-z0-9/_-]+/g, '-').replace(/^[-/]+|[-/]+$/g, '').slice(0, 60); }
+        function safeUrl(u) {
+            u = String(u).trim();
+            if (/^#\/view\/[a-z0-9/_-]+$/.test(u) || /^https?:\/\//i.test(u)) return u;
+            return null;
+        }
+        function when(t) { return new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); }
+        function rng(seed) { var a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+        function between(r, a, b) { return Math.floor(a + r() * (b - a + 1)); }
+        function hoursLeft() { return Math.max(0, Math.ceil((state.expires - Date.now()) / 3600000)); }
+
+        function previewDoc(p) {
+            return '<!DOCTYPE html><html class="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+                '<script src="https://cdn.tailwindcss.com"><\/script>' +
+                '<style>html,body{margin:0;background:#0c0c0d;color:#a1a1aa;font-family:system-ui,sans-serif}' + (p.css || '') + '</style></head><body>' +
+                (p.html || '') + '<script>' + (p.js || '') + '<\/script></body></html>';
+        }
+        // No allow-same-origin: the frame gets a unique origin, so user JS can't read this
+        // page's storage, cookies or DOM. That is what makes running it here safe.
+        function makeFrame(cls, p) {
+            var f = document.createElement('iframe');
+            f.className = cls; f.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
+            f.setAttribute('title', 'Page preview'); f.srcdoc = previewDoc(p);
+            return f;
+        }
+
+        // ── Layout ──
+        function shell(active, inner) {
+            var tabs = [['#/', 'Dashboard'], ['#/analytics', 'Analytics'], ['#/audit', 'Activity']].map(function (t) {
+                return '<a href="' + t[0] + '"' + (active === t[0] ? ' class="on"' : '') + '>' + t[1] + '</a>';
+            }).join('');
+            return '<div class="bar"><div class="bar-in"><div><a class="brand" href="#/">CMS sandbox</a><span class="tag">local to this browser</span></div>' +
+                '<nav class="tabs" aria-label="Sandbox">' + tabs + '<a href="#/view/home">View site</a><a href="/">Exit</a></nav></div></div><main>' + inner + '</main>';
+        }
+
+        // ── Views ──
+        function viewDashboard() {
+            var slugs = Object.keys(state.pages).sort();
+            var rows = slugs.map(function (s) {
+                var p = state.pages[s];
+                return '<tr><td>' + esc(p.title) + '</td><td class="mono muted">/' + esc(s) + '</td><td class="muted">' + when(p.updated) + '</td>' +
+                    '<td class="act"><a class="btn small" href="#/view/' + esc(s) + '">View</a> <a class="btn small" href="#/edit/' + esc(s) + '">Edit</a> ' +
+                    '<button class="btn small danger" data-act="del-page" data-slug="' + esc(s) + '">Delete</button></td></tr>';
+            }).join('');
+            var nav = state.nav.map(function (l, i) {
+                return '<tr><td>' + esc(l.label) + '<div class="mono muted">' + esc(l.url) + '</div></td><td class="act">' +
+                    '<button class="btn small" data-act="nav-up" data-i="' + i + '" aria-label="Move up"' + (i === 0 ? ' disabled' : '') + '>&uarr;</button> ' +
+                    '<button class="btn small" data-act="nav-down" data-i="' + i + '" aria-label="Move down"' + (i === state.nav.length - 1 ? ' disabled' : '') + '>&darr;</button> ' +
+                    '<button class="btn small danger" data-act="nav-del" data-i="' + i + '">Remove</button></td></tr>';
+            }).join('');
+
+            return shell('#/',
+                '<div class="notice"><span>' + (memoryOnly ? 'Your browser blocked storage, so changes last only until you close this tab.' :
+                    'Everything here is saved in this browser only, and is deleted in about ' + hoursLeft() + ' hour' + (hoursLeft() === 1 ? '' : 's') + '.') + '</span>' +
+                '<button class="btn small danger" data-act="reset">Reset sandbox</button></div>' +
+
+                '<section><header><h1>Pages</h1></header>' +
+                (slugs.length ? '<table><thead><tr><th>Title</th><th>URL</th><th>Updated</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p class="empty">No pages yet.</p>') +
+                '<form data-form="new-page" class="row" style="margin-top:16px"><div><label for="np">New page URL</label><input id="np" type="text" name="slug" placeholder="e.g. blog" required></div>' +
+                '<div class="fixed"><button class="btn primary" type="submit">Create and edit</button></div></form></section>' +
+
+                '<div class="grid2"><section><header><h2>Navigation</h2></header>' +
+                (state.nav.length ? '<table><tbody>' + nav + '</tbody></table>' : '<p class="empty">No links.</p>') +
+                '<form data-form="add-nav" class="row" style="margin-top:14px"><div><label for="nl">Label</label><input id="nl" type="text" name="label" maxlength="30" required></div>' +
+                '<div><label for="nu">Link</label><input id="nu" type="text" name="url" placeholder="#/view/about or https://..." required></div>' +
+                '<div class="fixed"><button class="btn" type="submit"' + (state.nav.length >= 8 ? ' disabled' : '') + '>Add</button></div></form></section>' +
+
+                '<section><header><h2>Site</h2></header><form data-form="settings" class="card"><div class="row"><div><label for="sf">First name</label><input id="sf" type="text" name="first" maxlength="40" value="' + esc(state.settings.first) + '"></div>' +
+                '<div><label for="sl">Last name</label><input id="sl" type="text" name="last" maxlength="40" value="' + esc(state.settings.last) + '"></div>' +
+                '<div class="fixed"><button class="btn" type="submit">Save</button></div></div>' +
+                '<p style="margin:18px 0 8px"><strong style="color:var(--strong)">Maintenance mode:</strong> ' + (state.maintenance ? 'on' : 'off') + '</p>' +
+                '<p class="muted" style="margin:0 0 12px;font-size:14px">When on, visitors see a maintenance page instead of your content.</p>' +
+                '<button class="btn" type="button" data-act="maint">' + (state.maintenance ? 'Turn off' : 'Turn on') + '</button></form></section></div>');
+        }
+
+        function viewEditor(slug) {
+            var p = state.pages[slug] || { title: '', html: '', css: '', js: '' };
+            return shell('', '<section><header><h1>' + (state.pages[slug] ? 'Edit page' : 'New page') + '</h1>' +
+                '<div><a class="btn" href="#/">Back</a> <button class="btn primary" data-act="save-page" data-slug="' + esc(slug) + '">Save</button></div></header>' +
+                '<div class="row" style="margin-bottom:16px"><div><label for="et">Title</label><input id="et" type="text" maxlength="100" value="' + esc(p.title) + '"></div>' +
+                '<div><label for="es">URL</label><input id="es" type="text" class="mono" value="' + esc(slug) + '"></div></div>' +
+                '<div class="editor"><div class="col"><div class="ttabs" role="tablist"><button class="on" data-tab="html">HTML</button><button data-tab="css">CSS</button><button data-tab="js">JavaScript</button></div>' +
+                '<textarea id="ed-html" spellcheck="false" aria-label="HTML">' + esc(p.html) + '</textarea>' +
+                '<textarea id="ed-css" spellcheck="false" aria-label="CSS" hidden>' + esc(p.css) + '</textarea>' +
+                '<textarea id="ed-js" spellcheck="false" aria-label="JavaScript" hidden>' + esc(p.js) + '</textarea></div>' +
+                '<div class="col"><div class="ttabs"><button class="on" tabindex="-1">Live preview</button></div><div id="pv" class="col" style="flex:1"></div></div></div>' +
+                '<p class="muted" style="font-size:13px;margin-top:12px">Pages here are static HTML, CSS and JS. Python and Jinja are only available on the real site, where they run for the signed-in owner.</p></section>');
+        }
+
+        function mountEditor() {
+            var pv = document.getElementById('pv'), timer;
+            function current() { return { html: val('ed-html'), css: val('ed-css'), js: val('ed-js') }; }
+            function val(id) { return document.getElementById(id).value; }
+            function render() { if (!document.getElementById('ed-html')) return; pv.innerHTML = ''; pv.appendChild(makeFrame('preview', current())); }
+            render();
+            ['ed-html', 'ed-css', 'ed-js'].forEach(function (id) {
+                var ta = document.getElementById(id);
+                ta.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(render, 500); });
+                ta.addEventListener('keydown', function (e) {
+                    if (e.key === 'Tab' && !e.shiftKey) {
+                        e.preventDefault();
+                        var s = ta.selectionStart;
+                        ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(ta.selectionEnd);
+                        ta.selectionStart = ta.selectionEnd = s + 2;
+                    }
+                });
+            });
+            document.querySelectorAll('[data-tab]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    document.querySelectorAll('[data-tab]').forEach(function (x) { x.classList.toggle('on', x === b); });
+                    ['html', 'css', 'js'].forEach(function (t) { document.getElementById('ed-' + t).hidden = t !== b.dataset.tab; });
+                });
+            });
+        }
+
+        function viewSite(slug) {
+            var s = state.settings;
+            var links = state.nav.map(function (l) {
+                var u = safeUrl(l.url);
+                return u ? '<a href="' + esc(u) + '"' + (/^https?:/.test(u) ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' + esc(l.label) + '</a>' : '';
+            }).join('');
+            return '<div class="site-nav"><div class="site-nav-in"><span class="name">' + esc(s.first + ' ' + s.last) + '</span>' + links +
+                '<a href="#/" style="color:var(--brand)">Back to dashboard</a></div></div><div id="site"></div>';
+        }
+        function mountSite(slug) {
+            var box = document.getElementById('site'), p = state.pages[slug];
+            if (state.maintenance) {
+                box.innerHTML = '<main style="text-align:center;padding-top:80px"><h1>Back shortly</h1><p class="muted">Maintenance mode is on. Visitors see this instead of your pages.</p></main>';
+            } else if (!p) {
+                box.innerHTML = '<main style="text-align:center;padding-top:80px"><h1>Page not found</h1><p class="muted">Nothing exists at /' + esc(slug) + '.</p></main>';
+            } else {
+                box.appendChild(makeFrame('site-frame', p));
+            }
+        }
+
+        function viewAnalytics() {
+            var r = rng(state.seed), pages = Object.keys(state.pages);
+            var days = [], i, d;
+            for (i = 7; i >= 0; i--) { d = new Date(Date.now() - i * 86400000); days.push({ l: d.toLocaleDateString([], { month: 'short', day: 'numeric' }), v: between(r, 12, 45) * Math.max(1, pages.length) }); }
+            var max = Math.max.apply(null, days.map(function (x) { return x.v; })), total = days.reduce(function (a, x) { return a + x.v; }, 0);
+            function meters(obj) {
+                var t = Object.keys(obj).reduce(function (a, k) { return a + obj[k]; }, 0);
+                return Object.keys(obj).map(function (k) { var pc = Math.round(obj[k] / t * 100); return '<div class="meter"><span>' + esc(k) + '</span><span><i style="width:' + pc + '%"></i></span><span class="muted">' + pc + '%</span></div>'; }).join('');
+            }
+            var refs = { 'Direct': between(r, 30, 60), 'Search': between(r, 15, 35), 'GitHub': between(r, 10, 25), 'LinkedIn': between(r, 5, 15) };
+            var devs = { 'Desktop': between(r, 40, 80), 'Mobile': between(r, 15, 40), 'Tablet': between(r, 2, 8) };
+            var top = pages.map(function (s) { return [s, between(r, 10, 80)]; }).sort(function (a, b) { return b[1] - a[1]; });
+            return shell('#/analytics',
+                '<div class="notice"><span>This is made-up data, seeded per sandbox, to show the layout of the real analytics page.</span></div>' +
+                '<section><header><h1>Analytics</h1></header><div class="grid2"><div class="card"><div class="muted">Views, last 8 days</div><div class="stat">' + total + '</div>' +
+                '<div class="bars" style="margin-bottom:28px">' + days.map(function (x) { return '<div style="height:' + Math.round(x.v / max * 100) + '%"><span>' + esc(x.l) + '</span></div>'; }).join('') + '</div></div>' +
+                '<div class="card"><div class="muted" style="margin-bottom:8px">Top pages</div>' + top.map(function (t) { return '<div class="meter" style="grid-template-columns:1fr 40px"><span class="mono">/' + esc(t[0]) + '</span><span class="muted">' + t[1] + '</span></div>'; }).join('') + '</div></div></section>' +
+                '<div class="grid2"><section class="card"><div class="muted" style="margin-bottom:8px">Where visitors come from</div>' + meters(refs) + '</section>' +
+                '<section class="card"><div class="muted" style="margin-bottom:8px">Devices</div>' + meters(devs) + '</section></div>');
+        }
+
+        function viewAudit() {
+            var rows = state.audit.map(function (e) {
+                return '<tr class="log-' + esc(e.level) + '"><td class="mono">' + esc(e.action) + '</td><td>' + esc(e.detail) + '</td><td class="muted">' + when(e.t) + '</td></tr>';
+            }).join('');
+            return shell('#/audit', '<section><header><h1>Activity</h1></header><table><thead><tr><th>Action</th><th>Detail</th><th>When</th></tr></thead><tbody>' + rows + '</tbody></table></section>');
+        }
+
+        // ── Router ──
+        function route() {
+            var h = location.hash.replace(/^#/, '') || '/', m;
+            window.scrollTo(0, 0);
+            if ((m = h.match(/^\/edit\/(.+)$/))) { var slug = slugify(m[1]); app.innerHTML = viewEditor(slug); mountEditor(); }
+            else if ((m = h.match(/^\/view\/(.+)$/))) { app.innerHTML = viewSite(m[1]); mountSite(slugify(m[1])); }
+            else if (h === '/analytics') app.innerHTML = viewAnalytics();
+            else if (h === '/audit') app.innerHTML = viewAudit();
+            else app.innerHTML = viewDashboard();
+        }
+
+        // ── Actions ──
+        function go(hash) { if (location.hash === hash) route(); else location.hash = hash; }
+
+        app.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-act]'); if (!b) return;
+            var act = b.dataset.act, i = parseInt(b.dataset.i, 10), slug = b.dataset.slug;
+            if (act === 'del-page') {
+                if (!confirm('Delete /' + slug + '?')) return;
+                delete state.pages[slug]; log('page_delete', '/' + slug, 'warn'); route();
+            } else if (act === 'nav-del') {
+                var gone = state.nav.splice(i, 1)[0]; log('nav_delete', gone.label); route();
+            } else if (act === 'nav-up' || act === 'nav-down') {
+                var j = act === 'nav-up' ? i - 1 : i + 1, t = state.nav[i]; state.nav[i] = state.nav[j]; state.nav[j] = t; log('nav_reorder'); route();
+            } else if (act === 'maint') {
+                state.maintenance = !state.maintenance; log('maintenance', state.maintenance ? 'on' : 'off'); route();
+            } else if (act === 'reset') {
+                if (!confirm('Delete everything in this sandbox and start again?')) return;
+                state = defaults(); save(); route();
+            } else if (act === 'save-page') {
+                var ns = slugify(document.getElementById('es').value);
+                if (!ns) { alert('Give the page a URL.'); return; }
+                if (ns !== slug && state.pages[ns]) { alert('/' + ns + ' already exists.'); return; }
+                if (ns !== slug) delete state.pages[slug];
+                state.pages[ns] = {
+                    title: document.getElementById('et').value.trim().slice(0, 100) || 'Untitled',
+                    html: document.getElementById('ed-html').value, css: document.getElementById('ed-css').value,
+                    js: document.getElementById('ed-js').value, updated: Date.now()
+                };
+                log('page_save', '/' + ns); go('#/');
+            }
+        });
+
+        app.addEventListener('submit', function (e) {
+            var f = e.target.closest('[data-form]'); if (!f) return;
+            e.preventDefault();
+            var fd = new FormData(f), kind = f.dataset.form;
+            if (kind === 'new-page') {
+                var s = slugify(fd.get('slug')); if (!s) return;
+                go('#/edit/' + s);
+            } else if (kind === 'add-nav') {
+                var label = String(fd.get('label')).trim().slice(0, 30), url = safeUrl(fd.get('url'));
+                if (!url) { alert('Links must start with #/view/ or http(s)://'); return; }
+                if (label && state.nav.length < 8) { state.nav.push({ label: label, url: url }); log('nav_add', label); route(); }
+            } else if (kind === 'settings') {
+                state.settings.first = String(fd.get('first')).trim().slice(0, 40) || 'Kurtis-Lee';
+                state.settings.last = String(fd.get('last')).trim().slice(0, 40) || 'Hopewell';
+                log('settings_update'); route();
+            }
+        });
+
+        window.addEventListener('hashchange', route);
+        route();
+    })();
+    </script>
+</body>
+</html>

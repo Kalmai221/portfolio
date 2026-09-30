@@ -1,86 +1,20 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="fixed inset-0 -z-10 bg-[#09090b]">
-    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" 
-         style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
-</div>
-
-<div class="flex flex-col items-center justify-center min-h-screen p-6">
-    <div class="max-w-xl w-full reveal">
-        <div class="bg-zinc-900 border border-zinc-800 rounded shadow-2xl overflow-hidden">
-            
-            <div class="px-6 py-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full {{ 'bg-amber-500' if maintenance_active else 'bg-red-500 animate-pulse' }}"></div>
-                    <h3 class="font-mono text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
-                        {{ "System Maintenance" if maintenance_active else "Service Interruption" }}
-                    </h3>
-                </div>
-                <span class="text-[9px] font-mono text-zinc-700 uppercase tracking-widest font-medium">Status 503</span>
-            </div>
-
-            <div class="p-10 md:p-14 space-y-10">
-                <div class="space-y-4">
-                    <h1 class="text-3xl font-bold text-zinc-100 tracking-tight uppercase font-mono">
-                        {{ "Currently Offline" if maintenance_active else "Service Unavailable" }}
-                    </h1>
-                    <p class="text-zinc-500 text-sm leading-relaxed font-sans">
-                        {% if maintenance_active %}
-                            The site is currently undergoing scheduled maintenance to improve performance and security. We expect to be back online shortly.
-                        {% else %}
-                            We are currently experiencing a connection issue with our data cluster. Our automated systems are attempting to restore the service.
-                        {% endif %}
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 gap-px bg-zinc-800 border border-zinc-800 rounded overflow-hidden">
-                    <div class="bg-zinc-900 p-4 flex justify-between items-center">
-                        <span class="text-[10px] font-mono text-zinc-600 uppercase">Service</span>
-                        <span class="text-[11px] font-mono text-zinc-300">Application Node 01</span>
-                    </div>
-                    <div class="bg-zinc-900 p-4 flex justify-between items-center">
-                        <span class="text-[10px] font-mono text-zinc-600 uppercase">Auto-Refresh</span>
-                        <span class="text-[11px] font-mono text-brand font-bold uppercase tracking-widest">
-                            In <span id="timer">15</span>s
-                        </span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3 pt-2">
-                    <button onclick="window.location.reload()" class="w-full bg-zinc-100 text-zinc-950 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all">
-                        Refresh Status
-                    </button>
-
-                    {% if session.get('user') and maintenance_active %}
-                        <a href="/admin/bypass-maintenance" class="w-full bg-brand/10 border border-brand/30 text-brand py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:bg-brand/20 transition-all text-center">
-                            Admin: View Live Content
-                        </a>
-                    {% endif %}
-
-                    <a href="/" class="w-full border border-zinc-800 text-zinc-600 py-3 rounded-sm font-bold text-[11px] uppercase tracking-widest hover:text-zinc-300 transition-all text-center">
-                        Return to Dashboard
-                    </a>
-                </div>
-            </div>
-
-            <div class="px-6 py-4 bg-zinc-950/50 border-t border-zinc-800 flex justify-between items-center">
-                <span class="text-[9px] font-mono text-zinc-700 uppercase">Region: Coventry, UK</span>
-                <span class="text-[9px] font-mono text-zinc-700 uppercase">2026-Node-V2</span>
-            </div>
-        </div>
+<div class="max-w-xl mx-auto px-6 py-24">
+    <p class="font-mono text-sm text-brand mb-3">503</p>
+    {% if maintenance_active %}
+    <h1 class="font-serif text-4xl text-zinc-100 mb-4">Back shortly</h1>
+    <p class="text-zinc-400 leading-relaxed mb-8">The site is down for maintenance. This page checks again every 15 seconds, so you don't need to refresh.</p>
+    {% else %}
+    <h1 class="font-serif text-4xl text-zinc-100 mb-4">Can't reach the database</h1>
+    <p class="text-zinc-400 leading-relaxed mb-8">The site couldn't load its content just now. This page will retry every 15 seconds.</p>
+    {% endif %}
+    <div class="flex flex-wrap gap-3">
+        <button onclick="location.reload()" class="btn btn-primary">Try again now</button>
+        {% if session.get('user') and maintenance_active %}
+        <a href="/admin/bypass-maintenance?next={{ request.path }}" class="btn border border-zinc-700 text-zinc-200 hover:border-zinc-500">View the live site (admin)</a>
+        {% endif %}
     </div>
 </div>
-
-<script>
-    let seconds = 15;
-    const timerElement = document.getElementById('timer');
-    const countdown = setInterval(() => {
-        seconds--;
-        timerElement.innerText = seconds;
-        if (seconds <= 0) {
-            clearInterval(countdown);
-            window.location.reload();
-        }
-    }, 1000);
-</script>
+<script>setTimeout(function () { location.reload(); }, 15000);</script>
 {% endblock %}

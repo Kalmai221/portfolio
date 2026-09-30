@@ -2,37 +2,49 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <title>Kurtis-Lee Hopewell | IT Portfolio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {%- set site_name = (settings.site_name_first ~ ' ' ~ settings.site_name_last) if settings and settings.site_name_first else 'Kurtis-Lee Hopewell' %}
+    {%- set is_home = not page or page.slug == 'home' %}
+    {%- set page_title = (page.title ~ ' | ' ~ site_name) if (page and page.title and not is_home) else (site_name ~ ' | IT Portfolio') %}
+    {%- set page_desc = (page.description if page and page.description else settings.site_description) or 'IT portfolio.' %}
+    {%- set canonical = site_url ~ ('/' if request.path in ('/', '/home') else request.path) %}
+    <title>{{ page_title }}</title>
+    <meta name="description" content="{{ page_desc }}">
+    <link rel="canonical" href="{{ canonical }}">
+    {%- if request.path.startswith(('/admin', '/login', '/trial')) %}
+    <meta name="robots" content="noindex, nofollow">
+    {%- endif %}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:title" content="{{ page_title }}">
+    <meta property="og:description" content="{{ page_desc }}">
+    <meta property="og:url" content="{{ canonical }}">
+    <meta property="og:image" content="{{ site_url }}/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#0c0c0d">
+    <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Person", "name": site_name, "url": site_url, "jobTitle": "IT professional and developer", "sameAs": ["https://github.com/Kalmai221", "https://www.linkedin.com/in/kurtishopewell/"]} | tojson }}</script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Google+Sans:opsz,wght@17..18,400..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    
+
     <script>
+        // Page content is authored in the CMS and uses arbitrary utility classes,
+        // so Tailwind has to compile in the browser rather than at build time.
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['"Google Sans"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+                        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+                        serif: ['Newsreader', 'Georgia', 'serif'],
                     },
                     colors: {
-                        zinc: {
-                            950: '#09090b',
-                            900: '#18181b',
-                            800: '#27272a',
-                            700: '#3f3f46',
-                            100: '#f4f4f5'
-                        },
-                        brand: '#6366f1'
-                    },
-                    transitionTimingFunction: {
-                        'expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+                        zinc: { 950: '#0c0c0d', 900: '#171719', 800: '#26262a', 700: '#3f3f46', 100: '#f4f4f5' },
+                        brand: '#d6a15c'
                     }
                 }
             }
@@ -41,442 +53,143 @@
 
     <style type="text/tailwindcss">
         @layer base {
-            body { 
-                @apply bg-zinc-950 text-zinc-400 antialiased selection:bg-brand/30; 
-                font-feature-settings: "cv02", "cv11";
-            }
+            body { @apply bg-zinc-950 text-zinc-400 antialiased selection:bg-brand/30; }
+            a:focus-visible, button:focus-visible { @apply outline outline-2 outline-offset-2 outline-brand; }
         }
-
         @layer components {
-            .btn { @apply inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 min-h-[40px]; }
-            .btn-primary { @apply bg-zinc-100 text-zinc-950 hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]; }
-
-            /* Increased tracking slightly for Roboto Mono's wider characters */
-            .nav-link { 
-                @apply text-[12px] font-mono font-medium uppercase tracking-wide text-zinc-400 hover:text-zinc-100 transition-colors py-2; 
-            }
-
-            .brand-frame { 
-                @apply relative w-11 h-11 flex items-center justify-center border border-zinc-800 bg-zinc-900/50 rounded-lg overflow-hidden transition-all duration-500 ease-expo;
-            }
-
-            .group:hover .brand-frame { 
-                @apply border-zinc-600 bg-zinc-800 shadow-[0_0_15px_rgba(99,102,241,0.1)]; 
-            }
-
-            .reveal { @apply opacity-0 translate-y-4 transition-all duration-700 ease-expo; }
+            .btn { @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors min-h-[40px]; }
+            .btn-primary { @apply bg-zinc-100 text-zinc-950 hover:bg-white; }
+            .reveal { @apply opacity-0 translate-y-2 transition duration-500; }
             .reveal.active { @apply opacity-100 translate-y-0; }
         }
-
-        .bg-grid {
-            background-image: radial-gradient(circle at 1px 1px, #18181b 1px, transparent 0);
-            background-size: 32px 32px;
-        }
-
-        #mobile-menu { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        #mobile-menu.closed { transform: translateX(100%); }
-
-        .stagger-item { opacity: 0; transform: translateX(-10px); transition: all 0.4s ease-expo; }
-        .stagger-active .stagger-item { opacity: 1; transform: translateX(0); }
-
-        #offline-banner {
-            @apply fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 px-5 py-3 
-                   bg-zinc-900/80 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)];
-            opacity: 0;
-            pointer-events: none;
-            transform: translate(-50%, -20px);
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        #offline-banner.visible {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translate(-50%, 0);
-        }
-
-        @keyframes scan {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-
-        
-    </style>
-    <style>
-        .ns-wrapper {
-            position: fixed; inset: 0; z-index: 9999; background-color: #09090b;
-            display: flex; align-items: center; justify-content: center; padding: 2rem;
-            font-family: 'Inter', sans-serif;
-        }
-        .ns-card { max-width: 420px; width: 100%; text-align: center; }
-        .ns-icon {
-            width: 56px; height: 56px; background: #18181b; border: 1px solid #27272a;
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 1.5rem auto; color: #ef4444;
-        }
-        .ns-title { color: #f4f4f5; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; letter-spacing: -0.02em; }
-        .ns-text { color: #a1a1aa; font-size: 0.935rem; line-height: 1.6; margin-bottom: 2rem; }
-        .ns-badge {
-            display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
-            background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1);
-            border-radius: 6px; color: #ef4444; font-family: 'Roboto Mono', monospace;
-            font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1; transform: none; transition: none; }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col overflow-x-hidden bg-grid">
+<body class="min-h-screen flex flex-col overflow-x-hidden">
     <noscript>
-        <div class="ns-wrapper">
-            <div class="ns-card">
-                <div class="ns-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                </div>
-                <h2 class="ns-title">Enable JavaScript to continue</h2>
-                <p class="ns-text">Please enable JavaScript to view the full site.</p>
-                <div class="ns-badge">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="12"/></svg>
-                    Execution Halted
-                </div>
-            </div>
-        </div>
+        <p class="bg-zinc-900 border-b border-zinc-800 text-zinc-300 text-sm text-center px-4 py-3">
+            This site works best with JavaScript enabled. Some pages won't display without it.
+        </p>
     </noscript>
 
-    <div id="offline-banner">
-        <div class="relative flex items-center justify-center">
-            <div class="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-20"></div>
-            <div class="relative w-10 h-10 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-center">
-                <i class="fa-solid fa-wifi"></i>
-            </div>
-        </div>
-        <div class="flex flex-col">
-            <span class="text-xs font-bold text-zinc-100 uppercase tracking-wider">Connection Lost</span>
-            <span class="text-[10px] font-mono text-zinc-500">Database link severed...</span>
-        </div>
-        <button onclick="window.location.reload()" class="ml-2 px-3 py-1.5 bg-zinc-100 text-zinc-950 text-[10px] font-bold uppercase rounded hover:bg-white transition-colors">Reconnect</button>
-    </div>
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-zinc-100 focus:text-zinc-950 focus:px-3 focus:py-2 focus:rounded">Skip to content</a>
 
-    <div id="mobile-menu-overlay" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
-    <div id="mobile-menu" class="fixed top-0 right-0 bottom-0 w-[85%] max-w-[320px] bg-zinc-950 z-[70] flex flex-col closed border-l border-zinc-800 shadow-2xl">
-        <div class="p-6 border-b border-zinc-900 flex items-center justify-between bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
-            <div class="flex items-center gap-3">
-                <span class="font-mono text-[10px] text-zinc-300 uppercase tracking-widest">Navigation</span>
-            </div>
-            <button id="close-menu" class="p-2 text-zinc-500 hover:text-white transition-all active:scale-90">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
+    <header class="border-b border-zinc-800/80">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="font-serif text-xl text-zinc-100 tracking-tight hover:text-white">{{ site_name }}</a>
 
-        <div id="mobile-nav-links" class="flex-grow overflow-y-auto custom-scrollbar p-8">
-            <div class="space-y-1 mb-10">
-                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.3em] mb-4 block">Menu</span>
+            <nav aria-label="Main" class="hidden md:flex items-center gap-7 text-[15px]">
                 {% if settings and settings.nav_links %}
                     {% for link in settings.nav_links %}
-                    <a href="{{ link.url }}" class="stagger-item group flex items-center justify-between py-4 border-b border-zinc-900/50">
-                        <span class="text-xl font-bold text-zinc-200 group-hover:text-brand transition-colors">{{ link.label }}</span>
-                        <svg class="w-4 h-4 text-zinc-700 group-hover:text-brand transition-all transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2"/></svg>
-                    </a>
+                    <a href="{{ link.url }}"
+                       class="text-zinc-400 hover:text-zinc-100 transition-colors {{ 'text-zinc-100 underline underline-offset-8 decoration-brand decoration-2' if request.path.rstrip('/') == link.url.rstrip('/') else '' }}">{{ link.label }}</a>
                     {% endfor %}
                 {% endif %}
-            </div>
-        </div>
+                {% if session.get('user') %}
+                    <span class="w-px h-4 bg-zinc-800"></span>
+                    <a href="/admin" class="text-zinc-500 hover:text-zinc-100 text-sm">Admin</a>
+                    <a href="/logout" class="text-zinc-500 hover:text-zinc-100 text-sm">Sign out</a>
+                {% endif %}
+            </nav>
 
-        <div id="mobile-auth-footer" class="p-8 border-t border-zinc-900 bg-zinc-950/80 backdrop-blur-md mt-auto">
-            {% if session.get('user') %}
-                <div class="flex flex-col gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
-                        <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Active Session</span>
-                    </div>
-                    <div class="space-y-3">
-                        <a href="/admin" class="flex items-center justify-center bg-brand w-full py-3 text-white text-[11px] font-bold uppercase tracking-widest rounded hover:bg-opacity-90 transition-all">Admin Dashboard</a>
-                        <a href="/logout" class="block text-center text-[10px] font-mono text-zinc-600 hover:text-red-400 py-1 transition-colors">Sign Out</a>
-                    </div>
-                </div>
-            {% else %}
-                <div class="space-y-4">
-                    <p class="text-[10px] font-mono text-zinc-600 text-center uppercase tracking-widest">Guest Mode</p>
-                    <a href="/login" class="flex items-center justify-center bg-zinc-100 w-full text-zinc-950 py-3 text-[11px] font-bold uppercase tracking-widest rounded hover:bg-white transition-all">Sign In</a>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <nav class="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="/" class="flex items-center gap-3 group outline-none">
-                <div class="brand-frame w-11 h-11 group-hover:border-brand/50 group-hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]">
-                    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-brand/10 to-transparent -translate-y-full group-hover:animate-[scan_2s_ease-in-out_infinite] pointer-events-none"></div>
-                    <span class="relative z-10 text-zinc-100 font-bold text-base tracking-tighter transition-all duration-500 group-hover:scale-110 group-hover:text-white">
-                        KH
-                    </span>
-                </div>
-
-                <div class="flex flex-col justify-center border-l border-zinc-800 pl-3 py-1 transition-colors duration-500 group-hover:border-brand/30">
-                    <div class="flex items-baseline">
-                        <span class="text-zinc-100 font-bold text-[15px] tracking-tight leading-none transition-colors duration-300 group-hover:text-white">
-                            {{ settings.site_name_first if settings and settings.site_name_first else 'Kurtis-Lee' }}<span class="text-brand">.</span>{{ settings.site_name_last if settings and settings.site_name_last else 'Hopewell' }}
-                        </span>
-                    </div>
-
-                    <div class="flex items-center gap-2 mt-1.5">
-                        <span class="text-zinc-300 font-mono text-[10px] font-medium uppercase tracking-wider leading-none whitespace-nowrap">
-                            IT Portfolio
-                        </span>
-                        <span class="w-1.5 h-1.5 rounded-full {{ 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]' if is_trial or request.path.startswith('/trial') else 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' }}"></span>
-                        <span class="text-zinc-500 font-mono text-[9px] font-medium uppercase tracking-wide leading-none">
-                            {{ 'Trial Mode' if is_trial or request.path.startswith('/trial') else 'v2.0.26' }}
-                        </span>
-                    </div>
-                </div>
-            </a>
-
-            <div class="hidden lg:flex items-center gap-10">
-                <div class="flex items-center gap-8">
-                    {% if settings and settings.nav_links %}
-                        {% for link in settings.nav_links %}
-                        <a href="{{ link.url }}" class="nav-link relative after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-brand after:transition-all hover:after:w-full">{{ link.label }}</a>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-                <div class="flex items-center gap-3 pl-4 border-l border-zinc-800">
-                    {% if is_trial or request.path.startswith('/trial') %}
-                        <a href="/trial" class="btn btn-primary !bg-brand !text-white !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest hover:!bg-brand/90 transition-all">Trial Panel</a>
-                        <a href="/" class="btn !bg-zinc-800 !text-zinc-300 !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest hover:!text-white transition-all">Exit Trial</a>
-                    {% elif session.get('user') %}
-                        <a href="/admin" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Admin</a>
-                        <a href="/logout" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest !bg-zinc-800 !text-zinc-100 hover:!bg-red-500 hover:!text-white transition-colors">Sign out</a>
-                    {% else %}
-                        <a href="/trial" class="btn !bg-zinc-900 border border-zinc-700 !text-zinc-200 hover:!border-brand/50 hover:!text-white !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest transition-all">Trial Sandbox</a>
-                        <a href="/login" class="btn btn-primary !text-[10px] !py-1 !px-4 uppercase font-bold tracking-widest">Sign In</a>
-                    {% endif %}
-                </div>
-            </div>
-
-            <button id="open-menu" class="lg:hidden p-2 text-zinc-400 hover:text-white transition-colors">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8h16M8 16h12"/></svg>
+            <button id="open-menu" class="md:hidden -mr-2 p-2 text-zinc-400 hover:text-white" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
         </div>
-    </nav>
 
-    <main class="flex-grow">
+        <nav id="mobile-menu" aria-label="Mobile" class="md:hidden hidden border-t border-zinc-800/80 bg-zinc-950">
+            <div class="max-w-5xl mx-auto px-6 py-3 flex flex-col">
+                {% if settings and settings.nav_links %}
+                    {% for link in settings.nav_links %}
+                    <a href="{{ link.url }}" class="py-3 text-base text-zinc-300 border-b border-zinc-900 last:border-0">{{ link.label }}</a>
+                    {% endfor %}
+                {% endif %}
+                {% if session.get('user') %}
+                    <a href="/admin" class="py-3 text-sm text-zinc-500">Admin</a>
+                    <a href="/logout" class="py-3 text-sm text-zinc-500">Sign out</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main id="main" class="flex-grow">
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="border-t border-zinc-900 bg-zinc-950 pt-24 pb-12 reveal">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-                <div class="space-y-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                            <span class="text-zinc-100 font-bold text-xs tracking-tighter">KH</span>
-                        </div>
-                        <span class="text-zinc-100 font-bold text-sm tracking-tight">Kurtis-Lee Hopewell</span>
-                    </div>
-                    <p class="text-xs leading-relaxed text-zinc-500 max-w-[260px]">
-                        Professional IT Portfolio showcasing expertise in systems architecture, full-stack development, and database management.
-                    </p>
-                </div>
-
-                <div class="space-y-6 lg:col-span-3">
-                    <h4 class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-600">Connect & Resources</h4>
-                    <div class="flex flex-wrap gap-3">
-                        <a href="https://github.com/Kalmai221" target="_blank" rel="noopener noreferrer" 
-                           class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
-                            <i class="fa-brands fa-github text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
-                            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">GitHub</span>
-                        </a>
-
-                        <a href="https://www.linkedin.com/in/kurtishopewell/" target="_blank" rel="noopener noreferrer" 
-                           class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
-                            <i class="fa-brands fa-linkedin-in text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
-                            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">LinkedIn</span>
-                        </a>
-
-                        <a href="mailto:hkurtislee@outlook.com" 
-                           class="group flex items-center gap-3 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-brand/40 hover:bg-zinc-900 transition-all duration-300">
-                            <i class="fa-solid fa-envelope text-zinc-500 group-hover:text-brand transition-colors text-base"></i>
-                            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">Email</span>
-                        </a>
-
-                        <a href="https://github.com/Kalmai221/portfolio" target="_blank" rel="noopener noreferrer" 
-                           class="group flex items-center gap-3 px-4 py-2.5 bg-brand/5 border border-brand/20 rounded-lg hover:border-brand/40 hover:bg-brand/10 transition-all duration-300">
-                            <i class="fa-solid fa-code text-brand/60 group-hover:text-brand transition-colors text-base"></i>
-                            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-100 uppercase tracking-widest">Source Code</span>
-                        </a>
-                    </div>
-                </div>
+    <footer class="border-t border-zinc-800/80 mt-24">
+        <div class="max-w-5xl mx-auto px-6 py-10 flex flex-col md:flex-row md:items-start md:justify-between gap-8 text-sm">
+            <div class="space-y-2 max-w-xs">
+                <p class="font-serif text-lg text-zinc-200">{{ site_name }}</p>
+                <p class="text-zinc-500 leading-relaxed">Systems, databases and full-stack development. Based in the UK.</p>
             </div>
-
-            <div class="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="flex flex-col md:flex-row items-center gap-4">
-                    <div class="flex items-center gap-4 text-[10px] font-medium text-zinc-600 uppercase tracking-widest">
-                        <span>&copy; {{ now.year if now else '2026' }} Kurtis-Lee Hopewell</span>
-                        <span class="w-1 h-1 rounded-full bg-zinc-800"></span>
-                        <span class="lowercase text-zinc-700 font-mono">v2.0.26</span>
-                    </div>
-
-                    <button onclick="localStorage.removeItem('data-notice-accepted'); window.location.reload();" 
-                            class="text-[9px] font-mono text-zinc-500 hover:text-brand transition-colors uppercase tracking-widest underline decoration-zinc-800 underline-offset-4">
-                        Privacy Policy
-                    </button>
-                </div>
-
-                <div class="flex items-center gap-8 text-[9px] font-mono uppercase tracking-widest">
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <span class="text-zinc-800">Backend:</span>
-                            <span class="text-zinc-500">Flask</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-zinc-800">Database:</span>
-                            <span class="text-zinc-500">MongoDB</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2 px-3 py-1 bg-emerald-500/5 border border-emerald-500/10 rounded-full">
-                        <span class="relative flex h-1.5 w-1.5">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                        </span>
-                        <span class="text-emerald-500/80 font-bold">System Online</span>
-                    </div>
-                </div>
+            <ul class="flex flex-wrap gap-x-6 gap-y-2 text-zinc-400">
+                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://github.com/Kalmai221" rel="noopener noreferrer" target="_blank">GitHub</a></li>
+                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://www.linkedin.com/in/kurtishopewell/" rel="noopener noreferrer" target="_blank">LinkedIn</a></li>
+                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="mailto:hkurtislee@outlook.com">Email</a></li>
+                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://github.com/Kalmai221/portfolio" rel="noopener noreferrer" target="_blank">Source for this site</a></li>
+                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="/trial">Try the CMS</a></li>
+            </ul>
+        </div>
+        <div class="border-t border-zinc-900">
+            <div class="max-w-5xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600">
+                <span>&copy; {{ now.year if now else '2026' }} {{ site_name }}</span>
+                <span class="flex gap-5">
+                    <button type="button" id="privacy-link" class="hover:text-zinc-300 underline underline-offset-4 decoration-zinc-800">Privacy</button>
+                    {% if not session.get('user') %}<a href="/login" class="hover:text-zinc-300">Admin</a>{% endif %}
+                </span>
             </div>
         </div>
     </footer>
 
-    <div id="data-modal" class="fixed inset-0 z-[200] flex items-end lg:items-center justify-center bg-zinc-950/90 backdrop-blur-md hidden opacity-0 transition-all duration-500">
-        <div id="data-modal-container" class="bg-zinc-900 border-t lg:border border-zinc-800 w-full max-w-lg rounded-t-2xl lg:rounded-xl shadow-[0_-20px_50px_rgba(0,0,0,0.5)] lg:shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transform translate-y-full lg:translate-y-0 transition-transform duration-500">
-
-            <div class="lg:hidden w-full flex justify-center pt-3 pb-1">
-                <div class="w-10 h-1 bg-zinc-800 rounded-full"></div>
-            </div>
-
-            <div class="px-6 py-4 bg-zinc-950/50 border-b border-zinc-800 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-brand shadow-[0_0_10px_rgba(99,102,241,0.6)]"></div>
-                    <h3 class="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-zinc-400">Data Transparency & Privacy</h3>
-                </div>
-            </div>
-
-            <div class="p-6 lg:p-8 space-y-6">
-                <div class="space-y-2">
-                    <h4 class="text-white font-bold text-sm lg:text-base tracking-tight">Your privacy is prioritized.</h4>
-                    <p class="text-zinc-500 text-xs leading-relaxed font-sans">
-                        This portfolio uses a custom analytics engine to improve performance and user experience. We utilize server-side processing to ensure no third-party tracking scripts are ever loaded.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 gap-4">
-                    <div class="flex items-start gap-4 p-4 bg-zinc-950/30 border border-zinc-800/50 rounded-lg group">
-                        <div class="text-brand shrink-0 mt-1 opacity-70 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-shield-halved"></i></div>
-                        <div>
-                            <p class="text-zinc-200 text-[11px] font-bold uppercase tracking-wider">Secure Anonymization</p>
-                            <p class="text-zinc-500 text-[10px] leading-relaxed mt-1">Network identifiers are transformed into a SHA-256 encrypted hash. This provides accurate visitor counts without storing identifiable personal data.</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-4 p-4 bg-zinc-950/30 border border-zinc-800/50 rounded-lg group">
-                        <div class="text-brand shrink-0 mt-1 opacity-70 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-chart-simple"></i></div>
-                        <div>
-                            <p class="text-zinc-200 text-[11px] font-bold uppercase tracking-wider">Service Optimization</p>
-                            <p class="text-zinc-500 text-[10px] leading-relaxed mt-1">We record page navigation paths and application performance metrics to identify and resolve potential technical faults.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pt-2 space-y-4">
-                    <button onclick="acceptDataNotice()" class="w-full py-4 lg:py-3 bg-zinc-100 text-zinc-950 text-[11px] font-bold uppercase tracking-widest rounded hover:bg-white transition-all shadow-xl active:scale-[0.98]">
-                        Accept and Continue
-                    </button>
-                    <p class="text-[9px] font-sans text-zinc-600 uppercase tracking-widest text-center">No data is shared with or sold to third-party entities.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <aside id="privacy-notice" role="dialog" aria-labelledby="privacy-title" class="hidden fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-sm z-50 bg-zinc-900 border border-zinc-800 rounded-lg p-5 shadow-lg">
+        <h2 id="privacy-title" class="text-zinc-100 font-semibold text-sm">About analytics</h2>
+        <p class="text-zinc-400 text-sm leading-relaxed mt-2">
+            I count page views with my own server-side counter. Your IP address is hashed together with your browser string and the date, so it can't be traced back to you or linked across days. There are no cookies for visitors and no third-party trackers.
+        </p>
+        <button type="button" id="privacy-ok" class="btn btn-primary mt-4 !py-1.5 !min-h-0 text-sm">Got it</button>
+    </aside>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Offline & UI Logic
-            const offlineBanner = document.getElementById('offline-banner');
-            const revealObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
-            }, { threshold: 0.1 });
-            document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-
-            // 2. Mobile Menu
-            const mobileMenu = document.getElementById('mobile-menu');
-            const mobileOverlay = document.getElementById('mobile-menu-overlay');
-            const mobileNavLinks = document.getElementById('mobile-nav-links'); // Get the container
-
-            window.toggleMobileMenu = function(show) {
-                if (show) {
-                    mobileMenu.classList.remove('closed');
-                    mobileOverlay.classList.remove('hidden');
-                    // Add stagger-active to trigger the visibility of the links
-                    setTimeout(() => {
-                        mobileOverlay.classList.add('opacity-100');
-                        mobileNavLinks.classList.add('stagger-active');
-                    }, 50);
-                    document.body.style.overflow = 'hidden';
-                } else {
-                    mobileMenu.classList.add('closed');
-                    mobileOverlay.classList.remove('opacity-100');
-                    // Remove stagger-active so they reset for the next time it opens
-                    mobileNavLinks.classList.remove('stagger-active');
-                    setTimeout(() => mobileOverlay.classList.add('hidden'), 300);
-                    document.body.style.overflow = '';
-                }
+        (function () {
+            var store = {
+                get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+                del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
             };
-            document.getElementById('open-menu').onclick = () => toggleMobileMenu(true);
-            document.getElementById('close-menu').onclick = () => toggleMobileMenu(false);
-            mobileOverlay.onclick = () => toggleMobileMenu(false);
 
-        // 3. Privacy Modal Logic
-        const dataModal = document.getElementById('data-modal');
-        const modalContainer = document.getElementById('data-modal-container');
+            // Fade-in on scroll
+            if ('IntersectionObserver' in window) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('active'); });
+                }, { threshold: 0.05 });
+                document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+            } else {
+                document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('active'); });
+            }
 
-        window.acceptDataNotice = function() {
-            localStorage.setItem('data-notice-accepted', 'true');
-            modalContainer.classList.add('translate-y-full');
-            dataModal.classList.remove('opacity-100');
-            setTimeout(() => {
-                dataModal.classList.add('hidden');
-                document.body.style.overflow = '';
-            }, 500);
-        };
+            // Mobile menu
+            var btn = document.getElementById('open-menu');
+            var menu = document.getElementById('mobile-menu');
+            btn.addEventListener('click', function () {
+                var open = menu.classList.toggle('hidden') === false;
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
 
-        // --- ENHANCED BOT DETECTION ---
-        // 1. Check URL parameters for ?isBot=true (Triggered by your Python og-image route)
-        const urlParams = new URLSearchParams(window.location.search);
-        const isBotParam = urlParams.get('isBot') === 'true';
-
-        // 2. Check User Agent strings for common crawlers
-        const isBotUA = /bot|googlebot|crawler|spider|robot|crawling|facebookexternalhit|linkedinbot|preview/i.test(navigator.userAgent);
-
-        // Combined check
-        const isBot = isBotParam || isBotUA;
-        const hasAccepted = localStorage.getItem('data-notice-accepted');
-
-        // Execution Logic
-        if (!hasAccepted && !isBot) {
-            // Show modal for real, new human visitors
-            setTimeout(() => {
-                dataModal.classList.remove('hidden');
-                setTimeout(() => {
-                    dataModal.classList.add('opacity-100');
-                    modalContainer.classList.remove('translate-y-full');
-                    modalContainer.classList.add('translate-y-0');
-                }, 10);
-                document.body.style.overflow = 'hidden';
-            }, 600);
-        } else {
-            // Strictly hide for bots or returning users
-            dataModal.classList.add('hidden');
-            document.body.style.overflow = ''; // Ensure scrolling is enabled for snapshots
-        }
-        });
+            // Privacy notice (not shown to crawlers or screenshot bots)
+            var notice = document.getElementById('privacy-notice');
+            var isBot = /bot|crawler|spider|preview|lighthouse/i.test(navigator.userAgent) ||
+                        new URLSearchParams(location.search).get('isBot') === 'true';
+            if (!store.get('privacy-notice-seen') && !isBot) notice.classList.remove('hidden');
+            document.getElementById('privacy-ok').addEventListener('click', function () {
+                store.set('privacy-notice-seen', '1');
+                notice.classList.add('hidden');
+            });
+            document.getElementById('privacy-link').addEventListener('click', function () {
+                notice.classList.remove('hidden');
+            });
+        })();
     </script>
 </body>
 </html>
