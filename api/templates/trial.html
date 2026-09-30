@@ -1,102 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CMS sandbox | Kurtis-Lee Hopewell</title>
-    <meta name="robots" content="noindex, nofollow">
-    <meta name="description" content="Try the portfolio CMS in your browser. Nothing is sent to a server.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
-    <style>
-        :root {
+{% extends "layout.html" %}
+{% block title %}CMS sandbox | {{ site_name }}{% endblock %}
+{% block content %}
+<style>
+#trial { color: var(--text); font-size: 15px; line-height: 1.55; }
+#trial {
             --bg: #0c0c0d; --panel: #171719; --line: #26262a; --line-2: #3f3f46;
             --text: #d4d4d8; --muted: #8b8b94; --strong: #f4f4f5; --brand: #d6a15c; --danger: #f87171;
         }
-        * { box-sizing: border-box; }
-        html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 "IBM Plex Sans", system-ui, sans-serif; }
-        a { color: var(--strong); text-decoration-color: var(--line-2); text-underline-offset: 3px; }
-        a:hover { text-decoration-color: var(--brand); }
-        h1, h2 { font-family: Newsreader, Georgia, serif; font-weight: 500; color: var(--strong); margin: 0; }
-        h1 { font-size: 30px; } h2 { font-size: 21px; }
-        button, input, textarea, select { font: inherit; color: inherit; }
-        :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+#trial * { box-sizing: border-box; }
+#trial a { color: var(--strong); text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+#trial a:hover { text-decoration-color: var(--brand); }
+#trial h1, #trial h2 { font-family: Newsreader, Georgia, serif; font-weight: 500; color: var(--strong); margin: 0; }
+#trial h1 { font-size: 30px; }
+#trial h2 { font-size: 21px; }
+#trial button, #trial input, #trial textarea, #trial select { font: inherit; color: inherit; }
+#trial :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+#trial .bar { border-bottom: 1px solid var(--line); }
+#trial .bar-in { max-width: 1024px; margin: 0 auto; padding: 0 24px; min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+#trial .brand { font: 500 19px Newsreader, Georgia, serif; color: var(--strong); text-decoration: none; }
+#trial .tag { font: 12px "IBM Plex Mono", monospace; color: var(--brand); margin-left: 10px; }
+#trial .tabs { display: flex; gap: 20px; font-size: 14px; }
+#trial .tabs a { color: var(--muted); text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; }
+#trial .tabs a.on, #trial .tabs a:hover { color: var(--strong); border-color: var(--brand); }
+#trial .pane { max-width: 1024px; margin: 0 auto; padding: 28px 24px 80px; }
+#trial .notice { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; color: var(--muted); font-size: 14px; display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 28px; }
+#trial section { margin-bottom: 36px; }
+#trial section > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+#trial .muted { color: var(--muted); }
+#trial .mono { font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+#trial table { width: 100%; border-collapse: collapse; }
+#trial th { text-align: left; font-weight: 500; color: var(--muted); font-size: 13px; }
+#trial th, #trial td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+#trial td.act { text-align: right; white-space: nowrap; }
+#trial .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line-2); background: transparent; cursor: pointer; text-decoration: none; font-size: 14px; }
+#trial .btn:hover { border-color: var(--muted); }
+#trial .btn.primary { background: var(--strong); color: #0c0c0d; border-color: var(--strong); font-weight: 500; }
+#trial .btn.primary:hover { background: #fff; }
+#trial .btn.small { padding: 3px 10px; font-size: 13px; }
+#trial .btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+#trial .btn:disabled { opacity: .4; cursor: default; }
+#trial label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+#trial input[type=text], #trial input[type=url], #trial textarea, #trial select { width: 100%; background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 8px 10px; }
+#trial input:focus, #trial textarea:focus { border-color: var(--brand); outline: none; }
+#trial .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+#trial .row > div { flex: 1 1 160px; }
+#trial .row > .fixed { flex: 0 0 auto; }
+#trial .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+#trial .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 760px) { #trial .grid2 { grid-template-columns: 1fr; }}
+#trial .editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: calc(100vh - 250px); min-height: 460px; }
+@media (max-width: 900px) { #trial .editor { grid-template-columns: 1fr; height: auto; }
+#trial .editor textarea { height: 340px; }
+#trial .editor iframe { height: 420px; }}
+#trial .editor .col { display: flex; flex-direction: column; min-height: 0; }
+#trial .editor textarea { flex: 1; resize: none; font: 13px/1.6 "IBM Plex Mono", monospace; tab-size: 2; white-space: pre; overflow: auto; }
+#trial .editor .ttabs { display: flex; gap: 2px; margin-bottom: 8px; }
+#trial .ttabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 4px 12px; cursor: pointer; color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+#trial .ttabs button.on { color: var(--strong); border-color: var(--brand); }
+#trial iframe.preview { flex: 1; width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #000; min-height: 300px; }
+#trial .bars { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding-top: 8px; }
+#trial .bars div { flex: 1; background: var(--line-2); border-radius: 3px 3px 0 0; position: relative; min-height: 2px; }
+#trial .bars div:last-child { background: var(--brand); }
+#trial .bars span { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--muted); white-space: nowrap; }
+#trial .meter { display: grid; grid-template-columns: 110px 1fr 40px; gap: 10px; align-items: center; font-size: 14px; margin: 6px 0; }
+#trial .meter i { display: block; height: 8px; background: var(--brand); border-radius: 4px; }
+#trial .stat { font: 500 30px Newsreader, Georgia, serif; color: var(--strong); }
+#trial .empty { color: var(--muted); padding: 24px 0; }
+#trial .log-warn td:first-child { color: var(--danger); }
 
-        .bar { border-bottom: 1px solid var(--line); }
-        .bar-in { max-width: 1040px; margin: 0 auto; padding: 0 20px; min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-        .brand { font: 500 19px Newsreader, Georgia, serif; color: var(--strong); text-decoration: none; }
-        .tag { font: 12px "IBM Plex Mono", monospace; color: var(--brand); margin-left: 10px; }
-        .tabs { display: flex; gap: 20px; font-size: 14px; }
-        .tabs a { color: var(--muted); text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; }
-        .tabs a.on, .tabs a:hover { color: var(--strong); border-color: var(--brand); }
-        main { max-width: 1040px; margin: 0 auto; padding: 28px 20px 80px; }
-        .notice { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; color: var(--muted); font-size: 14px; display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 28px; }
-        section { margin-bottom: 36px; }
-        section > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-        .muted { color: var(--muted); } .mono { font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+@media (max-width: 640px) {
+    #trial .pages th:nth-child(3), #trial .pages td:nth-child(3) { display: none; }
+    #trial td.act { white-space: normal; }
+    #trial td.act .btn { margin: 2px 0; }
+    #trial .bar-in { padding-top: 8px; padding-bottom: 8px; }
+    #trial .tabs { gap: 14px; flex-wrap: wrap; }
+}
+#trial .pane.center { text-align: center; padding-top: 72px; }
+#trial .site-frame { display: block; width: 100%; border: 0; background: #000; min-height: 400px; height: calc(100vh - 220px); }
+</style>
 
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; font-weight: 500; color: var(--muted); font-size: 13px; }
-        th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-        td.act { text-align: right; white-space: nowrap; }
+<div id="trial"><div id="app"></div></div>
+<noscript><p style="padding:24px">The sandbox runs entirely in your browser, so it needs JavaScript.</p></noscript>
 
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line-2); background: transparent; cursor: pointer; text-decoration: none; font-size: 14px; }
-        .btn:hover { border-color: var(--muted); }
-        .btn.primary { background: var(--strong); color: #0c0c0d; border-color: var(--strong); font-weight: 500; }
-        .btn.primary:hover { background: #fff; }
-        .btn.small { padding: 3px 10px; font-size: 13px; }
-        .btn.danger:hover { border-color: var(--danger); color: var(--danger); }
-        .btn:disabled { opacity: .4; cursor: default; }
-
-        label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-        input[type=text], input[type=url], textarea, select { width: 100%; background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 8px 10px; }
-        input:focus, textarea:focus { border-color: var(--brand); outline: none; }
-        .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-        .row > div { flex: 1 1 160px; }
-        .row > .fixed { flex: 0 0 auto; }
-        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
-        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
-
-        .editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: calc(100vh - 250px); min-height: 460px; }
-        @media (max-width: 900px) { .editor { grid-template-columns: 1fr; height: auto; } .editor textarea { height: 340px; } .editor iframe { height: 420px; } }
-        .editor .col { display: flex; flex-direction: column; min-height: 0; }
-        .editor textarea { flex: 1; resize: none; font: 13px/1.6 "IBM Plex Mono", monospace; tab-size: 2; white-space: pre; overflow: auto; }
-        .editor .ttabs { display: flex; gap: 2px; margin-bottom: 8px; }
-        .ttabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 4px 12px; cursor: pointer; color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 13px; }
-        .ttabs button.on { color: var(--strong); border-color: var(--brand); }
-        iframe.preview { flex: 1; width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #000; min-height: 300px; }
-
-        .bars { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding-top: 8px; }
-        .bars div { flex: 1; background: var(--line-2); border-radius: 3px 3px 0 0; position: relative; min-height: 2px; }
-        .bars div:last-child { background: var(--brand); }
-        .bars span { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--muted); white-space: nowrap; }
-        .meter { display: grid; grid-template-columns: 110px 1fr 40px; gap: 10px; align-items: center; font-size: 14px; margin: 6px 0; }
-        .meter i { display: block; height: 8px; background: var(--brand); border-radius: 4px; }
-        .stat { font: 500 30px Newsreader, Georgia, serif; color: var(--strong); }
-
-        .site-nav { border-bottom: 1px solid var(--line); background: var(--panel); }
-        .site-nav-in { max-width: 1040px; margin: 0 auto; padding: 12px 20px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
-        .site-nav a { text-decoration: none; color: var(--muted); font-size: 14px; }
-        .site-nav a:hover { color: var(--strong); }
-        .site-nav .name { font: 500 18px Newsreader, Georgia, serif; color: var(--strong); margin-right: auto; }
-        .site-frame { width: 100%; height: calc(100vh - 190px); min-height: 400px; border: 0; background: #000; display: block; }
-        .empty { color: var(--muted); padding: 24px 0; }
-        .log-warn td:first-child { color: var(--danger); }
-    </style>
-</head>
-<body>
-    <div id="app"></div>
-    <noscript><p style="padding:24px">The sandbox runs entirely in your browser, so it needs JavaScript.</p></noscript>
-
-    <script>
-    (function () {
+<script>
+(function () {
         'use strict';
 
         var KEY = 'kh-trial-v2';
         var TTL_MS = 24 * 60 * 60 * 1000;
         var app = document.getElementById('app');
+        var dirty = false;
 
         // ── Storage (localStorage, with an in-memory fallback for private windows) ──
         var memoryOnly = false, memoryCopy = null;
@@ -176,8 +169,8 @@
             var tabs = [['#/', 'Dashboard'], ['#/analytics', 'Analytics'], ['#/audit', 'Activity']].map(function (t) {
                 return '<a href="' + t[0] + '"' + (active === t[0] ? ' class="on"' : '') + '>' + t[1] + '</a>';
             }).join('');
-            return '<div class="bar"><div class="bar-in"><div><a class="brand" href="#/">CMS sandbox</a><span class="tag">local to this browser</span></div>' +
-                '<nav class="tabs" aria-label="Sandbox">' + tabs + '<a href="#/view/home">View site</a><a href="/">Exit</a></nav></div></div><main>' + inner + '</main>';
+            return '<div class="bar"><div class="bar-in"><div><strong class="label">CMS sandbox</strong><span class="tag">saved in this browser only</span></div>' +
+                '<nav class="tabs" aria-label="Sandbox">' + tabs + '<a href="#/view/home">View site</a></nav></div></div><div class="pane">' + inner + '</div>';
         }
 
         // ── Views ──
@@ -202,7 +195,7 @@
                 '<button class="btn small danger" data-act="reset">Reset sandbox</button></div>' +
 
                 '<section><header><h1>Pages</h1></header>' +
-                (slugs.length ? '<table><thead><tr><th>Title</th><th>URL</th><th>Updated</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p class="empty">No pages yet.</p>') +
+                (slugs.length ? '<table class="pages"><thead><tr><th>Title</th><th>URL</th><th>Updated</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p class="empty">No pages yet.</p>') +
                 '<form data-form="new-page" class="row" style="margin-top:16px"><div><label for="np">New page URL</label><input id="np" type="text" name="slug" placeholder="e.g. blog" required></div>' +
                 '<div class="fixed"><button class="btn primary" type="submit">Create and edit</button></div></form></section>' +
 
@@ -240,9 +233,10 @@
             function val(id) { return document.getElementById(id).value; }
             function render() { if (!document.getElementById('ed-html')) return; pv.innerHTML = ''; pv.appendChild(makeFrame('preview', current())); }
             render();
+            ['et', 'es'].forEach(function (id) { document.getElementById(id).addEventListener('input', function () { dirty = true; }); });
             ['ed-html', 'ed-css', 'ed-js'].forEach(function (id) {
                 var ta = document.getElementById(id);
-                ta.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(render, 500); });
+                ta.addEventListener('input', function () { dirty = true; clearTimeout(timer); timer = setTimeout(render, 500); });
                 ta.addEventListener('keydown', function (e) {
                     if (e.key === 'Tab' && !e.shiftKey) {
                         e.preventDefault();
@@ -261,20 +255,15 @@
         }
 
         function viewSite(slug) {
-            var s = state.settings;
-            var links = state.nav.map(function (l) {
-                var u = safeUrl(l.url);
-                return u ? '<a href="' + esc(u) + '"' + (/^https?:/.test(u) ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' + esc(l.label) + '</a>' : '';
-            }).join('');
-            return '<div class="site-nav"><div class="site-nav-in"><span class="name">' + esc(s.first + ' ' + s.last) + '</span>' + links +
-                '<a href="#/" style="color:var(--brand)">Back to dashboard</a></div></div><div id="site"></div>';
+            return '<div class="bar"><div class="bar-in"><div><strong class="label">Previewing your site</strong><span class="tag">this is how visitors would see it</span></div>' +
+                '<nav class="tabs" aria-label="Sandbox"><a href="#/">Back to dashboard</a><a href="#/edit/' + esc(slug) + '">Edit this page</a></nav></div></div><div id="site"></div>';
         }
         function mountSite(slug) {
             var box = document.getElementById('site'), p = state.pages[slug];
             if (state.maintenance) {
-                box.innerHTML = '<main style="text-align:center;padding-top:80px"><h1>Back shortly</h1><p class="muted">Maintenance mode is on. Visitors see this instead of your pages.</p></main>';
+                box.innerHTML = '<div class="pane center"><h1>Back shortly</h1><p class="muted">Maintenance mode is on, so visitors see this instead of your pages.</p></div>';
             } else if (!p) {
-                box.innerHTML = '<main style="text-align:center;padding-top:80px"><h1>Page not found</h1><p class="muted">Nothing exists at /' + esc(slug) + '.</p></main>';
+                box.innerHTML = '<div class="pane center"><h1>That page does not exist</h1><p class="muted">Nothing lives at /' + esc(slug) + '.</p></div>';
             } else {
                 box.appendChild(makeFrame('site-frame', p));
             }
@@ -308,10 +297,27 @@
             return shell('#/audit', '<section><header><h1>Activity</h1></header><table><thead><tr><th>Action</th><th>Detail</th><th>When</th></tr></thead><tbody>' + rows + '</tbody></table></section>');
         }
 
+        // ── Keep the real site header in step with the sandbox settings ──
+        function syncChrome() {
+            var brand = document.getElementById('site-brand');
+            if (brand) { brand.textContent = state.settings.first + ' ' + state.settings.last; brand.setAttribute('href', '#/view/home'); }
+            var desk = document.getElementById('site-nav'), mob = document.getElementById('mobile-links');
+            var links = state.nav.map(function (l) { return { l: l, u: safeUrl(l.url) }; }).filter(function (x) { return x.u; });
+            if (desk) desk.innerHTML = links.map(function (x) {
+                var ext = /^https?:/.test(x.u) ? ' target="_blank" rel="noopener noreferrer"' : '';
+                return '<a href="' + esc(x.u) + '"' + ext + ' class="text-zinc-400 hover:text-zinc-100 transition-colors">' + esc(x.l.label) + '</a>';
+            }).join('');
+            if (mob) mob.innerHTML = links.map(function (x) {
+                return '<a href="' + esc(x.u) + '" class="py-3 text-base text-zinc-300 border-b border-zinc-900 last:border-0">' + esc(x.l.label) + '</a>';
+            }).join('');
+        }
+
         // ── Router ──
         function route() {
             var h = location.hash.replace(/^#/, '') || '/', m;
             window.scrollTo(0, 0);
+            dirty = false;
+            syncChrome();
             if ((m = h.match(/^\/edit\/(.+)$/))) { var slug = slugify(m[1]); app.innerHTML = viewEditor(slug); mountEditor(); }
             else if ((m = h.match(/^\/view\/(.+)$/))) { app.innerHTML = viewSite(m[1]); mountSite(slugify(m[1])); }
             else if (h === '/analytics') app.innerHTML = viewAnalytics();
@@ -347,7 +353,7 @@
                     html: document.getElementById('ed-html').value, css: document.getElementById('ed-css').value,
                     js: document.getElementById('ed-js').value, updated: Date.now()
                 };
-                log('page_save', '/' + ns); go('#/');
+                log('page_save', '/' + ns); dirty = false; go('#/');
             }
         });
 
@@ -369,9 +375,15 @@
             }
         });
 
+        window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+        document.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                var btn = document.querySelector('[data-act="save-page"]');
+                if (btn) { e.preventDefault(); btn.click(); }
+            }
+        });
         window.addEventListener('hashchange', route);
         route();
     })();
-    </script>
-</body>
-</html>
+</script>
+{% endblock %}

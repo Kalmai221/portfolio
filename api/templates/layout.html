@@ -8,7 +8,7 @@
     {%- set page_title = (page.title ~ ' | ' ~ site_name) if (page and page.title and not is_home) else (site_name ~ ' | IT Portfolio') %}
     {%- set page_desc = (page.description if page and page.description else settings.site_description) or 'IT portfolio.' %}
     {%- set canonical = site_url ~ ('/' if request.path in ('/', '/home') else request.path) %}
-    <title>{{ page_title }}</title>
+    <title>{% block title %}{{ page_title }}{% endblock %}</title>
     <meta name="description" content="{{ page_desc }}">
     <link rel="canonical" href="{{ canonical }}">
     {%- if request.path.startswith(('/admin', '/login', '/trial')) %}
@@ -78,9 +78,9 @@
 
     <header class="border-b border-zinc-800/80">
         <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="/" class="font-serif text-xl text-zinc-100 tracking-tight hover:text-white">{{ site_name }}</a>
+            <a href="/" id="site-brand" class="font-serif text-xl text-zinc-100 tracking-tight hover:text-white inline-flex items-center min-h-[44px]">{{ site_name }}</a>
 
-            <nav aria-label="Main" class="hidden md:flex items-center gap-7 text-[15px]">
+            <nav aria-label="Main" id="site-nav" class="hidden md:flex items-center gap-7 text-[15px]">
                 {% if settings and settings.nav_links %}
                     {% for link in settings.nav_links %}
                     <a href="{{ link.url }}"
@@ -100,7 +100,7 @@
         </div>
 
         <nav id="mobile-menu" aria-label="Mobile" class="md:hidden hidden border-t border-zinc-800/80 bg-zinc-950">
-            <div class="max-w-5xl mx-auto px-6 py-3 flex flex-col">
+            <div id="mobile-links" class="max-w-5xl mx-auto px-6 py-3 flex flex-col">
                 {% if settings and settings.nav_links %}
                     {% for link in settings.nav_links %}
                     <a href="{{ link.url }}" class="py-3 text-base text-zinc-300 border-b border-zinc-900 last:border-0">{{ link.label }}</a>
@@ -125,11 +125,11 @@
                 <p class="text-zinc-500 leading-relaxed">Systems, databases and full-stack development. Based in the UK.</p>
             </div>
             <ul class="flex flex-wrap gap-x-6 gap-y-2 text-zinc-400">
-                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://github.com/Kalmai221" rel="noopener noreferrer" target="_blank">GitHub</a></li>
-                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://www.linkedin.com/in/kurtishopewell/" rel="noopener noreferrer" target="_blank">LinkedIn</a></li>
-                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="mailto:hkurtislee@outlook.com">Email</a></li>
-                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://github.com/Kalmai221/portfolio" rel="noopener noreferrer" target="_blank">Source for this site</a></li>
-                <li><a class="underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="/trial">Try the CMS</a></li>
+                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://github.com/Kalmai221" rel="noopener noreferrer" target="_blank">GitHub</a></li>
+                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://www.linkedin.com/in/kurtishopewell/" rel="noopener noreferrer" target="_blank">LinkedIn</a></li>
+                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="mailto:hkurtislee@outlook.com">Email</a></li>
+                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://github.com/Kalmai221/portfolio" rel="noopener noreferrer" target="_blank">Source for this site</a></li>
+                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="/trial">Try the CMS</a></li>
             </ul>
         </div>
         <div class="border-t border-zinc-900">
