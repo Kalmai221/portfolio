@@ -20,6 +20,7 @@ from flask import (
     url_for,
 )
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+from werkzeug.datastructures import ImmutableMultiDict
 
 from .app import SITE_URL, app, logger, utc_now
 from .security import login_required
@@ -75,17 +76,45 @@ def render_preview(content, css, js, logic, base_context=None):
         return f"<pre style='background:#111;color:orange;padding:20px'>Template error: {html.escape(str(e))}</pre>"
 
 
+class _PreviewRequest:
+    """Stand-in for `request` while previewing.
+
+    The editor sends its own fields with a POST, which would look like a real form
+    submission to page code (contact form, message deletion). Previews therefore see a
+    GET with no form data, so they can read the database but never act on it.
+    """
+
+    method = "GET"
+
+    def __init__(self, real):
+        self._real = real
+        self.form = ImmutableMultiDict()
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+
 @app.route("/_preview", methods=["GET", "POST"])
 @login_required
 def preview_node():
     """Admin-only. Executes the editor's Python and Jinja, so it must never be public."""
-    base_ctx = {"session": session, "request": request, "datetime": datetime, "now": utc_now()}
+    base_ctx = {
+        "db": g.db,
+        "session": session,
+        "request": _PreviewRequest(request),
+        "datetime": datetime,
+        "timedelta": timedelta,
+        "now": utc_now(),
+        "page": {},
+        "maintenance_active": False,
+    }
 
     if request.method == "GET":
         slug = request.args.get("target_slug", "home")
         page = g.pages.find_one({"slug": slug}) if g.pages is not None else None
         if not page:
             return "Node not found", 404
+        base_ctx["page"] = page
         return render_preview(
             page.get("content", ""), page.get("css", ""), page.get("js", ""),
             page.get("python_logic", ""), base_ctx,

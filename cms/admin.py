@@ -227,7 +227,7 @@ def edit_page(slug):
     if request.method == "POST":
         validate_csrf()
         new_slug = request.form.get("slug", slug).strip("/").lower()
-        if not new_slug or new_slug.split("/")[0] in RESERVED_SLUGS:
+        if not new_slug or new_slug in RESERVED_SLUGS:
             return redirect(url_for("edit_page", slug=slug))
         if new_slug != slug and g.pages.find_one({"slug": new_slug}):
             return redirect(url_for("edit_page", slug=slug))
