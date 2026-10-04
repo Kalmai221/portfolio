@@ -1,6 +1,7 @@
 """Flask app object, configuration and the Vercel path shim."""
 import logging
 import os
+import re
 import secrets
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote
@@ -16,6 +17,20 @@ _API = os.path.join(_ROOT, "api")
 
 IS_PRODUCTION = bool(os.environ.get("VERCEL")) or os.environ.get("FLASK_ENV") == "production"
 SITE_URL = os.environ.get("SITE_URL", "https://klhportfolio.vercel.app").rstrip("/")
+
+# Who may embed the public pages in an <iframe> (CSP frame-ancestors). Space-separated list
+# of origins, "*" for any site, or "'self'" for none. Admin and login pages ignore this and
+# can never be framed. Anything that isn't "*", "'self'" or a plain http(s) origin is dropped.
+_ORIGIN = re.compile(r"^https?://[A-Za-z0-9.-]+(:\d{1,5})?$")
+
+
+def _frame_ancestors() -> str:
+    tokens = os.environ.get("FRAME_ANCESTORS", "*").split()
+    allowed = [t for t in tokens if t in ("*", "'self'") or _ORIGIN.match(t)]
+    return " ".join(allowed) or "'self'"
+
+
+FRAME_ANCESTORS = _frame_ancestors()
 
 _PLACEHOLDER_SECRETS = {"", "dev-key-change-in-production", "your_random_secret_key_here"}
 _PLACEHOLDER_PASSWORDS = {"", "password", "your_password_here"}

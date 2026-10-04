@@ -10,7 +10,7 @@ from threading import Lock
 from flask import abort, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from .app import IS_PRODUCTION, admin_login_enabled, app, logger, utc_now
+from .app import FRAME_ANCESTORS, IS_PRODUCTION, admin_login_enabled, app, logger, utc_now
 
 
 def client_ip() -> str:
@@ -135,15 +135,34 @@ def safe_next_url(target):
 
 
 # ── Headers ────────────────────────────────────────────────
+# Pages that carry privileges (sign-in, admin, the editor preview) must never be framed,
+# otherwise another site could trick an admin into clicking buttons they can't see.
+_NEVER_FRAMED = ("/admin", "/login", "/logout", "/_preview")
+
+
+def _never_framed(path: str) -> bool:
+    return any(path == p or path.startswith(p + "/") for p in _NEVER_FRAMED)
+
+
 @app.after_request
 def set_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+
     # Page content is admin-authored HTML/JS, so a strict script policy would break it.
-    # These directives still close off plugins, <base> hijacking and framing.
-    response.headers["Content-Security-Policy"] = "object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+    # These directives still close off plugins and <base> hijacking.
+    csp = "object-src 'none'; base-uri 'self'; "
+    if _never_framed(request.path):
+        csp += "frame-ancestors 'none'"
+        response.headers["X-Frame-Options"] = "DENY"
+    else:
+        # X-Frame-Options can't express "these origins", and it would override the policy
+        # below in older browsers, so public pages don't send it at all.
+        csp += f"frame-ancestors {FRAME_ANCESTORS}"
+        response.headers.pop("X-Frame-Options", None)
+    response.headers["Content-Security-Policy"] = csp
+
     if IS_PRODUCTION:
         response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
     return response
