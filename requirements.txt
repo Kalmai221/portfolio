@@ -6,3 +6,4 @@ gunicorn>=23.0
 user-agents~=2.2
 requests~=2.32
 pytz>=2024.1
+dnspython
