@@ -90,7 +90,10 @@
                 {% if session.get('user') %}
                     <span class="w-px h-4 bg-zinc-800"></span>
                     <a href="/admin" class="text-zinc-500 hover:text-zinc-100 text-sm">Admin</a>
-                    <a href="/logout" class="text-zinc-500 hover:text-zinc-100 text-sm">Sign out</a>
+                    <form method="POST" action="/logout" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="text-zinc-500 hover:text-zinc-100 text-sm">Sign out</button>
+                    </form>
                 {% endif %}
             </nav>
 
@@ -108,7 +111,10 @@
                 {% endif %}
                 {% if session.get('user') %}
                     <a href="/admin" class="py-3 text-sm text-zinc-500">Admin</a>
-                    <a href="/logout" class="py-3 text-sm text-zinc-500">Sign out</a>
+                    <form method="POST" action="/logout" class="py-3">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="text-sm text-zinc-500">Sign out</button>
+                    </form>
                 {% endif %}
             </div>
         </nav>

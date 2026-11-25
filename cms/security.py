@@ -80,11 +80,18 @@ def rate_limit(max_calls: int, window_seconds: int):
 
 
 LOGIN_MAX_FAILURES = 5
+# Failures per username across all IPs. Higher than the per-IP limit so one attacker can't
+# lock the real admin out easily, but low enough to stop slow guessing from many addresses.
+LOGIN_USER_MAX_FAILURES = 20
 LOGIN_WINDOW = 900
 
 
-def login_locked_out(ip: str) -> bool:
-    return rate_count(f"loginfail:{ip}", LOGIN_WINDOW) >= LOGIN_MAX_FAILURES
+def login_locked_out(ip: str, username: str = "") -> bool:
+    if rate_count(f"loginfail:{ip}", LOGIN_WINDOW) >= LOGIN_MAX_FAILURES:
+        return True
+    if username:
+        return rate_count(f"loginfail-user:{username.lower()[:100]}", LOGIN_WINDOW) >= LOGIN_USER_MAX_FAILURES
+    return False
 
 
 # ── CSRF ───────────────────────────────────────────────────

@@ -35,7 +35,10 @@
 <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm shadow-lg">
     <span class="text-zinc-300">Maintenance is on. Only you can see this page.</span>
     <a href="/admin" class="text-zinc-400 underline underline-offset-4 hover:text-zinc-100">Admin</a>
-    <a href="/logout" class="text-zinc-400 underline underline-offset-4 hover:text-zinc-100">Sign out</a>
+    <form method="POST" action="/logout" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="text-zinc-400 underline underline-offset-4 hover:text-zinc-100">Sign out</button>
+    </form>
 </div>
 {% endif %}
 {% endblock %}

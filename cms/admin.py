@@ -41,14 +41,15 @@ def login():
     elif request.method == "POST":
         validate_csrf()
         ip = client_ip()
-        if login_locked_out(ip):
-            return render_template("login.html", error="Too many failed attempts. Try again in 15 minutes."), 429
-
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
 
+        if login_locked_out(ip, username):
+            return render_template("login.html", error="Too many failed attempts. Try again in 15 minutes."), 429
+
         if check_admin_credentials(username, password):
             rate_clear(f"loginfail:{ip}")
+            rate_clear(f"loginfail-user:{username.lower()[:100]}")
             session.clear()  # prevent session fixation
             session.permanent = True
             session["user"] = username
@@ -57,14 +58,17 @@ def login():
             return redirect(safe_next_url(request.args.get("next")) or url_for("admin_dashboard"))
 
         rate_record(f"loginfail:{ip}")
+        rate_record(f"loginfail-user:{username.lower()[:100]}")
         audit("login_fail", f"Failed login for '{username}' from {ip}", level="warn")
         error = "Invalid credentials"
 
     return render_template("login.html", error=error)
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 def logout():
+    # POST + CSRF so another site can't sign the admin out with an image or link.
+    validate_csrf()
     audit("logout")
     session.clear()
     return redirect(url_for("login"))
