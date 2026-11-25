@@ -1,208 +1,329 @@
 {% extends "layout.html" %}
+{% block title %}Analytics | {{ settings.site_name_first }} {{ settings.site_name_last }}{% endblock %}
 {% block content %}
+{% set qs = request.query_string.decode() %}
 
 {% macro change(value) %}
-    {% if value is not none %}
-    <span class="text-xs {{ 'text-emerald-400' if value > 0 else 'text-red-400' if value < 0 else 'text-zinc-500' }}">
-        {{ '+' if value > 0 else '' }}{{ value }}% <span class="text-zinc-600">vs previous</span>
-    </span>
-    {% endif %}
+    {% if value is not none %}<span class="an-delta {{ 'is-up' if value > 0 else 'is-down' if value < 0 else '' }}">{{ '+' if value > 0 else '' }}{{ value }}% on the period before</span>{% endif %}
 {% endmacro %}
 
-{% macro bars(title, rows, key, empty='Nothing yet') %}
-<section class="bg-zinc-900 border border-zinc-800 rounded-lg p-5" aria-label="{{ title }}">
-    <h2 class="text-sm font-medium text-zinc-200 mb-4">{{ title }}</h2>
+{% macro ranks(title, rows, key, empty='Nothing yet') %}
+<section class="an-block" aria-label="{{ title }}">
+    <h2>{{ title }}</h2>
     {% if rows %}
-    <ul class="space-y-3">
-        {% set top = rows[0].count %}
+    {% set top = rows[0].count %}
+    <ul class="an-ranks">
         {% for r in rows %}
         <li>
-            <a href="{{ link(**{key: r.name}) }}" class="block group">
-                <div class="flex justify-between gap-3 text-sm mb-1">
-                    <span class="text-zinc-300 group-hover:text-white truncate">{{ r.name }}</span>
-                    <span class="text-zinc-500 tabular-nums">{{ r.count }}</span>
-                </div>
-                <div class="h-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div class="h-full bg-zinc-600 group-hover:bg-brand rounded-full" style="width: {{ (r.count / top * 100)|round|int }}%"></div>
-                </div>
+            <a href="{{ link(**{key: r.name}) }}">
+                <span class="an-rank-name">{{ r.name }}</span>
+                <span class="an-rank-n">{{ r.count }}</span>
+                <span class="an-rank-bar"><i style="width: {{ (r.count / top * 100)|round|int }}%"></i></span>
             </a>
         </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p class="text-sm text-zinc-600">{{ empty }}</p>
-    {% endif %}
+    {% else %}<p class="an-empty">{{ empty }}</p>{% endif %}
 </section>
 {% endmacro %}
 
-<div class="max-w-6xl mx-auto px-5 py-10 space-y-6">
+<style>
+  .an {
+    --border: rgba(255, 255, 255, 0.09);
+    --text-1: #f4f4f5;
+    --text-2: #b4b4bb;
+    --text-3: #8b8b94;
+    --accent: #d4c5a9;
+  }
+  :where(.an h1, .an h2, .an p, .an ul, .an dl, .an dd, .an figure) { margin: 0; padding: 0; }  /* :where() so this reset never outranks the rules below */
+  .an ul { list-style: none; }
+  .an a:focus-visible, .an button:focus-visible, .an summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .an-num { font-variant-numeric: tabular-nums; }
 
-    <!-- Header -->
-    <header class="flex flex-wrap items-end justify-between gap-4">
+  .an-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem; }
+  .an-back { display: inline-block; margin-bottom: 1rem; color: var(--text-3); text-decoration: none; font-size: 0.9rem; }
+  .an-back:hover { color: var(--text-1); }
+  .an h1 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: clamp(2.25rem, 7vw, 3.5rem); line-height: 1.05; letter-spacing: -0.02em; color: var(--text-1); }
+
+  /* The sentence that opens the page: the answer first, the detail below it */
+  .an-lead { max-width: 44rem; margin-top: 1.75rem; font-family: Newsreader, Georgia, serif; font-size: clamp(1.5rem, 3.6vw, 2.15rem); line-height: 1.25; color: var(--text-2); }
+  .an-lead b { font-weight: 500; color: var(--text-1); }
+  .an-delta { display: block; margin-top: 0.6rem; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 0.9rem; color: var(--text-3); }
+  .an-delta.is-up { color: #6ee7b7; }
+  .an-delta.is-down { color: #fca5a5; }
+  .an-insights { display: flex; flex-wrap: wrap; gap: 0.35rem 1.75rem; margin-top: 1.25rem; max-width: 52rem; font-size: 0.95rem; line-height: 1.6; color: var(--text-3); }
+
+  .an-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; margin-top: 2.25rem; border-bottom: 1px solid var(--border); }
+  .an-tabs { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+  .an-tab { display: inline-flex; align-items: center; padding: 0.75rem 0; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--text-3); text-decoration: none; font-size: 0.95rem; transition: color 0.15s; }
+  .an-tab:hover { color: var(--text-1); }
+  .an-tab[aria-current="true"] { color: var(--text-1); border-bottom-color: var(--accent); }
+  .an-tools { display: flex; flex-wrap: wrap; gap: 0.5rem; padding-bottom: 0.6rem; }
+  .an-btn { display: inline-flex; align-items: center; min-height: 36px; padding: 0.25rem 0.85rem; background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: var(--text-1); font: inherit; font-size: 0.85rem; text-decoration: none; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .an-btn:hover { border-color: rgba(255, 255, 255, 0.5); }
+  .an-btn.is-on { border-color: var(--accent); color: var(--accent); }
+
+  .an-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 1.25rem; font-size: 0.9rem; color: var(--text-3); }
+  .an-chip { padding: 0.15rem 0.7rem; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 999px; color: var(--text-1); text-decoration: none; }
+  .an-chip:hover { border-color: rgba(255, 255, 255, 0.5); }
+
+  .an-live { margin-top: 1.5rem; border-bottom: 1px solid var(--border); }
+  .an-live summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0; cursor: pointer; list-style: none; color: var(--text-2); font-size: 0.95rem; }
+  .an-live summary::-webkit-details-marker { display: none; }
+  .an-live summary::after { content: "Show"; margin-left: auto; font-size: 0.85rem; color: var(--text-3); }
+  .an-live[open] summary::after { content: "Hide"; }
+  .an-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; }
+  .an-dot.is-live { background: #34d399; box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18); }
+  .an-recent { padding: 0.25rem 0 1rem; }
+  .an-recent li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; padding: 0.4rem 0; font-size: 0.9rem; color: var(--text-3); }
+  .an-recent li span:first-child { color: var(--text-1); font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.85rem; overflow-wrap: anywhere; }
+
+  .an-chart { margin-top: 2rem; }
+  .an-chart-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.5rem; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-3); }
+  .an-key { display: inline-flex; align-items: center; gap: 0.4rem; margin-right: 1.25rem; }
+  .an-key i { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--accent); }
+  .an-key.is-visitors i { border-top: 1.5px solid #a1a1aa; }
+  .an-key.is-prev i { border-top: 2px dashed #6b6b73; }
+  .an-check { display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; color: var(--text-2); }
+  .an-check input { accent-color: #d4c5a9; width: 16px; height: 16px; }
+  .an-canvas { position: relative; height: 18rem; }
+  .an details.an-table { margin-top: 1rem; font-size: 0.9rem; }
+  .an-table summary { cursor: pointer; color: var(--text-3); }
+  .an-table summary:hover { color: var(--text-1); }
+
+  /* Headline numbers sit in a ruled row, not boxes */
+  .an-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 2.5rem; border-top: 1px solid var(--border); }
+  @media (min-width: 900px) { .an-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .an-stat { padding: 1.25rem 1rem 1.25rem 0; border-bottom: 1px solid var(--border); }
+  .an-stat dt { font-size: 0.9rem; color: var(--text-3); }
+  .an-stat dd { margin-top: 0.35rem; font-family: Newsreader, Georgia, serif; font-size: 2.1rem; line-height: 1.1; color: var(--text-1); font-variant-numeric: tabular-nums; }
+  .an-stat small { display: block; margin-top: 0.3rem; font-size: 0.8rem; color: var(--text-3); }
+
+  .an-grid { display: grid; gap: 2.5rem 3.5rem; margin-top: 3rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 900px) { .an-grid.is-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .an-grid.is-wide { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); } .an-grid.is-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2.5rem 2rem; } }
+  .an-block h2 { padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.35rem; color: var(--text-1); }
+  .an-note { margin-top: 0.6rem; font-size: 0.85rem; line-height: 1.55; color: var(--text-3); }
+  .an-empty { padding-top: 1rem; font-size: 0.95rem; color: var(--text-3); }
+
+  .an-ranks a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); text-decoration: none; }
+  .an-rank-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); font-size: 0.95rem; }
+  .an-rank-n { color: var(--text-3); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  .an-rank-bar { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+  .an-rank-bar i { display: block; height: 100%; background: rgba(212, 197, 169, 0.5); transition: background 0.15s; }
+  .an-ranks a:hover .an-rank-name { color: var(--text-1); }
+  .an-ranks a:hover .an-rank-bar i { background: var(--accent); }
+
+  .an-rows { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  .an-rows th { padding: 0.7rem 0 0.5rem; text-align: left; font-weight: 400; font-size: 0.85rem; color: var(--text-3); }
+  .an-rows td { padding: 0.7rem 0; border-top: 1px solid var(--border); color: var(--text-2); }
+  .an-rows .r { text-align: right; padding-left: 1rem; font-variant-numeric: tabular-nums; }
+  .an-rows a { color: var(--text-1); text-decoration: none; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.85rem; overflow-wrap: anywhere; }
+  .an-rows a:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--accent); }
+  .an-code { display: inline-block; padding: 0.05rem 0.5rem; border-radius: 4px; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.8rem; background: rgba(251, 191, 36, 0.1); color: #fcd34d; }
+  .an-code.is-5 { background: rgba(248, 113, 113, 0.1); color: #fca5a5; }
+
+  .an-hours { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 3px; margin-top: 1.25rem; }
+  .an-hours div { height: 2.25rem; border-radius: 2px; }
+  .an-hours-labels { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 3px; margin-top: 0.35rem; font-size: 0.7rem; color: var(--text-3); }
+  .an-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.5rem; align-items: end; height: 7rem; margin-top: 1.25rem; }
+  .an-days div { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+  .an-days i { display: block; min-height: 2px; border-radius: 2px 2px 0 0; background: rgba(212, 197, 169, 0.55); }
+  .an-days-labels { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.4rem; font-size: 0.8rem; color: var(--text-3); text-align: center; }
+
+  .an-funnel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.5rem; margin-top: 1rem; }
+  .an-funnel b { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 2.1rem; color: var(--text-1); font-variant-numeric: tabular-nums; }
+  .an-funnel span { font-size: 0.9rem; color: var(--text-3); }
+  .an-funnel .sep { color: var(--text-3); }
+  .an-link { color: var(--text-1); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, 0.3); }
+  .an-link:hover { text-decoration-color: var(--accent); }
+  .an-foot { max-width: 44rem; margin-top: 3.5rem; font-size: 0.85rem; line-height: 1.65; color: var(--text-3); }
+</style>
+
+<div class="an max-w-6xl mx-auto px-5 py-10">
+
+    <header class="an-top">
         <div>
-            <p class="text-sm text-zinc-500 mb-1"><a href="/admin" class="hover:text-zinc-200">&larr; Admin</a></p>
-            <h1 class="font-serif text-3xl text-zinc-100">Analytics</h1>
-            <p class="text-sm text-zinc-500 mt-1">
-                {{ win.label }} &middot; times in UTC &middot;
-                <span class="text-zinc-300">{{ online }}</span> on the site now
-            </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-3">
-            <nav class="flex rounded-md border border-zinc-800 overflow-hidden text-sm" aria-label="Time range">
-                {% for r in range_choices %}
-                <a href="{{ link(range=r, date=None) }}"
-                   class="px-3 py-1.5 {{ 'bg-zinc-100 text-zinc-950 font-medium' if win.range == r else 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900' }}"
-                   {% if win.range == r %}aria-current="true"{% endif %}>{{ 'All' if r == 'all' else r }}</a>
-                {% endfor %}
-            </nav>
-            <a href="{{ link(bots=None if show_bots else 'true') }}"
-               class="px-3 py-1.5 text-sm rounded-md border {{ 'border-brand text-brand' if show_bots else 'border-zinc-800 text-zinc-400 hover:text-zinc-100' }}">
-                {{ 'Bots shown' if show_bots else 'Bots hidden' }}
-            </a>
-            <button type="button" id="export" class="px-3 py-1.5 text-sm rounded-md border border-zinc-800 text-zinc-400 hover:text-zinc-100">Export CSV</button>
+            <a href="/admin" class="an-back">&larr; Admin</a>
+            <h1>Analytics</h1>
         </div>
     </header>
 
-    <!-- Active filters -->
+    <p class="an-lead">
+        <b class="an-num">{{ '{:,}'.format(visitors) }}</b> {{ 'person' if visitors == 1 else 'people' }} read
+        <b class="an-num">{{ '{:,}'.format(views) }}</b> {{ 'page' if views == 1 else 'pages' }}
+        {% if win.range == 'all' %}since the site started counting{% elif win.range is none %}on {{ win.label }}{% else %}in the {{ win.label|lower }}{% endif %}.
+        {{ change(views_change) }}
+    </p>
+    {% if insights %}
+    <ul class="an-insights" aria-label="Highlights">
+        {% for line in insights %}<li>{{ line }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="an-bar">
+        <nav class="an-tabs" aria-label="Time range">
+            {% for r in range_choices %}
+            <a href="{{ link(range=r, date=None) }}" class="an-tab" {% if win.range == r %}aria-current="true"{% endif %}>{{ 'All time' if r == 'all' else r }}</a>
+            {% endfor %}
+        </nav>
+        <div class="an-tools">
+            <a href="{{ link(bots=None if show_bots else 'true') }}" class="an-btn {{ 'is-on' if show_bots }}">{{ 'Bots shown' if show_bots else 'Bots hidden' }}</a>
+            <a href="/admin/analytics.csv{{ '?' ~ qs if qs }}" class="an-btn" download>Export CSV</a>
+        </div>
+    </div>
+
     {% if filters or win.range is none %}
-    <div class="flex flex-wrap items-center gap-2 text-sm">
-        <span class="text-zinc-500">Filtered by</span>
-        {% if win.range is none %}
-        <a href="{{ link(date=None) }}" class="px-2.5 py-1 rounded-full border border-zinc-700 text-zinc-200 hover:border-zinc-500">{{ win.label }} &times;</a>
-        {% endif %}
-        {% for k, v in filters.items() %}
-        <a href="{{ link(**{k: None}) }}" class="px-2.5 py-1 rounded-full border border-zinc-700 text-zinc-200 hover:border-zinc-500">{{ k }}: {{ v }} &times;</a>
-        {% endfor %}
+    <div class="an-filters">
+        <span>Filtered by</span>
+        {% if win.range is none %}<a href="{{ link(date=None) }}" class="an-chip">{{ win.label }} &times;</a>{% endif %}
+        {% for k, v in filters.items() %}<a href="{{ link(**{k: None}) }}" class="an-chip">{{ k }}: {{ v }} &times;</a>{% endfor %}
     </div>
     {% endif %}
 
-    <!-- Headline numbers -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Summary">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-            <p class="text-sm text-zinc-500">Page views</p>
-            <p class="font-serif text-4xl text-zinc-100 tabular-nums mt-1">{{ '{:,}'.format(views) }}</p>
-            {{ change(views_change) }}
-        </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-            <p class="text-sm text-zinc-500">Visitors</p>
-            <p class="font-serif text-4xl text-zinc-100 tabular-nums mt-1">{{ '{:,}'.format(visitors) }}</p>
-            {{ change(visitors_change) }}
-        </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-            <p class="text-sm text-zinc-500">Views per visitor</p>
-            <p class="font-serif text-4xl text-zinc-100 tabular-nums mt-1">{{ per_visitor }}</p>
-            <span class="text-xs text-zinc-600">pages read each visit</span>
-        </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-            <p class="text-sm text-zinc-500">Bot requests</p>
-            <p class="font-serif text-4xl text-zinc-100 tabular-nums mt-1">{{ '{:,}'.format(bot_requests) }}</p>
-            <span class="text-xs text-zinc-600">{{ 'included above' if show_bots else 'not counted above' }}</span>
-        </div>
-    </section>
+    <details class="an-live" id="live">
+        <summary><span class="an-dot {{ 'is-live' if online }}" id="live-dot"></span><span id="live-text">{{ online }} on the site now</span></summary>
+        <ul class="an-recent" id="live-list"><li><span>Opens with the latest visits</span><span></span></li></ul>
+    </details>
 
-    <!-- Traffic chart -->
-    <section class="bg-zinc-900 border border-zinc-800 rounded-lg p-5" aria-labelledby="traffic-h">
-        <div class="flex flex-wrap items-baseline justify-between gap-2 mb-4">
-            <h2 id="traffic-h" class="text-sm font-medium text-zinc-200">Traffic</h2>
-            <p class="text-xs text-zinc-500">
-                <span class="inline-block w-2.5 h-0.5 bg-brand align-middle mr-1"></span>Views
-                <span class="inline-block w-2.5 h-0.5 bg-zinc-400 align-middle ml-3 mr-1"></span>Visitors
-                {% if chart.unit == 'day' %}&middot; click a day to see its hours{% endif %}
+    <figure class="an-chart">
+        <div class="an-chart-head">
+            <p>
+                <span class="an-key"><i></i>Views</span><span class="an-key is-visitors"><i></i>Visitors</span>{% if chart.previous %}<span class="an-key is-prev"><i></i>Views, period before</span>{% endif %}
+            </p>
+            <p>
+                {% if chart.previous %}<label class="an-check"><input type="checkbox" id="compare" checked> Compare to the period before</label>{% endif %}
+                {% if chart.unit == 'day' %}<span style="margin-left:1rem">Click a day for its hours. Times are UTC.</span>{% else %}<span style="margin-left:1rem">Times are UTC.</span>{% endif %}
             </p>
         </div>
-        <div class="h-64"><canvas id="traffic" role="img" aria-label="Views and visitors over time"></canvas></div>
-        <details class="mt-4 text-sm">
-            <summary class="cursor-pointer text-zinc-500 hover:text-zinc-300">View as a table</summary>
-            <div class="mt-3 max-h-64 overflow-auto">
-                <table class="w-full text-left">
-                    <thead class="text-zinc-500"><tr><th class="py-1 font-normal">When</th><th class="py-1 font-normal text-right">Views</th><th class="py-1 font-normal text-right">Visitors</th></tr></thead>
-                    <tbody class="text-zinc-300">
+        <div class="an-canvas"><canvas id="traffic" role="img" aria-label="Views and visitors over time"></canvas></div>
+        <details class="an-table">
+            <summary>View as a table</summary>
+            <div style="max-height:16rem;overflow:auto;margin-top:0.5rem">
+                <table class="an-rows">
+                    <thead><tr><th>When</th><th class="r">Views</th><th class="r">Visitors</th>{% if chart.previous %}<th class="r">Views, before</th>{% endif %}</tr></thead>
+                    <tbody>
                         {% for i in range(chart.labels|length) %}
-                        <tr class="border-t border-zinc-800"><td class="py-1">{{ chart.keys[i] if chart.unit == 'day' else chart.labels[i] }}</td><td class="py-1 text-right tabular-nums">{{ chart.views[i] }}</td><td class="py-1 text-right tabular-nums">{{ chart.visitors[i] }}</td></tr>
+                        <tr><td>{{ chart.keys[i] if chart.unit == 'day' else chart.labels[i] }}</td><td class="r">{{ chart.views[i] }}</td><td class="r">{{ chart.visitors[i] }}</td>{% if chart.previous %}<td class="r">{{ chart.previous[i] }}</td>{% endif %}</tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </details>
-    </section>
+    </figure>
 
-    <!-- Pages and sources -->
-    <div class="grid lg:grid-cols-3 gap-5">
-        <section class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-lg p-5" aria-labelledby="pages-h">
-            <h2 id="pages-h" class="text-sm font-medium text-zinc-200 mb-3">Top pages</h2>
+    <dl class="an-stats">
+        <div class="an-stat"><dt>Page views</dt><dd>{{ '{:,}'.format(views) }}</dd>{% if views_change is not none %}<small>{{ '+' if views_change > 0 }}{{ views_change }}% before</small>{% endif %}</div>
+        <div class="an-stat"><dt>Visitors</dt><dd>{{ '{:,}'.format(visitors) }}</dd>{% if visitors_change is not none %}<small>{{ '+' if visitors_change > 0 }}{{ visitors_change }}% before</small>{% endif %}</div>
+        <div class="an-stat"><dt>Pages per visit</dt><dd>{{ per_visitor }}</dd><small>how far people read</small></div>
+        <div class="an-stat"><dt>Left after one page</dt><dd>{{ single_pct ~ '%' if single_pct is not none else '–' }}</dd><small>of visitors</small></div>
+        <div class="an-stat"><dt>Bot requests</dt><dd>{{ '{:,}'.format(bot_requests) }}</dd><small>{{ 'included above' if show_bots else 'not counted above' }}</small></div>
+    </dl>
+
+    <div class="an-grid is-wide">
+        <section class="an-block" aria-labelledby="pages-h">
+            <h2 id="pages-h">Top pages</h2>
             {% if top_pages %}
-            <table class="w-full text-left text-sm">
-                <thead class="text-zinc-500"><tr><th class="py-1.5 font-normal">Page</th><th class="py-1.5 font-normal text-right">Views</th><th class="py-1.5 font-normal text-right">Visitors</th></tr></thead>
+            <table class="an-rows">
+                <thead><tr><th>Page</th><th class="r">Views</th><th class="r">Visitors</th></tr></thead>
                 <tbody>
                     {% for p in top_pages %}
-                    <tr class="border-t border-zinc-800">
-                        <td class="py-2 pr-3"><a class="text-zinc-200 hover:text-brand font-mono text-[13px]" href="{{ link(path=p.path) }}">{{ '/' if p.path == 'home' else '/' ~ p.path }}</a></td>
-                        <td class="py-2 text-right tabular-nums text-zinc-300">{{ p.views }}</td>
-                        <td class="py-2 text-right tabular-nums text-zinc-500">{{ p.visitors }}</td>
+                    <tr>
+                        <td><a href="{{ link(path=p.path) }}">{{ '/' if p.path == 'home' else '/' ~ p.path }}</a></td>
+                        <td class="r">{{ p.views }}</td><td class="r">{{ p.visitors }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            {% else %}
-            <p class="text-sm text-zinc-600">No views in this period.</p>
-            {% endif %}
+            {% else %}<p class="an-empty">No views in this period.</p>{% endif %}
         </section>
-
-        {{ bars('Where visitors came from', referrers, 'referrer', 'No outside referrers yet') }}
+        <div style="display:grid;gap:2.5rem">
+            {{ ranks('Where visitors came from', referrers, 'referrer', 'No outside referrers yet') }}
+            <section class="an-block" aria-labelledby="entry-h">
+                <h2 id="entry-h">Where visits start</h2>
+                {% if entry_pages %}
+                <table class="an-rows">
+                    <tbody>
+                        {% for p in entry_pages %}
+                        <tr><td><a href="{{ link(path=p.path) }}">{{ '/' if p.path == 'home' else '/' ~ p.path }}</a></td><td class="r">{{ p.count }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}<p class="an-empty">Nothing yet</p>{% endif %}
+            </section>
+        </div>
     </div>
 
-    <!-- Audience -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {{ bars('Devices', devices, 'device') }}
-        {{ bars('Browsers', browsers, 'browser') }}
-        {{ bars('Operating systems', systems, 'os') }}
-        {{ bars('Countries', countries, 'country', 'No country data') }}
+    <div class="an-grid is-4">
+        {{ ranks('Devices', devices, 'device') }}
+        {{ ranks('Browsers', browsers, 'browser') }}
+        {{ ranks('Operating systems', systems, 'os') }}
+        {{ ranks('Countries', countries, 'country', 'No country data') }}
     </div>
 
-    <!-- Hours and errors -->
-    <div class="grid lg:grid-cols-2 gap-5">
-        <section class="bg-zinc-900 border border-zinc-800 rounded-lg p-5" aria-labelledby="hours-h">
-            <h2 id="hours-h" class="text-sm font-medium text-zinc-200 mb-1">Busiest hours</h2>
-            <p class="text-xs text-zinc-500 mb-4">Views by hour of day, UTC. Darker means quieter.</p>
-            <div class="grid gap-1" style="grid-template-columns: repeat(24, minmax(0, 1fr))">
-                {% for h in range(24) %}
-                <div class="flex flex-col items-center gap-1">
-                    <div class="w-full h-9 rounded-sm"
-                         style="background: rgba(214,161,92,{{ (0.06 + 0.94 * hour_counts[h] / hour_max)|round(2) }})"
-                         title="{{ '%02d'|format(h) }}:00 UTC, {{ hour_counts[h] }} views"></div>
-                    <span class="text-[10px] text-zinc-600 {{ '' if h % 6 == 0 else 'invisible' }}">{{ '%02d'|format(h) }}</span>
-                </div>
-                {% endfor %}
+    <div class="an-grid is-2">
+        <section class="an-block" aria-labelledby="hours-h">
+            <h2 id="hours-h">Busiest hours</h2>
+            <div class="an-hours">
+                {% for h in range(24) %}<div style="background: rgba(212,197,169,{{ (0.06 + 0.94 * hour_counts[h] / hour_max)|round(2) }})" title="{{ '%02d'|format(h) }}:00 UTC, {{ hour_counts[h] }} views"></div>{% endfor %}
             </div>
+            <div class="an-hours-labels" aria-hidden="true">
+                {% for h in range(24) %}<span>{{ '%02d'|format(h) if h % 6 == 0 }}</span>{% endfor %}
+            </div>
+            <p class="an-note">Views by hour of day, UTC. Brighter means busier.</p>
         </section>
-
-        <section class="bg-zinc-900 border border-zinc-800 rounded-lg p-5" aria-labelledby="err-h">
-            <h2 id="err-h" class="text-sm font-medium text-zinc-200 mb-1">Errors</h2>
-            <p class="text-xs text-zinc-500 mb-3">Failed requests in this period, most frequent first. Not affected by filters.</p>
-            {% if errors %}
-            <table class="w-full text-left text-sm">
-                <tbody>
-                    {% for e in errors %}
-                    <tr class="border-t border-zinc-800 first:border-0">
-                        <td class="py-2 pr-3 w-14">
-                            <span class="font-mono text-xs px-1.5 py-0.5 rounded {{ 'bg-amber-500/10 text-amber-300' if e._id.s < 500 else 'bg-red-500/10 text-red-300' }}">{{ e._id.s }}</span>
-                        </td>
-                        <td class="py-2 pr-3 font-mono text-[13px] text-zinc-300 truncate max-w-[14rem]">/{{ e._id.p }}</td>
-                        <td class="py-2 text-right text-zinc-500 whitespace-nowrap">&times;{{ e.n }}<span class="hidden sm:inline"> &middot; {{ e.last.strftime('%d %b %H:%M') }}</span></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="text-sm text-zinc-600">No errors recorded. Nice.</p>
-            {% endif %}
+        <section class="an-block" aria-labelledby="days-h">
+            <h2 id="days-h">Busiest days</h2>
+            <div class="an-days">
+                {% for d in range(7) %}<div title="{{ ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][d] }}: {{ weekday_counts[d] }} views"><i style="height: {{ (weekday_counts[d] / weekday_max * 100)|round|int }}%"></i></div>{% endfor %}
+            </div>
+            <div class="an-days-labels" aria-hidden="true">
+                {% for n in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}<span>{{ n }}</span>{% endfor %}
+            </div>
+            <p class="an-note">Views by day of the week across this period.</p>
         </section>
     </div>
 
-    <p class="text-xs text-zinc-600 leading-relaxed max-w-3xl">
-        Visitors are anonymous daily hashes of IP address, browser and date, so nobody can be identified or followed across days.
-        A person who returns on a second day counts as a second visitor. Data is kept for {{ retention_days }} days.
+    <div class="an-grid is-2">
+        <section class="an-block" aria-labelledby="contact-h">
+            <h2 id="contact-h">Contact page</h2>
+            <div class="an-funnel">
+                <b>{{ contact_visitors }}</b><span>{{ 'person' if contact_visitors == 1 else 'people' }} opened it</span>
+                {% if messages is not none %}<span class="sep">&rarr;</span><b>{{ messages }}</b><span>{{ 'message' if messages == 1 else 'messages' }} sent{% if contact_visitors and messages %}, {{ ((messages / contact_visitors * 100)|round|int) }}% of visitors{% endif %}</span>{% endif %}
+            </div>
+            <p class="an-note">Spam is not counted. <a class="an-link" href="/admin/messages">Open Messages</a></p>
+        </section>
+        <section class="an-block" aria-labelledby="bots-h">
+            <h2 id="bots-h">Bots</h2>
+            {% if bots %}
+            <table class="an-rows">
+                <tbody>{% for b in bots %}<tr><td>{{ b.name }}</td><td class="r">{{ b.count }}</td></tr>{% endfor %}</tbody>
+            </table>
+            <p class="an-note">Crawlers and scripts. They are left out of every other number unless you show bots.</p>
+            {% else %}<p class="an-empty">No bot traffic in this period.</p>{% endif %}
+        </section>
+    </div>
+
+    <section class="an-block" style="margin-top:3rem" aria-labelledby="err-h">
+        <h2 id="err-h">Errors</h2>
+        <p class="an-note" style="margin-bottom:0.5rem">Failed requests in this period, most frequent first. Filters don't apply here.</p>
+        {% if errors %}
+        <table class="an-rows">
+            <tbody>
+                {% for e in errors %}
+                <tr>
+                    <td style="width:4.5rem"><span class="an-code {{ 'is-5' if e._id.s >= 500 }}">{{ e._id.s }}</span></td>
+                    <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:0.85rem;overflow-wrap:anywhere">/{{ e._id.p }}</td>
+                    <td class="r" style="white-space:nowrap">&times;{{ e.n }} <span style="color:var(--text-3)">{{ e.last.strftime('%d/%m/%Y %H:%M') }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}<p class="an-empty">No errors recorded.</p>{% endif %}
+    </section>
+
+    <p class="an-foot">
+        Visitors are anonymous daily codes made from IP address, browser and date, so nobody can be identified or followed across days.
+        Someone who comes back the next day counts as a new visitor. Nothing here uses cookies. Data is kept for {{ retention_days }} days.
     </p>
 </div>
 
@@ -210,49 +331,76 @@
 <script>
 (function () {
     var data = {{ chart|tojson }};
-    var brand = '#d6a15c', muted = '#a1a1aa', grid = '#26262a';
+    var accent = '#d4c5a9', muted = '#a1a1aa', faint = '#6b6b73', grid = 'rgba(255,255,255,0.07)';
 
-    var chart = new Chart(document.getElementById('traffic'), {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [
-                { label: 'Views', data: data.views, borderColor: brand, backgroundColor: 'rgba(214,161,92,0.12)', fill: true, tension: 0.3, borderWidth: 2, pointRadius: data.labels.length > 40 ? 0 : 3, pointHoverRadius: 5 },
-                { label: 'Visitors', data: data.visitors, borderColor: muted, borderWidth: 1.5, tension: 0.3, pointRadius: 0, pointHoverRadius: 4 }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, ticks: { color: muted, precision: 0, maxTicksLimit: 5 }, grid: { color: grid }, border: { display: false } },
-                x: { ticks: { color: muted, maxRotation: 0, autoSkipPadding: 16 }, grid: { display: false }, border: { display: false } }
-            },
-            onClick: function (e, els) {
-                if (!els.length || data.unit !== 'day') return;
-                var url = new URL(location.href);
-                url.searchParams.set('date', data.keys[els[0].index]);
-                url.searchParams.delete('range');
-                location.href = url.toString();
-            },
-            onHover: function (e, els) { e.native.target.style.cursor = els.length && data.unit === 'day' ? 'pointer' : 'default'; }
+    if (window.Chart) {
+        var datasets = [
+            { label: 'Views', data: data.views, borderColor: accent, backgroundColor: 'rgba(212,197,169,0.10)', fill: true, tension: 0.3, borderWidth: 2, pointRadius: data.labels.length > 40 ? 0 : 3, pointHoverRadius: 5, order: 1 },
+            { label: 'Visitors', data: data.visitors, borderColor: muted, borderWidth: 1.5, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, order: 2 }
+        ];
+        if (data.previous) {
+            datasets.push({ label: 'Views, period before', data: data.previous, borderColor: faint, borderDash: [5, 4], borderWidth: 1.5, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, order: 3 });
         }
-    });
-
-    document.getElementById('export').addEventListener('click', function () {
-        var rows = [['when', 'views', 'visitors']];
-        data.keys.forEach(function (k, i) {
-            rows.push([data.unit === 'day' ? k : k + ' ' + data.labels[i], data.views[i], data.visitors[i]]);
+        var chart = new Chart(document.getElementById('traffic'), {
+            type: 'line',
+            data: { labels: data.labels, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: muted, precision: 0, maxTicksLimit: 5 }, grid: { color: grid }, border: { display: false } },
+                    x: { ticks: { color: muted, maxRotation: 0, autoSkipPadding: 16 }, grid: { display: false }, border: { display: false } }
+                },
+                onClick: function (e, els) {
+                    if (!els.length || data.unit !== 'day') return;
+                    var url = new URL(location.href);
+                    url.searchParams.set('date', data.keys[els[0].index]);
+                    url.searchParams.delete('range');
+                    location.href = url.toString();
+                },
+                onHover: function (e, els) { e.native.target.style.cursor = els.length && data.unit === 'day' ? 'pointer' : 'default'; }
+            }
         });
-        var csv = rows.map(function (r) { return r.join(','); }).join('\n');
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-        a.download = 'analytics-' + new Date().toISOString().slice(0, 10) + '.csv';
-        a.click();
-        URL.revokeObjectURL(a.href);
-    });
+        var compare = document.getElementById('compare');
+        if (compare) {
+            compare.addEventListener('change', function () {
+                chart.setDatasetVisibility(2, compare.checked);
+                chart.update();
+            });
+        }
+    }
+
+    // Who is on the site: ask every 30 seconds, and only while the tab is visible.
+    var live = document.getElementById('live'), text = document.getElementById('live-text'), dot = document.getElementById('live-dot'), list = document.getElementById('live-list');
+    function ago(m) { return m < 1 ? 'just now' : m + (m === 1 ? ' minute ago' : ' minutes ago'); }
+    function refresh() {
+        if (document.hidden) return;
+        fetch('/admin/analytics/live', { credentials: 'same-origin', cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d) return;
+                text.textContent = d.online + ' on the site now';
+                dot.classList.toggle('is-live', d.online > 0);
+                list.textContent = '';
+                if (!d.recent.length) {
+                    var empty = document.createElement('li');
+                    empty.textContent = 'No visits in the last 30 minutes.';
+                    list.appendChild(empty);
+                    return;
+                }
+                d.recent.forEach(function (v) {
+                    var li = document.createElement('li'), a = document.createElement('span'), b = document.createElement('span');
+                    a.textContent = v.path === 'home' ? '/' : '/' + v.path;
+                    b.textContent = v.country + ' · ' + ago(v.minutes);
+                    li.appendChild(a); li.appendChild(b); list.appendChild(li);
+                });
+            })
+            .catch(function () {});
+    }
+    live.addEventListener('toggle', function () { if (live.open) refresh(); });
+    setInterval(refresh, 30000);
 })();
 </script>
 {% endblock %}
