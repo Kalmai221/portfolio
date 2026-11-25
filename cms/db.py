@@ -18,16 +18,31 @@ _indexes_ready = False
 _RETRY_AFTER = 10  # seconds to wait before retrying a failed connection
 
 
+def note_db_failure():
+    """Call when a query fails because the database can't be reached.
+
+    Starts a short cooldown during which requests skip the database and fail straight away,
+    instead of each one waiting out PyMongo's server-selection timeout. It also detaches this
+    request's own handles so later lookups in the same request don't wait a second time.
+    """
+    global _last_failure
+    _last_failure = time.monotonic()
+    g.db = g.pages = g.settings_col = g.audit_col = g.rate_col = None
+    g.analytics_col = g.analytics_write_col = None
+
+
 def get_mongo_client():
     """Return a cached client. PyMongo reconnects on its own, so no per-request ping."""
     global _client, _last_failure
+    # While the database is known to be down, don't touch it. One request per cooldown
+    # period probes it again.
+    if _last_failure and time.monotonic() - _last_failure < _RETRY_AFTER:
+        return None
     if _client is not None:
         return _client
 
     uri = os.environ.get("MONGODB_URI")
     if not uri:
-        return None
-    if _last_failure and time.monotonic() - _last_failure < _RETRY_AFTER:
         return None
 
     try:
@@ -47,6 +62,7 @@ def get_mongo_client():
         return None
 
     _client = c
+    _last_failure = 0.0
     _ensure_indexes(c.my_portfolio)
     return _client
 

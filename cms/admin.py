@@ -219,7 +219,7 @@ def bypass_maintenance():
 # ── Page editor ────────────────────────────────────────────
 RESERVED_SLUGS = {
     "admin", "login", "logout", "static", "_preview", "trial",
-    "sitemap.xml", "robots.txt", "og-image.png",
+    "sitemap.xml", "robots.txt", "og-image.png", "healthz",
 }
 
 

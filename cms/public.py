@@ -11,6 +11,8 @@ from flask import (
     Response,
     abort,
     g,
+    jsonify,
+    make_response,
     redirect,
     render_template,
     render_template_string,
@@ -23,6 +25,7 @@ from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from werkzeug.datastructures import ImmutableMultiDict
 
 from .app import SITE_URL, app, logger, utc_now
+from .db import get_mongo_client, note_db_failure
 from .security import login_required
 from .services import get_site_settings, is_maintenance_mode, log_visit
 
@@ -139,6 +142,60 @@ def trial_legacy(_rest):
     return redirect(url_for("trial"), code=301)
 
 
+# ── Database outages ───────────────────────────────────────
+# Last copy of each page this process served. It is only read when the database can't be
+# reached, and it is replaced by the database's version every time that works, so it can be
+# out of date during an outage but never afterwards. Serverless instances each keep their own.
+_page_cache: dict = {}
+_PAGE_CACHE_MAX = 64
+
+
+def _unavailable(maintenance=False):
+    return render_template("503.html", maintenance_active=maintenance), 503, {"Retry-After": "15"}
+
+
+def _load_page(path):
+    """Return (page, from_cache). On an outage this falls back to the last copy of the page."""
+    if g.pages is not None:
+        try:
+            page = g.pages.find_one({"slug": path})
+        except (ConnectionFailure, ServerSelectionTimeoutError) as e:
+            note_db_failure()
+            logger.warning(f"Database unreachable, trying cached copy of /{path}: {e}")
+        else:
+            if page:
+                if len(_page_cache) >= _PAGE_CACHE_MAX and path not in _page_cache:
+                    _page_cache.pop(next(iter(_page_cache)))
+                _page_cache[path] = page
+            else:
+                _page_cache.pop(path, None)
+            return page, False
+    return _page_cache.get(path), True
+
+
+@app.errorhandler(ConnectionFailure)
+def database_unreachable(e):
+    """Any route (admin included) that loses the database gets the friendly page, not a 500."""
+    note_db_failure()
+    logger.error(f"Database unreachable: {e}")
+    return _unavailable()
+
+
+@app.route("/healthz")
+def healthz():
+    """Uptime check: 200 when the database answers, 503 when it doesn't."""
+    ok = False
+    client = get_mongo_client()
+    if client is not None:
+        try:
+            client.admin.command("ping")
+            ok = True
+        except ConnectionFailure:
+            note_db_failure()
+    status = {"status": "ok" if ok else "degraded", "database": ok}
+    return jsonify(status), (200 if ok else 503), {"Cache-Control": "no-store"}
+
+
 # ── CMS router ─────────────────────────────────────────────
 @app.route("/", defaults={"path": "home"}, methods=["GET", "POST"])
 @app.route("/<path:path>", methods=["GET", "POST"])
@@ -153,11 +210,11 @@ def cms_router(path):
     if global_maint and not (is_admin and has_bypass):
         return render_template("503.html", maintenance_active=True), 503
 
-    if g.pages is None:
-        return render_template("503.html", maintenance_active=False), 503
-
     try:
-        page = g.pages.find_one({"slug": path})
+        page, from_cache = _load_page(path)
+        if page is None and from_cache:
+            # The database is down and this process has never served this page.
+            return _unavailable()
         if page:
             maint_val = page.get("maintenance", False)
             page_maint = maint_val.lower() == "true" if isinstance(maint_val, str) else bool(maint_val)
@@ -186,11 +243,15 @@ def cms_router(path):
                     logger.error(f"Logic exec error on /{path}: {e}")
 
             rendered = render_template_string(page.get("content", ""), **ctx)
-            return render_template("page.html", rendered_node_content=rendered, **ctx)
+            response = make_response(render_template("page.html", rendered_node_content=rendered, **ctx))
+            if from_cache:
+                response.headers["X-Content-Source"] = "cache"
+            return response
 
     except (ConnectionFailure, ServerSelectionTimeoutError) as db_err:
+        note_db_failure()
         logger.critical(f"DB error serving /{path}: {db_err}")
-        return render_template("503.html", maintenance_active=False), 503
+        return _unavailable()
 
     except Exception as e:
         logger.error(f"CMS router failure on /{path}: {e}")

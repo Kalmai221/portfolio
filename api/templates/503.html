@@ -6,15 +6,26 @@
     <h1 class="font-serif text-4xl text-zinc-100 mb-4">Back shortly</h1>
     <p class="text-zinc-400 leading-relaxed mb-8">The site is down for maintenance. This page checks again every 15 seconds, so you don't need to refresh.</p>
     {% else %}
-    <h1 class="font-serif text-4xl text-zinc-100 mb-4">Can't reach the database</h1>
-    <p class="text-zinc-400 leading-relaxed mb-8">The site couldn't load its content just now. This page will retry every 15 seconds.</p>
+    <h1 class="font-serif text-4xl text-zinc-100 mb-4">This page isn't loading right now</h1>
+    {% if request.method == 'GET' %}
+    <p class="text-zinc-400 leading-relaxed mb-8">The site couldn't load its content just now. That's usually brief, and this page tries again every 15 seconds on its own. If it keeps happening, my contact details are in the footer below.</p>
+    {% else %}
+    <p class="text-zinc-400 leading-relaxed mb-8">What you sent didn't go through. Go back and try again in a minute, or use the email address in the footer below.</p>
+    {% endif %}
     {% endif %}
     <div class="flex flex-wrap gap-3">
+        {% if request.method == 'GET' %}
         <button onclick="location.reload()" class="btn btn-primary">Try again now</button>
+        {% else %}
+        <button onclick="history.back()" class="btn btn-primary">Go back</button>
+        {% endif %}
         {% if session.get('user') and maintenance_active %}
         <a href="/admin/bypass-maintenance?next={{ request.path }}" class="btn border border-zinc-700 text-zinc-200 hover:border-zinc-500">View the live site (admin)</a>
         {% endif %}
     </div>
 </div>
+{% if request.method == 'GET' %}
+{#- Only GET pages retry on their own: reloading after a POST would send the form again. #}
 <script>setTimeout(function () { location.reload(); }, 15000);</script>
+{% endif %}
 {% endblock %}

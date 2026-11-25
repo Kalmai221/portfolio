@@ -3,9 +3,11 @@ import hashlib
 from datetime import datetime, timedelta
 
 from flask import g, request, session
+from pymongo.errors import ConnectionFailure
 from user_agents import parse
 
 from .app import SITE_URL, app, logger, utc_now
+from .db import note_db_failure
 from .security import client_ip, generate_csrf_token
 
 # ── Settings (30s in-process cache) ────────────────────────
@@ -25,17 +27,22 @@ def get_site_settings() -> dict:
     global _settings_cache, _settings_expiry
     if utc_now() < _settings_expiry and _settings_cache:
         return _settings_cache
+    # If the database can't be reached, keep using the last settings this process saw
+    # (navigation, site name) rather than dropping back to bare defaults.
     try:
         if g.settings_col is None:
-            return dict(_SETTINGS_DEFAULTS)
+            return _settings_cache or dict(_SETTINGS_DEFAULTS)
         doc = g.settings_col.find_one({"name": "global_config"})
         if not doc:
             return dict(_SETTINGS_DEFAULTS)
         _settings_cache = {**_SETTINGS_DEFAULTS, **doc}
         _settings_expiry = utc_now() + timedelta(seconds=30)
         return _settings_cache
+    except ConnectionFailure:
+        note_db_failure()
+        return _settings_cache or dict(_SETTINGS_DEFAULTS)
     except Exception:
-        return dict(_SETTINGS_DEFAULTS)
+        return _settings_cache or dict(_SETTINGS_DEFAULTS)
 
 
 def bust_settings_cache():
@@ -53,9 +60,11 @@ def is_maintenance_mode() -> bool:
     global _maint_value, _maint_expiry
     if utc_now() < _maint_expiry:
         return _maint_value
+    # If the database is unreachable, keep the last known state so a site that was in
+    # maintenance mode doesn't suddenly look open.
     try:
         if g.settings_col is None:
-            return False
+            return _maint_value
         config = g.settings_col.find_one({"name": "maintenance_mode"})
         active = config.get("active") if config else False
         if isinstance(active, str):
@@ -63,8 +72,11 @@ def is_maintenance_mode() -> bool:
         _maint_value = bool(active)
         _maint_expiry = utc_now() + timedelta(seconds=10)
         return _maint_value
+    except ConnectionFailure:
+        note_db_failure()
+        return _maint_value
     except Exception:
-        return False
+        return _maint_value
 
 
 def bust_maintenance_cache():
