@@ -59,6 +59,10 @@
         @layer components {
             .btn { @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors min-h-[40px]; }
             .btn-primary { @apply bg-zinc-100 text-zinc-950 hover:bg-white; }
+            .nav-link { @apply inline-flex items-center rounded-md px-3 min-h-[40px] text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-100; }
+            .nav-link[aria-current="page"] { @apply bg-zinc-900 text-zinc-100; }
+            .nav-link-m { @apply flex items-center rounded-md px-3 min-h-[48px] text-lg text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-100; }
+            .nav-link-m[aria-current="page"] { @apply bg-zinc-900 text-zinc-100; }
             .reveal { @apply opacity-0 translate-y-2 transition duration-500; }
             .reveal.active { @apply opacity-100 translate-y-0; }
         }
@@ -76,46 +80,54 @@
 
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-zinc-100 focus:text-zinc-950 focus:px-3 focus:py-2 focus:rounded">Skip to content</a>
 
-    <header class="border-b border-zinc-800/80">
-        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="/" id="site-brand" class="font-serif text-xl text-zinc-100 tracking-tight hover:text-white inline-flex items-center min-h-[44px]">{{ site_name }}</a>
+    <header id="site-header" class="sticky top-0 z-40 border-b border-transparent bg-zinc-950/80 backdrop-blur-md transition-colors duration-200">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
+            <div class="flex items-center gap-4 min-w-0">
+                <a href="/" id="site-brand" class="font-serif text-xl text-zinc-100 tracking-tight hover:text-white inline-flex items-center min-h-[44px] truncate">{{ site_name }}</a>
+                <span class="hidden lg:inline-flex items-center gap-2 rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-300 whitespace-nowrap">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true"></span>
+                    Open to work
+                </span>
+            </div>
 
-            <nav aria-label="Main" id="site-nav" class="hidden md:flex items-center gap-7 text-[15px]">
+            <nav aria-label="Main" id="site-nav" class="hidden md:flex items-center gap-1 text-[15px]">
                 {% if settings and settings.nav_links %}
                     {% for link in settings.nav_links %}
-                    <a href="{{ link.url }}"
-                       class="text-zinc-400 hover:text-zinc-100 transition-colors {{ 'text-zinc-100 underline underline-offset-8 decoration-brand decoration-2' if request.path.rstrip('/') == link.url.rstrip('/') else '' }}">{{ link.label }}</a>
+                    <a href="{{ link.url }}" class="nav-link"{% if request.path.rstrip('/') == link.url.rstrip('/') %} aria-current="page"{% endif %}>{{ link.label }}</a>
                     {% endfor %}
                 {% endif %}
                 {% if session.get('user') %}
-                    <span class="w-px h-4 bg-zinc-800"></span>
-                    <a href="/admin" class="text-zinc-500 hover:text-zinc-100 text-sm">Admin</a>
+                    <span class="mx-2 w-px h-4 bg-zinc-800" aria-hidden="true"></span>
+                    <a href="/admin" class="nav-link text-sm">Admin</a>
                     <form method="POST" action="/logout" class="inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="text-zinc-500 hover:text-zinc-100 text-sm">Sign out</button>
+                        <button type="submit" class="nav-link text-sm">Sign out</button>
                     </form>
                 {% endif %}
+                <a href="/static/Kurtis-Lee-Hopewell-CV.pdf" target="_blank" rel="noopener" class="btn btn-primary ml-3">Download CV<span class="sr-only"> (opens in a new tab)</span></a>
             </nav>
 
-            <button id="open-menu" class="md:hidden -mr-2 p-2 text-zinc-400 hover:text-white" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <button id="open-menu" type="button" class="md:hidden -mr-2 inline-flex h-11 w-11 items-center justify-center rounded-md text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-white" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+                <svg id="icon-menu-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 7h16M4 12h16M4 17h16"/></svg>
+                <svg id="icon-menu-close" class="hidden w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M6 6l12 12M18 6L6 18"/></svg>
             </button>
         </div>
 
-        <nav id="mobile-menu" aria-label="Mobile" class="md:hidden hidden border-t border-zinc-800/80 bg-zinc-950">
-            <div id="mobile-links" class="max-w-5xl mx-auto px-6 py-3 flex flex-col">
+        <nav id="mobile-menu" aria-label="Mobile" class="md:hidden hidden absolute inset-x-0 top-full border-b border-zinc-800 bg-zinc-950 shadow-2xl">
+            <div id="mobile-links" class="max-w-5xl mx-auto px-6 py-4 flex flex-col gap-1">
                 {% if settings and settings.nav_links %}
                     {% for link in settings.nav_links %}
-                    <a href="{{ link.url }}" class="py-3 text-base text-zinc-300 border-b border-zinc-900 last:border-0">{{ link.label }}</a>
+                    <a href="{{ link.url }}" class="nav-link-m"{% if request.path.rstrip('/') == link.url.rstrip('/') %} aria-current="page"{% endif %}>{{ link.label }}</a>
                     {% endfor %}
                 {% endif %}
                 {% if session.get('user') %}
-                    <a href="/admin" class="py-3 text-sm text-zinc-500">Admin</a>
-                    <form method="POST" action="/logout" class="py-3">
+                    <a href="/admin" class="nav-link-m text-base text-zinc-500">Admin</a>
+                    <form method="POST" action="/logout">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="text-sm text-zinc-500">Sign out</button>
+                        <button type="submit" class="nav-link-m w-full text-base text-zinc-500">Sign out</button>
                     </form>
                 {% endif %}
+                <a href="/static/Kurtis-Lee-Hopewell-CV.pdf" target="_blank" rel="noopener" class="btn btn-primary mt-3 min-h-[48px] w-full">Download CV<span class="sr-only"> (opens in a new tab)</span></a>
             </div>
         </nav>
     </header>
@@ -184,13 +196,37 @@
                 document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('active'); });
             }
 
+            // Header border fades in once the page has scrolled
+            var header = document.getElementById('site-header');
+            function onScroll() {
+                var scrolled = window.scrollY > 8;
+                header.classList.toggle('border-zinc-800', scrolled);
+                header.classList.toggle('border-transparent', !scrolled);
+            }
+            onScroll();
+            window.addEventListener('scroll', onScroll, { passive: true });
+
             // Mobile menu
             var btn = document.getElementById('open-menu');
             var menu = document.getElementById('mobile-menu');
-            btn.addEventListener('click', function () {
-                var open = menu.classList.toggle('hidden') === false;
+            var iconOpen = document.getElementById('icon-menu-open');
+            var iconClose = document.getElementById('icon-menu-close');
+            function setMenu(open) {
+                menu.classList.toggle('hidden', !open);
+                iconOpen.classList.toggle('hidden', open);
+                iconClose.classList.toggle('hidden', !open);
                 btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            }
+            btn.addEventListener('click', function () { setMenu(menu.classList.contains('hidden')); });
+            menu.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+            document.addEventListener('click', function (e) {
+                if (!menu.classList.contains('hidden') && !header.contains(e.target)) setMenu(false);
             });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !menu.classList.contains('hidden')) { setMenu(false); btn.focus(); }
+            });
+            matchMedia('(min-width: 768px)').addEventListener('change', function (e) { if (e.matches) setMenu(false); });
 
             // Privacy notice (not shown to crawlers or screenshot bots)
             var notice = document.getElementById('privacy-notice');
