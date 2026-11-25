@@ -1,29 +1,140 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="max-w-sm mx-auto px-6 py-20">
-    <h1 class="font-serif text-3xl text-zinc-100 mb-1">Sign in</h1>
-    <p class="text-sm text-zinc-500 mb-8">Admin access for the site owner.</p>
+<style>
+    .login { max-width: 27rem; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+    @media (min-width: 640px) { .login { padding-top: 5rem; } }
+    .login h1 { margin: 0 0 0.6rem; font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 2.5rem; line-height: 1.1; letter-spacing: -0.01em; color: #f4f4f5; }
+    .login-lead { margin: 0 0 2rem; font-size: 1rem; line-height: 1.6; color: #a1a1aa; }
 
-    <form method="POST" class="space-y-5">
+    .login-form { display: flex; flex-direction: column; gap: 1.25rem; }
+    .login-field label { display: block; margin-bottom: 0.45rem; font-size: 0.95rem; color: #f4f4f5; }
+    .login-field input {
+        width: 100%;
+        min-height: 46px;
+        padding: 0.65rem 0.85rem;
+        background: #0c0c0d;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 6px;
+        color: #f4f4f5;
+        font: inherit;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .login-field input:hover { border-color: rgba(255, 255, 255, 0.32); }
+    .login-field input:focus { outline: none; border-color: #d4c5a9; box-shadow: 0 0 0 3px rgba(212, 197, 169, 0.18); }
+    .login-password { position: relative; }
+    .login-password input { padding-right: 4.5rem; }
+    .login-toggle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0 0.95rem;
+        background: none;
+        border: 0;
+        border-radius: 0 6px 6px 0;
+        color: #a1a1aa;
+        font: inherit;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: color 0.15s;
+    }
+    .login-toggle:hover { color: #f4f4f5; }
+    .login-toggle:focus-visible { outline: 2px solid #d4c5a9; outline-offset: -2px; }
+
+    .login-error {
+        display: flex;
+        gap: 0.6rem;
+        align-items: flex-start;
+        margin: 0;
+        padding: 0.85rem 1rem;
+        background: rgba(248, 113, 113, 0.08);
+        border: 1px solid rgba(248, 113, 113, 0.4);
+        border-left: 3px solid #f87171;
+        border-radius: 6px;
+        color: #fecaca;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    .login-error::before {
+        content: "!";
+        flex: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-top: 0.1rem;
+        border-radius: 50%;
+        background: #f87171;
+        color: #131316;
+        font-size: 0.8rem;
+        font-weight: 700;
+        line-height: 1.25rem;
+        text-align: center;
+    }
+
+    .login-submit { min-height: 46px; margin-top: 0.25rem; width: 100%; }
+    .login-submit:disabled { opacity: 0.6; cursor: progress; }
+
+    .login-links { margin: 2.5rem 0 0; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.09); display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.95rem; color: #8b8b94; }
+    .login-links a { display: inline-flex; align-items: center; min-height: 40px; color: #f4f4f5; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, 0.3); }
+    .login-links a:hover { text-decoration-color: #d4c5a9; }
+</style>
+
+<div class="login">
+    <h1>Sign in</h1>
+    <p class="login-lead">Admin access for the site owner.</p>
+
+    <form method="POST" class="login-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div>
-            <label for="username" class="block text-sm text-zinc-300 mb-1.5">Username</label>
-            <input id="username" type="text" name="username" required autocomplete="username"
-                   class="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2.5 text-zinc-100 focus:border-brand focus:outline-none">
-        </div>
-        <div>
-            <label for="password" class="block text-sm text-zinc-300 mb-1.5">Password</label>
-            <input id="password" type="password" name="password" required autocomplete="current-password"
-                   class="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2.5 text-zinc-100 focus:border-brand focus:outline-none">
-        </div>
+
         {% if error %}
-        <p role="alert" class="text-sm text-red-400">{{ error }}</p>
+        <p role="alert" class="login-error">{{ error }}</p>
         {% endif %}
-        <button type="submit" class="btn btn-primary w-full">Sign in</button>
+
+        <div class="login-field">
+            <label for="username">Username</label>
+            <input id="username" type="text" name="username" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false">
+        </div>
+        <div class="login-field">
+            <label for="password">Password</label>
+            <div class="login-password">
+                <input id="password" type="password" name="password" required autocomplete="current-password">
+                <button type="button" id="toggle-password" class="login-toggle" aria-pressed="false" aria-label="Show password">Show</button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary login-submit">Sign in</button>
     </form>
 
-    <p class="text-sm text-zinc-500 mt-8">
-        Just looking? <a href="/trial" class="text-zinc-300 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand">Try the CMS in a sandbox</a> with no account.
+    <p class="login-links">
+        <span>Just looking?</span>
+        <a href="/trial">Try the CMS in a sandbox, no account needed</a>
+        <a href="/">Back to the site</a>
     </p>
 </div>
+
+<script>
+(function () {
+    var form = document.querySelector('.login-form');
+    var input = document.getElementById('password');
+    var toggle = document.getElementById('toggle-password');
+    var submit = form.querySelector('.login-submit');
+
+    toggle.addEventListener('click', function () {
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        toggle.textContent = show ? 'Hide' : 'Show';
+        toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
+        toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+
+    // One click, one attempt: failed sign-ins count towards the lockout.
+    form.addEventListener('submit', function () {
+        submit.disabled = true;
+        submit.textContent = 'Signing in...';
+    });
+    // Coming back with the browser's Back button restores the page as it was, so unlock it.
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) { submit.disabled = false; submit.textContent = 'Sign in'; }
+    });
+})();
+</script>
 {% endblock %}
