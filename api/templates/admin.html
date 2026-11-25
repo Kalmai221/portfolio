@@ -1,335 +1,340 @@
 {% extends "layout.html" %}
+{% block title %}Admin | {{ settings.site_name_first }} {{ settings.site_name_last }}{% endblock %}
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
-<div class="max-w-7xl mx-auto px-6 py-10 space-y-10">
+<style>
+  .adm {
+    --border: rgba(255, 255, 255, 0.09);
+    --text-1: #f4f4f5;
+    --text-2: #b4b4bb;
+    --text-3: #8b8b94;
+    --accent: #d4c5a9;
+    --surface: #131316;
+  }
+  .adm h1, .adm h2, .adm h3, .adm p, .adm dl, .adm dd, .adm dt, .adm ul { margin: 0; padding: 0; }
+  .adm ul { list-style: none; }
+  body:has(dialog[open]) { overflow: hidden; }
 
-    <!-- Header -->
-    <div class="flex flex-wrap items-end justify-between gap-6 pb-8 border-b border-zinc-800">
+  /* Header */
+  .adm-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem; padding-bottom: 2rem; }
+  .adm-head h1 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: clamp(2.25rem, 7vw, 3.5rem); line-height: 1.05; letter-spacing: -0.02em; color: var(--text-1); }
+  .adm-head p { margin-top: 0.6rem; max-width: 30rem; line-height: 1.6; color: var(--text-2); }
+  .adm-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+  /* Buttons */
+  .adm-btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0.4rem 1rem;
+    background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px;
+    color: var(--text-1); font: inherit; font-size: 0.9rem; text-decoration: none; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+  }
+  .adm-btn:hover { border-color: rgba(255, 255, 255, 0.5); }
+  .adm-btn:focus-visible, .adm-link:focus-visible, .adm-icon:focus-visible, .adm-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .adm-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .adm-btn-primary { background: var(--text-1); border-color: var(--text-1); color: #0c0c0d; font-weight: 500; }
+  .adm-btn-primary:hover { background: #fff; border-color: #fff; }
+  .adm-btn-danger { color: #fca5a5; border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.08); }
+  .adm-btn-danger:hover { border-color: #f87171; background: rgba(248, 113, 113, 0.16); }
+  .adm-btn-safe { color: #6ee7b7; border-color: rgba(52, 211, 153, 0.45); background: rgba(52, 211, 153, 0.08); }
+  .adm-btn-safe:hover { border-color: #34d399; background: rgba(52, 211, 153, 0.16); }
+  .adm-btn-small { min-height: 34px; padding: 0.25rem 0.85rem; font-size: 0.85rem; }
+  .adm-link { color: var(--text-1); font-size: 0.9rem; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, 0.3); background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; }
+  .adm-link:hover { text-decoration-color: var(--accent); }
+  .adm-link-danger:hover { color: #fca5a5; text-decoration-color: #f87171; }
+
+  /* New page */
+  .adm-new { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; padding: 1.25rem 0; border-top: 1px solid var(--border); }
+  .adm-new label { font-size: 0.95rem; color: var(--text-2); margin-right: 0.4rem; }
+  .adm-input {
+    min-height: 40px; padding: 0.45rem 0.8rem; background: #0c0c0d; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 6px;
+    color: var(--text-1); font: inherit; font-size: 0.95rem; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .adm-input::placeholder { color: var(--text-3); }
+  .adm-input:hover { border-color: rgba(255, 255, 255, 0.32); }
+  .adm-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212, 197, 169, 0.18); }
+  .adm-new .adm-input { width: 14rem; max-width: 100%; }
+
+  /* Stats */
+  .adm-stats { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .adm-stats > div { padding: 1.4rem 0; }
+  .adm-stats > div + div { border-top: 1px solid var(--border); }
+  @media (min-width: 720px) {
+    .adm-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .adm-stats > div { padding: 1.5rem 1.75rem; }
+    .adm-stats > div:first-child { padding-left: 0; }
+    .adm-stats > div + div { border-top: 0; border-left: 1px solid var(--border); }
+  }
+  .adm-stats dt { font-size: 0.9rem; color: var(--text-3); }
+  .adm-stats dd { margin-top: 0.4rem; font-size: 2rem; line-height: 1.1; font-weight: 500; color: var(--text-1); font-variant-numeric: tabular-nums; }
+  .adm-stats dd small { display: block; margin-top: 0.5rem; font-size: 0.9rem; font-weight: 400; color: var(--text-3); }
+  .adm-stats dd small a { color: var(--text-1); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, 0.3); }
+  .adm-stats dd small a:hover { text-decoration-color: var(--accent); }
+  .adm-dot { display: inline-block; width: 8px; height: 8px; margin-right: 0.6rem; border-radius: 50%; vertical-align: 0.2em; background: #34d399; }
+  .adm-dot.is-off { background: #f87171; }
+
+  /* Pages */
+  .adm-section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-bottom: 1rem; }
+  .adm-section-head h2 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.6rem; color: var(--text-1); }
+  .adm-table { width: 100%; border-collapse: collapse; text-align: left; }
+  .adm-table th { padding: 0.7rem 0; font-size: 0.85rem; font-weight: 400; color: var(--text-3); border-bottom: 1px solid var(--border); }
+  .adm-table td { padding: 1rem 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .adm-table td:last-child, .adm-table th:last-child { text-align: right; }
+  .adm-page-title { color: var(--text-1); font-weight: 500; }
+  .adm-page-slug { display: block; margin-top: 0.15rem; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--text-3); }
+  .adm-date { font-size: 0.9rem; color: var(--text-3); white-space: nowrap; }
+  .adm-row-actions { display: inline-flex; align-items: center; gap: 1.1rem; }
+  .adm-empty { padding: 2.5rem 0; text-align: center; color: var(--text-3); }
+
+  /* Dialogs */
+  .adm-dialog {
+    padding: 0; width: min(42rem, calc(100vw - 2rem)); max-height: min(85vh, 44rem); margin: auto;
+    background: var(--surface); color: var(--text-2); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  }
+  .adm-dialog::backdrop { background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(3px); }
+  .adm-dialog-small { width: min(26rem, calc(100vw - 2rem)); }
+  .adm-dialog-box { display: flex; flex-direction: column; max-height: inherit; }
+  .adm-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .adm-dialog-head h2 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.5rem; color: var(--text-1); }
+  .adm-icon { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; background: none; border: 0; border-radius: 6px; color: var(--text-3); cursor: pointer; transition: color 0.15s, background 0.15s; }
+  .adm-icon:hover { color: var(--text-1); background: rgba(255, 255, 255, 0.06); }
+  .adm-tabs { display: flex; gap: 1.5rem; padding: 0 1.5rem; border-bottom: 1px solid var(--border); }
+  .adm-tab { padding: 0.8rem 0; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--text-3); font: inherit; font-size: 0.95rem; cursor: pointer; transition: color 0.15s; }
+  .adm-tab:hover { color: var(--text-1); }
+  .adm-tab[aria-selected="true"] { color: var(--text-1); border-bottom-color: var(--accent); }
+  .adm-dialog-body { padding: 1.5rem; overflow-y: auto; }
+  .admin-tab-pane.hidden { display: none; }
+  .adm-pane-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+  .adm-pane-head h3 { font-size: 1.05rem; font-weight: 500; color: var(--text-1); }
+  .adm-pane-head p { margin-top: 0.25rem; font-size: 0.9rem; line-height: 1.5; color: var(--text-3); }
+
+  /* Navigation list */
+  .adm-list { border-top: 1px solid var(--border); }
+  .adm-list li { display: flex; align-items: center; gap: 0.9rem; padding: 0.8rem 0; border-bottom: 1px solid var(--border); cursor: grab; background: var(--surface); }
+  .adm-list li:active { cursor: grabbing; }
+  .adm-grip { color: var(--text-3); letter-spacing: -0.15em; user-select: none; }
+  .adm-list-text { flex: 1; min-width: 0; }
+  .adm-list-text strong { display: block; font-weight: 500; color: var(--text-1); }
+  .adm-list-text small { display: block; margin-top: 0.1rem; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--text-3); overflow-wrap: anywhere; }
+  .adm-empty-nav { padding: 1.25rem 0; color: var(--text-3); }
+  .sortable-ghost { opacity: 0.4; }
+  .adm-add { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .adm-add h4 { margin: 0 0 1rem; font-size: 1.05rem; font-weight: 500; color: var(--text-1); }
+  .adm-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  @media (min-width: 560px) { .adm-fields { grid-template-columns: 1fr 1fr; } }
+  .adm-field label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--text-1); }
+  .adm-field .adm-input { width: 100%; }
+  .adm-add .adm-btn { margin-top: 1rem; }
+
+  /* Maintenance */
+  .adm-maint { display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem; padding-top: 0.25rem; }
+  .adm-maint-state { font-size: 1.05rem; color: var(--text-1); }
+  .adm-maint p { max-width: 28rem; line-height: 1.6; }
+
+  /* Confirm dialog */
+  .adm-confirm { padding: 1.75rem; }
+  .adm-confirm h2 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.6rem; color: var(--text-1); margin-bottom: 0.6rem; }
+  .adm-confirm p { line-height: 1.6; margin-bottom: 1.5rem; }
+  .adm-confirm-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .adm-confirm-actions form { display: contents; }
+
+  /* Toasts */
+  #toast-container { position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+  .adm-toast { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: #1c1c20; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 8px; color: var(--text-1); font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); pointer-events: auto; }
+  .adm-toast i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  @keyframes toast-in  { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+  @keyframes toast-out { to { opacity: 0 } }
+  .toast-in  { animation: toast-in  200ms ease both; }
+  .toast-out { animation: toast-out 160ms ease both; }
+  @media (prefers-reduced-motion: reduce) { .toast-in, .toast-out { animation: none; } }
+</style>
+
+<div class="adm max-w-5xl mx-auto px-6 py-12">
+
+    <header class="adm-head">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-zinc-100 font-mono">Administration_Panel</h1>
-            <p class="text-zinc-500 text-xs mt-1 font-mono">// Manage content · navigation · availability</p>
+            <h1>Admin</h1>
+            <p>Manage pages, navigation and whether the site is open to visitors.</p>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-            <a href="/admin/audit" class="flex items-center gap-2 px-4 py-2 text-xs font-semibold font-mono uppercase tracking-widest text-zinc-400 bg-zinc-900 border border-zinc-700 rounded hover:border-zinc-500 hover:text-zinc-100 transition-all">
-                <i class="fa-solid fa-list-check text-xs"></i>
-                Audit Log
-            </a>
-            <button onclick="openSettings()" class="flex items-center gap-2 px-4 py-2 text-xs font-semibold font-mono uppercase tracking-widest text-zinc-400 bg-zinc-900 border border-zinc-700 rounded hover:border-zinc-500 hover:text-zinc-100 transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Settings
-            </button>
-            <div class="flex items-center bg-zinc-900 border border-zinc-700 rounded overflow-hidden focus-within:border-zinc-500 transition-colors">
-                <input id="new_slug" type="text" placeholder="page-slug…" onkeydown="if(event.key==='Enter')handleSlugRedirect()"
-                    class="bg-transparent px-3 py-2 text-xs font-mono text-zinc-300 placeholder-zinc-600 outline-none w-40">
-                <button onclick="handleSlugRedirect()"
-                    class="px-4 py-2 text-xs font-semibold font-mono uppercase tracking-widest text-white bg-brand hover:bg-brand/90 border-l border-zinc-700 transition-colors">
-                    + New Page
-                </button>
-            </div>
+        <div class="adm-actions">
+            <a href="/admin/messages" class="adm-btn">Messages</a>
+            <a href="/admin/audit" class="adm-btn">Audit log</a>
+            <button type="button" class="adm-btn" onclick="openSettings()">Settings</button>
         </div>
-    </div>
+    </header>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-colors">
-            <p class="text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest mb-4">Total Pages</p>
-            <p class="text-4xl font-bold font-mono text-zinc-100 tabular-nums">{{ pages|length }}</p>
-            <p class="text-[11px] font-mono text-zinc-600 uppercase mt-2">Published</p>
-        </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-colors relative">
-            <p class="text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest mb-4">Traffic</p>
-            <a href="/admin/analytics" class="absolute top-6 right-6 text-[10px] font-mono text-brand hover:underline">View →</a>
-            <p class="text-4xl font-bold font-mono text-zinc-100 tabular-nums">{{ total_hits }}</p>
-            <p class="text-[11px] font-mono text-zinc-600 uppercase mt-2">Total Visits</p>
-        </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-colors">
-            <p class="text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest mb-4">Site Status</p>
-            <div class="flex items-center gap-2 mt-1">
-                <span class="w-2 h-2 rounded-full shrink-0 {{ 'bg-red-500 animate-pulse' if maintenance_active else 'bg-emerald-500' }}"></span>
-                <span class="text-lg font-bold font-mono uppercase {{ 'text-red-400' if maintenance_active else 'text-emerald-400' }}">
-                    {{ 'Maintenance' if maintenance_active else 'Online' }}
-                </span>
-            </div>
-            <p class="text-[11px] font-mono text-zinc-600 uppercase mt-2">
-                {{ 'Admins only' if maintenance_active else 'Publicly accessible' }}
-            </p>
-        </div>
-    </div>
+    <form class="adm-new" onsubmit="handleSlugRedirect(); return false;">
+        <label for="new_slug">New page</label>
+        <input id="new_slug" class="adm-input" type="text" placeholder="page-address" autocomplete="off" autocapitalize="none" spellcheck="false">
+        <button type="submit" class="adm-btn adm-btn-primary">Create page</button>
+    </form>
 
-    <!-- Pages table -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/50">
-            <span class="text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-widest">Page Directory</span>
-            <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 focus-within:border-zinc-600 transition-colors">
-                <svg class="w-3 h-3 text-zinc-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
-                <input type="text" placeholder="Filter pages…" oninput="filterPages(this.value)"
-                    class="bg-transparent outline-none text-xs font-mono text-zinc-300 placeholder-zinc-600 w-36">
+    <dl class="adm-stats">
+        <div>
+            <dt>Pages</dt>
+            <dd>{{ pages|length }}<small>Published</small></dd>
+        </div>
+        <div>
+            <dt>Visits</dt>
+            <dd>{{ total_hits }}<small><a href="/admin/analytics">View analytics</a></small></dd>
+        </div>
+        <div>
+            <dt>Site status</dt>
+            <dd><span class="adm-dot {{ 'is-off' if maintenance_active else '' }}" aria-hidden="true"></span>{{ 'Maintenance' if maintenance_active else 'Online' }}<small>{{ 'Only admins can see the site' if maintenance_active else 'Open to everyone' }}</small></dd>
+        </div>
+    </dl>
+
+    <section aria-labelledby="pages-heading">
+        <div class="adm-section-head">
+            <h2 id="pages-heading">Pages</h2>
+            <div>
+                <label for="page-filter" class="sr-only">Filter pages</label>
+                <input id="page-filter" class="adm-input" type="search" placeholder="Filter pages" oninput="filterPages(this.value)" autocomplete="off">
             </div>
         </div>
-        <table class="w-full text-left border-collapse">
+        <table class="adm-table">
             <thead>
-                <tr class="bg-zinc-950/40">
-                    <th class="px-6 py-3 text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest">Page</th>
-                    <th class="px-6 py-3 text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest hidden md:table-cell">Modified</th>
-                    <th class="px-6 py-3 text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest text-right">Actions</th>
+                <tr>
+                    <th scope="col">Page</th>
+                    <th scope="col" class="hidden md:table-cell">Last changed</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
                 </tr>
             </thead>
-            <tbody id="pages-tbody" class="divide-y divide-zinc-800/60">
+            <tbody id="pages-tbody">
                 {% for p in pages %}
-                <tr class="hover:bg-zinc-800/30 transition-colors group" data-search="{{ p.title|lower }} {{ p.slug|lower }}">
-                    <td class="px-6 py-4">
-                        <div class="font-semibold text-zinc-200 text-sm group-hover:text-white transition-colors">{{ p.title }}</div>
-                        <div class="text-[11px] font-mono text-zinc-600 mt-0.5">/{{ p.slug if p.slug != 'home' else '' }}</div>
+                <tr data-search="{{ p.title|lower }} {{ p.slug|lower }}">
+                    <td>
+                        <span class="adm-page-title">{{ p.title }}</span>
+                        <span class="adm-page-slug">/{{ p.slug if p.slug != 'home' else '' }}</span>
                     </td>
-                    <td class="px-6 py-4 text-xs font-mono text-zinc-600 hidden md:table-cell">
-                        {{ p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '—' }}
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center justify-end gap-2">
-                            <a href="/{{ p.slug if p.slug != 'home' else '' }}" target="_blank"
-                                class="w-8 h-8 flex items-center justify-center rounded bg-zinc-800 border border-zinc-700 text-zinc-500 hover:text-zinc-200 hover:border-zinc-500 transition-all">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                            </a>
-                            <a href="{{ url_for('edit_page', slug=p.slug) }}"
-                                class="w-8 h-8 flex items-center justify-center rounded bg-zinc-800 border border-zinc-700 text-zinc-500 hover:text-brand hover:border-brand/50 transition-all">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            </a>
-                        </div>
+                    <td class="adm-date hidden md:table-cell">{{ p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '-' }}</td>
+                    <td>
+                        <span class="adm-row-actions">
+                            <a class="adm-link" href="/{{ p.slug if p.slug != 'home' else '' }}" target="_blank" rel="noopener">View<span class="sr-only"> {{ p.title }} (opens in a new tab)</span></a>
+                            <a class="adm-btn adm-btn-small" href="{{ url_for('edit_page', slug=p.slug) }}">Edit<span class="sr-only"> {{ p.title }}</span></a>
+                        </span>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <div id="no-results" class="hidden px-6 py-12 text-center text-xs font-mono text-zinc-600">No pages match your search.</div>
-    </div>
+        <p id="no-results" class="hidden adm-empty">No pages match your filter.</p>
+    </section>
 
-</div>
-
-<!-- Settings Modal -->
-<div id="settings-modal" class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-sm hidden"
-     style="opacity:0;transition:opacity 250ms ease" onclick="handleOverlayClick(event)">
-    <div class="bg-zinc-900 w-full max-w-4xl max-h-[85vh] border border-zinc-700 rounded-xl shadow-2xl flex flex-col overflow-hidden"
-         style="transform:translateY(12px);transition:transform 250ms ease" onclick="event.stopPropagation()">
-
-        <!-- Modal header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/60 shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                </div>
-                <div>
-                    <p class="font-semibold text-zinc-100 text-sm">System Settings</p>
-                    <p class="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Authorized Session</p>
-                </div>
-            </div>
-            <button onclick="closeSettings()" class="w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-
-        <!-- Mobile tabs -->
-        <div class="flex sm:hidden border-b border-zinc-800 bg-zinc-950/40 overflow-x-auto">
-            <button onclick="switchTab('nav', this)" class="admin-mobile-tab px-5 py-3 text-[10px] font-mono font-semibold uppercase tracking-widest text-brand border-b-2 border-brand whitespace-nowrap">Navigation</button>
-            <button onclick="switchTab('maintenance', this)" class="admin-mobile-tab px-5 py-3 text-[10px] font-mono font-semibold uppercase tracking-widest text-zinc-500 border-b-2 border-transparent whitespace-nowrap">Maintenance</button>
-        </div>
-
-        <div class="flex flex-1 overflow-hidden">
-            <!-- Sidebar -->
-            <div class="hidden sm:flex w-52 flex-col border-r border-zinc-800 bg-zinc-950/40 p-3 shrink-0">
-                <p class="px-3 py-2 text-[9px] font-mono font-semibold text-zinc-600 uppercase tracking-widest">Categories</p>
-                <button id="nav-sidebar-btn" onclick="switchTab('nav', this)"
-                    class="admin-sidebar-btn flex items-center gap-2.5 px-3 py-2.5 rounded text-sm font-medium transition-all text-brand bg-brand/8 border border-brand/20 text-left">
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
-                    Navigation Menu
+    <!-- Settings -->
+    <dialog id="settings-modal" class="adm-dialog" aria-labelledby="settings-title" onclick="handleOverlayClick(event)">
+        <div class="adm-dialog-box">
+            <div class="adm-dialog-head">
+                <h2 id="settings-title">Settings</h2>
+                <button type="button" class="adm-icon" onclick="closeSettings()" aria-label="Close settings">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
-                <button id="maint-sidebar-btn" onclick="switchTab('maintenance', this)"
-                    class="admin-sidebar-btn flex items-center gap-2.5 px-3 py-2.5 rounded text-sm font-medium transition-all text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 text-left mt-0.5">
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    Maintenance
-                </button>
-                <div class="mt-auto pt-4 border-t border-zinc-800/60 px-3">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-1.5 h-1.5 rounded-full {{ 'bg-red-500 animate-pulse' if maintenance_active else 'bg-emerald-500' }}"></span>
-                        <span class="text-[10px] font-mono text-zinc-500 uppercase">{{ 'Maintenance' if maintenance_active else 'Server_Online' }}</span>
-                    </div>
-                    <span class="text-[9px] font-mono text-zinc-700 uppercase">Build 3.2.0</span>
-                </div>
             </div>
 
-            <!-- Tab content -->
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="adm-tabs" role="tablist" aria-label="Settings sections">
+                <button type="button" role="tab" id="nav-sidebar-btn" class="adm-tab" aria-selected="true" aria-controls="tab-nav" onclick="switchTab('nav')">Navigation</button>
+                <button type="button" role="tab" id="maint-sidebar-btn" class="adm-tab" aria-selected="false" aria-controls="tab-maintenance" onclick="switchTab('maintenance')">Maintenance</button>
+            </div>
+
+            <div class="adm-dialog-body">
 
                 <!-- Navigation tab -->
-                <div id="tab-nav" class="admin-tab-pane space-y-5">
-                    <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
-                        <span class="text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-widest">Navigation Links</span>
-                        <div class="flex items-center gap-3">
-                            <span class="text-[10px] font-mono text-zinc-700 px-2 py-1 bg-zinc-800 rounded-full border border-zinc-700">{{ settings.nav_links|length }} / 8 slots</span>
-                            <button id="save-nav-btn" onclick="saveNavOrder()"
-                                class="px-4 py-1.5 text-[10px] font-mono font-semibold uppercase tracking-widest text-white bg-brand rounded hover:bg-brand/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled>
-                                Save Order
-                            </button>
+                <section id="tab-nav" role="tabpanel" aria-labelledby="nav-sidebar-btn" class="admin-tab-pane">
+                    <div class="adm-pane-head">
+                        <div>
+                            <h3>Navigation links</h3>
+                            <p>{{ settings.nav_links|length }} of 8 used. Drag a link to reorder, then save.</p>
                         </div>
+                        <button type="button" id="save-nav-btn" class="adm-btn adm-btn-primary adm-btn-small" onclick="saveNavOrder()" disabled>Save order</button>
                     </div>
 
-                    <div class="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden">
-                        <table class="w-full border-collapse">
-                            <tbody id="sortable-nav" class="divide-y divide-zinc-800/60">
-                                {% for link in settings.nav_links %}
-                                <tr class="group hover:bg-zinc-900/60 transition-colors cursor-grab active:cursor-grabbing"
-                                    data-label="{{ link.label }}" data-url="{{ link.url }}">
-                                    <td class="px-4 py-3 w-8">
-                                        <svg class="w-3.5 h-3.5 text-zinc-700 group-hover:text-zinc-500" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 11-2 2 2 2 0 012-2zm3 0a2 2 0 11-2 2 2 2 0 012-2zm3 0a2 2 0 11-2 2 2 2 0 012-2zM7 5a2 2 0 11-2 2 2 2 0 012-2zm3 0a2 2 0 11-2 2 2 2 0 012-2zm3 0a2 2 0 11-2 2 2 2 0 012-2z"/></svg>
-                                    </td>
-                                    <td class="px-2 py-3 flex-1">
-                                        <div class="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">{{ link.label }}</div>
-                                        <div class="text-[10px] font-mono text-zinc-600 mt-0.5">{{ link.url }}</div>
-                                    </td>
-                                    <td class="px-4 py-3 text-right">
-                                        <a href="{{ url_for('delete_nav_link', index=loop.index0) }}"
-                                            onclick="return confirmNavDelete(event, this)" aria-label="Remove {{ link.label }}"
-                                            class="inline-flex w-7 h-7 items-center justify-center rounded bg-zinc-800 border border-zinc-700 text-zinc-600 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 transition-all">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    {% if settings.nav_links %}
+                    <ul id="sortable-nav" class="adm-list">
+                        {% for link in settings.nav_links %}
+                        <li data-label="{{ link.label }}" data-url="{{ link.url }}">
+                            <span class="adm-grip" aria-hidden="true">&#8942;&#8942;</span>
+                            <span class="adm-list-text"><strong>{{ link.label }}</strong><small>{{ link.url }}</small></span>
+                            <a href="{{ url_for('delete_nav_link', index=loop.index0) }}" onclick="return confirmNavDelete(event, this)" class="adm-link adm-link-danger" aria-label="Remove {{ link.label }}">Remove</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <ul id="sortable-nav" class="adm-list"></ul>
+                    <p class="adm-empty-nav">No navigation links yet. Add one below.</p>
+                    {% endif %}
 
-                    <form action="/admin/add-nav" method="POST" onsubmit="return validateNavForm(event)"
-                        class="bg-zinc-950/60 border border-dashed border-zinc-700 rounded-lg p-5 space-y-4">
+                    <form action="/admin/add-nav" method="POST" onsubmit="return validateNavForm(event)" class="adm-add">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-mono font-semibold text-zinc-600 uppercase tracking-widest">Display Label</label>
-                                <input type="text" name="label" placeholder="e.g. Projects" maxlength="20" required pattern="^\S.*$"
-                                    class="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-brand/60 focus:ring-1 focus:ring-brand/20 transition-all">
+                        <h4>Add a link</h4>
+                        <div class="adm-fields">
+                            <div class="adm-field">
+                                <label for="nav-label">Label</label>
+                                <input id="nav-label" class="adm-input" type="text" name="label" placeholder="Projects" maxlength="20" required pattern="^\S.*$">
                             </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-mono font-semibold text-zinc-600 uppercase tracking-widest">Target URL</label>
-                                <input type="text" name="url" placeholder="/projects or https://…" required pattern="^\S+$"
-                                    class="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-brand/60 focus:ring-1 focus:ring-brand/20 transition-all">
+                            <div class="adm-field">
+                                <label for="nav-url">Address</label>
+                                <input id="nav-url" class="adm-input" type="text" name="url" placeholder="/projects or https://..." required pattern="^\S+$">
                             </div>
                         </div>
-                        <button type="submit" class="w-full py-2.5 text-[10px] font-mono font-semibold uppercase tracking-widest text-zinc-300 bg-zinc-800 border border-zinc-700 rounded hover:bg-zinc-700 hover:text-white transition-all">
-                            + Add Navigation Item
-                        </button>
+                        <button type="submit" class="adm-btn">Add link</button>
                     </form>
-                </div>
+                </section>
 
                 <!-- Maintenance tab -->
-                <div id="tab-maintenance" class="admin-tab-pane hidden space-y-5">
-                    <div class="flex items-center justify-between pb-4 border-b border-zinc-800">
-                        <span class="text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-widest">Availability Control</span>
-                        {% if maintenance_active %}
-                        <span class="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-red-400 bg-red-500/10 border border-red-500/20 rounded-full">Restricted</span>
-                        {% else %}
-                        <span class="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full">Public</span>
-                        {% endif %}
+                <section id="tab-maintenance" role="tabpanel" aria-labelledby="maint-sidebar-btn" class="admin-tab-pane hidden">
+                    <div class="adm-pane-head">
+                        <div>
+                            <h3>Maintenance mode</h3>
+                            <p>Close the site to visitors while you work on it. You can still see every page.</p>
+                        </div>
                     </div>
-
-                    <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-10 flex flex-col items-center text-center gap-6">
-                        <div class="w-14 h-14 rounded-full flex items-center justify-center {{ 'bg-red-500/10 text-red-400' if maintenance_active else 'bg-emerald-500/10 text-emerald-400' }}">
-                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        </div>
-                        <div class="space-y-2">
-                            <h4 class="text-base font-bold text-zinc-100 uppercase tracking-tight font-mono">
-                                {{ 'Maintenance Mode' if maintenance_active else 'Public Mode' }}
-                            </h4>
-                            <p class="text-sm text-zinc-500 max-w-sm">
-                                {{ 'Site is restricted. Only administrators can view pages.' if maintenance_active else 'Site is fully accessible to all visitors.' }}
-                            </p>
-                        </div>
-                        <button onclick="showMaintenanceConfirm({{ 'true' if maintenance_active else 'false' }})"
-                            class="px-8 py-3 text-[11px] font-mono font-bold uppercase tracking-widest rounded transition-all {{ 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20' if maintenance_active else 'text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20' }}">
-                            {{ 'Disable Maintenance' if maintenance_active else 'Enable Maintenance' }}
+                    <div class="adm-maint">
+                        <p class="adm-maint-state"><span class="adm-dot {{ 'is-off' if maintenance_active else '' }}" aria-hidden="true"></span>{{ 'Maintenance mode is on' if maintenance_active else 'The site is open to everyone' }}</p>
+                        <p>{{ 'The site is restricted. Only administrators can view pages.' if maintenance_active else 'Turning maintenance mode on shows visitors a maintenance page until you turn it off.' }}</p>
+                        <button type="button" class="adm-btn {{ 'adm-btn-safe' if maintenance_active else 'adm-btn-danger' }}" onclick="showMaintenanceConfirm({{ 'true' if maintenance_active else 'false' }})">
+                            {{ 'Turn off maintenance mode' if maintenance_active else 'Turn on maintenance mode' }}
                         </button>
                     </div>
-                </div>
+                </section>
 
             </div>
         </div>
-    </div>
-</div>
+    </dialog>
 
-<!-- Confirm modal -->
-<div id="confirm-modal" class="hidden fixed inset-0 z-[600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-zinc-900 border border-zinc-700 w-full max-w-sm rounded-xl p-7 shadow-2xl">
-        <div id="confirm-icon-wrap" class="w-10 h-10 rounded-lg flex items-center justify-center mb-5"></div>
-        <h3 class="text-base font-bold text-zinc-100 mb-2" id="confirm-title">Confirm</h3>
-        <p class="text-sm text-zinc-500 mb-6 leading-relaxed" id="confirm-desc"></p>
-        <div class="flex flex-col gap-2">
-            <form id="confirm-form" method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button id="confirm-href-btn" type="submit" class="w-full py-2.5 text-xs font-mono font-bold uppercase tracking-widest text-center rounded transition-colors"></button></form>
-            <button onclick="closeConfirm()" class="w-full py-2.5 text-xs font-mono font-semibold uppercase tracking-widest text-zinc-500 hover:text-zinc-200 transition-colors">Cancel</button>
+    <!-- Confirm -->
+    <dialog id="confirm-modal" class="adm-dialog adm-dialog-small" aria-labelledby="confirm-title" onclick="if (event.target === this) closeConfirm()">
+        <div class="adm-confirm">
+            <h2 id="confirm-title">Confirm</h2>
+            <p id="confirm-desc"></p>
+            <div class="adm-confirm-actions">
+                <form id="confirm-form" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button id="confirm-href-btn" type="submit" class="adm-btn"></button>
+                </form>
+                <button type="button" class="adm-btn" onclick="closeConfirm()">Cancel</button>
+            </div>
         </div>
-    </div>
+    </dialog>
+
+    <div id="toast-container" aria-live="polite"></div>
 </div>
-
-<!-- Toast container -->
-<div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
-
-<style>
-  .admin-tab-pane { display: block; }
-  .admin-tab-pane.hidden { display: none; }
-  .sortable-ghost { opacity: 0.4; background: rgba(99,102,241,.06); }
-  .sortable-chosen { background: rgba(99,102,241,.04); }
-  @keyframes toast-in  { from { opacity:0; transform:translateX(12px) } to { opacity:1; transform:translateX(0) } }
-  @keyframes toast-out { to   { opacity:0; transform:translateX(12px) } }
-  .toast-in  { animation: toast-in  280ms ease both; }
-  .toast-out { animation: toast-out 180ms ease both; }
-</style>
 
 <script>
-/* ── Settings modal ── */
-function openSettings() {
-    const m = document.getElementById('settings-modal');
-    const box = m.querySelector('.bg-zinc-900');
-    m.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => {
-        m.style.opacity = '1';
-        box.style.transform = 'translateY(0)';
-    });
-}
-function closeSettings() {
-    const m = document.getElementById('settings-modal');
-    const box = m.querySelector('.bg-zinc-900');
-    m.style.opacity = '0';
-    box.style.transform = 'translateY(12px)';
-    document.body.style.overflow = '';
-    setTimeout(() => m.classList.add('hidden'), 260);
-}
+/* ── Settings dialog ── */
+function openSettings() { document.getElementById('settings-modal').showModal(); }
+function closeSettings() { document.getElementById('settings-modal').close(); }
 function handleOverlayClick(e) {
+    // The dialog itself is only the target when the dimmed backdrop is clicked.
     if (e.target === document.getElementById('settings-modal')) closeSettings();
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
 
 /* ── Tab switching ── */
-function switchTab(tab, btn) {
+function switchTab(tab) {
     document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.add('hidden'));
     document.getElementById('tab-' + tab).classList.remove('hidden');
-
-    document.querySelectorAll('.admin-sidebar-btn').forEach(b => {
-        b.classList.remove('text-brand', 'bg-brand/8', 'border-brand/20', 'border');
-        b.classList.add('text-zinc-500', 'hover:text-zinc-200', 'hover:bg-zinc-800/60');
-    });
-    const sideId = tab === 'nav' ? 'nav-sidebar-btn' : 'maint-sidebar-btn';
-    const sideBtn = document.getElementById(sideId);
-    sideBtn.classList.add('text-brand', 'bg-brand/8', 'border', 'border-brand/20');
-    sideBtn.classList.remove('text-zinc-500', 'hover:text-zinc-200', 'hover:bg-zinc-800/60');
-
-    document.querySelectorAll('.admin-mobile-tab').forEach(b => {
-        b.classList.remove('text-brand', 'border-brand');
-        b.classList.add('text-zinc-500', 'border-transparent');
-    });
-    if (btn.classList.contains('admin-mobile-tab')) {
-        btn.classList.add('text-brand', 'border-brand');
-        btn.classList.remove('text-zinc-500', 'border-transparent');
-    }
+    document.getElementById('nav-sidebar-btn').setAttribute('aria-selected', tab === 'nav' ? 'true' : 'false');
+    document.getElementById('maint-sidebar-btn').setAttribute('aria-selected', tab === 'maintenance' ? 'true' : 'false');
 }
 
 /* ── Page filter ── */
@@ -344,10 +349,10 @@ function filterPages(q) {
     document.getElementById('no-results').classList.toggle('hidden', visible > 0);
 }
 
-/* ── New page slug ── */
+/* ── New page address ── */
 function handleSlugRedirect() {
     let slug = document.getElementById('new_slug').value.trim();
-    if (!slug || slug === '/') { showToast('Enter a valid slug', 'error'); return; }
+    if (!slug || slug === '/') { showToast('Enter a page address', 'error'); return; }
     slug = slug.replace(/^\/+/, '').replace(/\s+/g, '-').toLowerCase();
     window.location.href = '/admin/edit/' + slug;
 }
@@ -359,16 +364,15 @@ document.addEventListener('DOMContentLoaded', () => {
     Sortable.create(el, {
         animation: 160,
         ghostClass: 'sortable-ghost',
-        chosenClass: 'sortable-chosen',
         onEnd: () => { document.getElementById('save-nav-btn').disabled = false; }
     });
 });
 
 async function saveNavOrder() {
     const btn = document.getElementById('save-nav-btn');
-    const order = Array.from(document.querySelectorAll('#sortable-nav tr'))
+    const order = Array.from(document.querySelectorAll('#sortable-nav li'))
         .map(r => ({ label: r.dataset.label, url: r.dataset.url }));
-    btn.textContent = 'Saving…';
+    btn.textContent = 'Saving...';
     btn.disabled = true;
     try {
         const res = await fetch('/admin/api/reorder-nav', {
@@ -377,44 +381,38 @@ async function saveNavOrder() {
             body: JSON.stringify({ nav_links: order })
         });
         if (res.ok) { showToast('Navigation order saved', 'success'); }
-        else { showToast('Failed to save order', 'error'); btn.disabled = false; }
-    } catch { showToast('Network error', 'error'); btn.disabled = false; }
-    btn.textContent = 'Save Order';
+        else { showToast('Could not save the order', 'error'); btn.disabled = false; }
+    } catch { showToast('Network error. Try again.', 'error'); btn.disabled = false; }
+    btn.textContent = 'Save order';
 }
 
 /* ── Nav form validation ── */
 function validateNavForm(e) {
-    const rows = document.querySelectorAll('#sortable-nav tr');
-    if (rows.length >= 8) { showToast('Maximum 8 navigation items', 'error'); e.preventDefault(); return false; }
+    const rows = document.querySelectorAll('#sortable-nav li');
+    if (rows.length >= 8) { showToast('You can have at most 8 navigation links', 'error'); e.preventDefault(); return false; }
     return true;
 }
 
-/* ── Confirm modal ── */
-function showConfirm({ title, desc, btnText, btnClass, iconHtml, href }) {
+/* ── Confirm dialog ── */
+function showConfirm({ title, desc, btnText, btnClass, href }) {
     document.getElementById('confirm-title').textContent = title;
     document.getElementById('confirm-desc').textContent  = desc;
-    document.getElementById('confirm-icon-wrap').innerHTML = iconHtml;
     const btn = document.getElementById('confirm-href-btn');
     btn.textContent = btnText;
-    btn.className   = `w-full py-2.5 text-xs font-mono font-bold uppercase tracking-widest text-center rounded transition-colors ${btnClass}`;
+    btn.className   = `adm-btn ${btnClass}`;
     document.getElementById('confirm-form').action = href;
-    document.getElementById('confirm-modal').classList.remove('hidden');
+    document.getElementById('confirm-modal').showModal();
 }
-function closeConfirm() { document.getElementById('confirm-modal').classList.add('hidden'); }
+function closeConfirm() { document.getElementById('confirm-modal').close(); }
 
 function showMaintenanceConfirm(isActive) {
     showConfirm({
-        title:   isActive ? 'Disable Maintenance?' : 'Enable Maintenance?',
+        title:   isActive ? 'Turn off maintenance mode?' : 'Turn on maintenance mode?',
         desc:    isActive
-            ? 'This restores public access. All visitors will be able to see your site.'
-            : 'This restricts the site to admins only. Visitors will see a maintenance page.',
-        btnText:  isActive ? 'Disable' : 'Enable',
-        btnClass: isActive
-            ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20'
-            : 'text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20',
-        iconHtml: isActive
-            ? `<div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div>`
-            : `<div class="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>`,
+            ? 'This opens the site to everyone again.'
+            : 'Visitors will see a maintenance page until you turn this off. You can still see every page.',
+        btnText:  isActive ? 'Turn off' : 'Turn on',
+        btnClass: isActive ? 'adm-btn-safe' : 'adm-btn-danger',
         href: '/admin/toggle-maintenance'
     });
 }
@@ -422,11 +420,10 @@ function showMaintenanceConfirm(isActive) {
 function confirmNavDelete(e, anchor) {
     e.preventDefault();
     showConfirm({
-        title:   'Remove Link?',
-        desc:    'This will permanently remove the link from your navigation menu.',
-        btnText: 'Remove',
-        btnClass:'text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20',
-        iconHtml:`<div class="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></div>`,
+        title:   'Remove this link?',
+        desc:    'It will be removed from the navigation menu straight away.',
+        btnText: 'Remove link',
+        btnClass:'adm-btn-danger',
         href: anchor.getAttribute('href')
     });
     return false;
@@ -435,16 +432,19 @@ function confirmNavDelete(e, anchor) {
 /* ── Toast ── */
 function showToast(msg, type = 'info') {
     const c = document.getElementById('toast-container');
-    const dot = { success: 'bg-emerald-500', error: 'bg-red-500', info: 'bg-brand' }[type] || 'bg-brand';
-    const el = Object.assign(document.createElement('div'), {
-        className: `toast-in flex items-center gap-3 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-xs font-mono text-zinc-200 shadow-xl pointer-events-auto`,
-        innerHTML: `<span class="w-2 h-2 rounded-full shrink-0 ${dot}"></span><span>${msg}</span>`
-    });
+    const dot = { success: '#34d399', error: '#f87171', info: '#d4c5a9' }[type] || '#d4c5a9';
+    const el = document.createElement('div');
+    el.className = 'adm-toast toast-in';
+    const mark = document.createElement('i');
+    mark.style.background = dot;
+    const text = document.createElement('span');
+    text.textContent = msg;
+    el.append(mark, text);
     c.appendChild(el);
     setTimeout(() => {
         el.classList.replace('toast-in', 'toast-out');
         setTimeout(() => el.remove(), 180);
-    }, 3000);
+    }, 3200);
 }
 </script>
 
