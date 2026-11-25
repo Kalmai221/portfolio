@@ -143,7 +143,7 @@
         </div>
     </footer>
 
-    <aside id="privacy-notice" role="dialog" aria-labelledby="privacy-title" class="hidden fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md z-50 max-h-[80vh] overflow-y-auto bg-zinc-900 border border-zinc-800 rounded-lg p-5 shadow-lg">
+    <aside id="privacy-notice" role="dialog" aria-labelledby="privacy-title" hidden class="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md z-50 max-h-[80vh] overflow-y-auto bg-zinc-900 border border-zinc-800 rounded-lg p-5 shadow-lg">
         <h2 id="privacy-title" class="text-zinc-100 font-semibold text-sm">Privacy</h2>
 
         <h3 class="text-zinc-200 text-sm font-medium mt-3">Visiting the site</h3>
@@ -190,13 +190,15 @@
             var notice = document.getElementById('privacy-notice');
             var isBot = /bot|crawler|spider|preview|lighthouse/i.test(navigator.userAgent) ||
                         new URLSearchParams(location.search).get('isBot') === 'true';
-            if (!store.get('privacy-notice-v2') && !isBot) notice.classList.remove('hidden');
+            // The `hidden` attribute (not a Tailwind class) keeps the notice out of the page
+            // when scripts or the Tailwind CDN don't run, e.g. for crawlers and text-only tools.
+            if (!store.get('privacy-notice-v2') && !isBot) notice.hidden = false;
             document.getElementById('privacy-ok').addEventListener('click', function () {
                 store.set('privacy-notice-v2', '1');
-                notice.classList.add('hidden');
+                notice.hidden = true;
             });
             document.getElementById('privacy-link').addEventListener('click', function () {
-                notice.classList.remove('hidden');
+                notice.hidden = false;
             });
         })();
     </script>
