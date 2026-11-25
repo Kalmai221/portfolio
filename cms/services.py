@@ -84,6 +84,109 @@ def bust_maintenance_cache():
     _maint_expiry = datetime.min
 
 
+# ── Contact form settings ──────────────────────────────────
+# Edited in the admin Settings window. The contact page's Python tab reads the same document
+# ("contact_settings") on every request, so these are also its fallbacks when nothing is saved.
+CONTACT_DEFAULTS = {
+    "paused": False,              # hide the form and show the email address instead
+    "discord_enabled": True,      # post new messages to the private Discord channel
+    "ip_limit_per_hour": 3,
+    "cookie_limit_per_hour": 3,
+    "email_limit_per_day": 3,
+    "global_limit_per_hour": 30,  # circuit breaker across all visitors
+    "min_fill_seconds": 3,        # a form sent faster than this is treated as a bot
+    "spam_threshold": 3,          # spam score at which a message is saved as SPAM
+}
+CONTACT_LIMITS = {
+    "ip_limit_per_hour": (1, 50),
+    "cookie_limit_per_hour": (1, 50),
+    "email_limit_per_day": (1, 50),
+    "global_limit_per_hour": (1, 500),
+    "min_fill_seconds": (0, 30),
+    "spam_threshold": (1, 10),
+}
+
+
+def get_contact_settings() -> dict:
+    """Saved contact settings merged over the defaults. Never raises."""
+    out = dict(CONTACT_DEFAULTS)
+    try:
+        if g.settings_col is not None:
+            doc = g.settings_col.find_one({"name": "contact_settings"}) or {}
+            for key, default in CONTACT_DEFAULTS.items():
+                value = doc.get(key)
+                if isinstance(default, bool):
+                    if isinstance(value, bool):
+                        out[key] = value
+                elif isinstance(value, int) and not isinstance(value, bool):
+                    out[key] = value
+    except ConnectionFailure:
+        note_db_failure()
+    except Exception:
+        pass
+    return out
+
+
+# ── Site message: a banner shown at the top of every page (10s in-process cache) ──
+SITE_MESSAGE_STYLES = ("info", "notice", "warning", "success")
+SITE_MESSAGE_DEFAULTS = {
+    "active": False,
+    "text": "",
+    "link_label": "",
+    "link_url": "",
+    "style": "info",
+    "dismissible": True,
+    "until": "",  # optional last day to show it, YYYY-MM-DD (UTC)
+}
+_sm_doc: dict = {**SITE_MESSAGE_DEFAULTS, "updated_at": None}
+_sm_expiry: datetime = datetime.min
+
+
+def get_site_message_doc() -> dict:
+    """The stored site message with defaults filled in, whether or not it is switched on.
+
+    If the database can't be reached this keeps returning the last copy it saw.
+    """
+    global _sm_doc, _sm_expiry
+    if utc_now() < _sm_expiry:
+        return _sm_doc
+    try:
+        if g.settings_col is None:
+            return _sm_doc
+        doc = g.settings_col.find_one({"name": "site_message"}) or {}
+        _sm_doc = {**SITE_MESSAGE_DEFAULTS, **{k: doc[k] for k in SITE_MESSAGE_DEFAULTS if k in doc},
+                   "updated_at": doc.get("updated_at")}
+        _sm_expiry = utc_now() + timedelta(seconds=10)
+    except ConnectionFailure:
+        note_db_failure()
+    except Exception:
+        pass
+    return _sm_doc
+
+
+def get_site_message():
+    """The banner to show right now, or None when it is off, empty or past its last day."""
+    doc = get_site_message_doc()
+    text = (doc.get("text") or "").strip()
+    if not doc.get("active") or not text:
+        return None
+    until = doc.get("until") or ""
+    if until:
+        try:
+            if utc_now().date() > datetime.strptime(until, "%Y-%m-%d").date():
+                return None
+        except ValueError:
+            pass
+    # The key changes whenever the message is edited, so people who dismissed an older one see the new one.
+    raw = f"{text}|{doc.get('link_url')}|{doc.get('style')}|{doc.get('updated_at')}"
+    return {**doc, "text": text, "key": hashlib.sha256(raw.encode()).hexdigest()[:12]}
+
+
+def bust_site_message_cache():
+    global _sm_expiry
+    _sm_expiry = datetime.min
+
+
 # ── Audit log ──────────────────────────────────────────────
 def audit(action: str, detail: str = "", level: str = "info"):
     try:
@@ -181,4 +284,5 @@ def inject_globals():
         now=utc_now(),
         csrf_token=generate_csrf_token,
         site_url=SITE_URL,
+        site_message=get_site_message(),
     )

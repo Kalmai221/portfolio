@@ -71,6 +71,27 @@
             .reveal { opacity: 1; transform: none; transition: none; }
         }
     </style>
+    <style>
+        /* Dark, slim scrollbars to match the design. These are the standard properties, so they work in
+           Chrome, Edge, Firefox and Safari 18.2+; older browsers just keep their default scrollbar. */
+        :root { color-scheme: dark; scrollbar-color: #3f3f46 #0c0c0d; }
+        * { scrollbar-width: thin; }
+        html { scrollbar-width: auto; } /* the main page scrollbar stays full width so it's easy to grab */
+
+        /* Site message banner (also used for the live preview in the admin settings) */
+        .sm { border-bottom: 1px solid var(--sm-line); background: var(--sm-bg); color: #f4f4f5; font-size: 0.9rem; line-height: 1.5; }
+        .sm-info    { --sm-bg: #151518;                    --sm-line: rgba(255, 255, 255, 0.10); --sm-mark: #9ca3af; }
+        .sm-notice  { --sm-bg: rgba(212, 197, 169, 0.10);  --sm-line: rgba(212, 197, 169, 0.28); --sm-mark: #d4c5a9; }
+        .sm-warning { --sm-bg: rgba(251, 191, 36, 0.10);   --sm-line: rgba(251, 191, 36, 0.30);  --sm-mark: #fbbf24; }
+        .sm-success { --sm-bg: rgba(52, 211, 153, 0.10);   --sm-line: rgba(52, 211, 153, 0.30);  --sm-mark: #34d399; }
+        .sm-inner { display: flex; align-items: flex-start; gap: 0.75rem; padding-top: 0.7rem; padding-bottom: 0.7rem; }
+        .sm-mark { flex: none; width: 8px; height: 8px; margin-top: 0.5rem; border-radius: 50%; background: var(--sm-mark); }
+        .sm-text { flex: 1; min-width: 0; margin: 0; }
+        .sm-text a { margin-left: 0.4rem; color: #f4f4f5; font-weight: 500; white-space: nowrap; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--sm-mark); }
+        .sm-close { flex: none; display: inline-flex; width: 36px; height: 36px; margin: -0.4rem -0.5rem -0.4rem 0; align-items: center; justify-content: center; background: none; border: 0; border-radius: 6px; color: #a1a1aa; cursor: pointer; transition: color 0.15s, background 0.15s; }
+        .sm-close:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+        .sm-close:focus-visible { outline: 2px solid #d4c5a9; outline-offset: 1px; }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden">
     <noscript>
@@ -80,6 +101,22 @@
     </noscript>
 
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-zinc-100 focus:text-zinc-950 focus:px-3 focus:py-2 focus:rounded">Skip to content</a>
+
+    {% if site_message %}
+    <div id="site-message" class="sm sm-{{ site_message.style }}" role="region" aria-label="Site message" data-key="{{ site_message.key }}"{% if site_message.dismissible %} data-dismissible{% endif %}>
+        <div class="sm-inner max-w-5xl mx-auto px-6">
+            <span class="sm-mark" aria-hidden="true"></span>
+            <p class="sm-text">{{ site_message.text }}{% if site_message.link_url %}<a href="{{ site_message.link_url }}"{% if site_message.link_url.startswith('http') %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ site_message.link_label or 'Read more' }}{% if site_message.link_url.startswith('http') %}<span class="sr-only"> (opens in a new tab)</span>{% endif %}</a>{% endif %}</p>
+            {% if site_message.dismissible %}
+            <button type="button" class="sm-close" aria-label="Dismiss this message">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {#- Runs straight after the banner so a message someone already dismissed never flashes up. #}
+    <script>(function () { try { var m = document.getElementById('site-message'); if (m && m.hasAttribute('data-dismissible') && localStorage.getItem('site-message-dismissed') === m.dataset.key) m.remove(); } catch (e) {} })();</script>
+    {% endif %}
 
     <header id="site-header" class="sticky top-0 z-40 border-b border-transparent bg-zinc-950/80 backdrop-blur-md transition-colors duration-200">
         <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
@@ -236,6 +273,16 @@
                 if (e.key === 'Escape' && !menu.classList.contains('hidden')) { setMenu(false); btn.focus(); }
             });
             matchMedia('(min-width: 768px)').addEventListener('change', function (e) { if (e.matches) setMenu(false); });
+
+            // Site message: remember which version a visitor closed (the key changes when it is edited)
+            var siteMessage = document.getElementById('site-message');
+            if (siteMessage) {
+                var closeMessage = siteMessage.querySelector('.sm-close');
+                if (closeMessage) closeMessage.addEventListener('click', function () {
+                    store.set('site-message-dismissed', siteMessage.dataset.key);
+                    siteMessage.remove();
+                });
+            }
 
             // Privacy notice: shown once per browser (v3 because the wording changed), never to
             // crawlers or screenshot bots. It is built here rather than written into the HTML so

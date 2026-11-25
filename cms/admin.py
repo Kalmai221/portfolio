@@ -20,6 +20,8 @@ from .services import (
     audit,
     bust_maintenance_cache,
     bust_settings_cache,
+    get_contact_settings,
+    get_site_message_doc,
     is_maintenance_mode,
 )
 
@@ -85,6 +87,8 @@ def admin_dashboard():
         pages=all_pages,
         maintenance_active=is_maintenance_mode(),
         total_hits=total_hits,
+        contact=get_contact_settings(),
+        site_msg=get_site_message_doc(),
     )
 
 

@@ -94,7 +94,11 @@
   }
   .adm-dialog::backdrop { background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(3px); }
   .adm-dialog-small { width: min(26rem, calc(100vw - 2rem)); }
-  .adm-dialog-box { display: flex; flex-direction: column; max-height: inherit; }
+  /* The dialog clips itself and lays out as a column, so the box inside always fits and only
+     .adm-dialog-body scrolls (otherwise the border pushes the box 2px too tall and a second scrollbar appears). */
+  .adm-dialog { overflow: hidden; }
+  .adm-dialog[open] { display: flex; flex-direction: column; }
+  .adm-dialog-box { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .adm-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border); }
   .adm-dialog-head h2 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.5rem; color: var(--text-1); }
   .adm-icon { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; background: none; border: 0; border-radius: 6px; color: var(--text-3); cursor: pointer; transition: color 0.15s, background 0.15s; }
@@ -126,6 +130,44 @@
   .adm-field label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--text-1); }
   .adm-field .adm-input { width: 100%; }
   .adm-add .adm-btn { margin-top: 1rem; }
+
+  /* Forms inside the settings tabs */
+  .adm-tabs { flex-wrap: wrap; column-gap: 1.25rem; flex-shrink: 0; }
+  .adm-dialog-head { flex-shrink: 0; }
+  .adm-tab { white-space: nowrap; }
+  .adm-stack { display: flex; flex-direction: column; gap: 1.25rem; }
+  .adm-inline { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; }
+  .adm-subhead { margin: 0.5rem 0 0; padding-top: 1.25rem; border-top: 1px solid var(--border); font-size: 1.05rem; font-weight: 500; color: var(--text-1); }
+  .adm-hint { margin-top: 0.4rem; font-size: 0.85rem; line-height: 1.5; color: var(--text-3); }
+  textarea.adm-input { line-height: 1.5; resize: vertical; }
+  .adm-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .adm-fieldset legend { margin-bottom: 0.5rem; padding: 0; font-size: 0.9rem; color: var(--text-1); }
+  .adm-check { display: flex; align-items: center; gap: 0.6rem; min-height: 40px; color: var(--text-1); font-size: 0.95rem; cursor: pointer; }
+  .adm-check input { width: 18px; height: 18px; accent-color: #d4c5a9; }
+  .adm-field input[type="date"] { color-scheme: dark; }
+
+  .adm-switch { position: relative; display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .adm-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .adm-switch-track { position: relative; flex: none; width: 40px; height: 24px; margin-top: 0.1rem; border-radius: 999px; background: rgba(255, 255, 255, 0.16); transition: background 0.15s; }
+  .adm-switch-track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #f4f4f5; transition: transform 0.15s, background 0.15s; }
+  .adm-switch input:checked + .adm-switch-track { background: #d4c5a9; }
+  .adm-switch input:checked + .adm-switch-track::after { transform: translateX(16px); background: #0c0c0d; }
+  .adm-switch input:focus-visible + .adm-switch-track { outline: 2px solid #d4c5a9; outline-offset: 2px; }
+  .adm-switch-text strong { display: block; font-weight: 500; color: var(--text-1); }
+  .adm-switch-text small { display: block; margin-top: 0.15rem; font-size: 0.9rem; line-height: 1.5; color: var(--text-3); }
+
+  .adm-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .adm-chip { position: relative; display: inline-flex; align-items: center; gap: 0.5rem; min-height: 40px; padding: 0.3rem 0.95rem; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; color: var(--text-2); font-size: 0.9rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .adm-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .adm-chip i { width: 8px; height: 8px; border-radius: 50%; }
+  .adm-chip:hover { border-color: rgba(255, 255, 255, 0.4); }
+  .adm-chip:has(input:checked) { border-color: #d4c5a9; background: rgba(212, 197, 169, 0.1); color: var(--text-1); }
+  .adm-chip:has(input:focus-visible) { outline: 2px solid #d4c5a9; outline-offset: 2px; }
+
+  .adm-preview { margin-bottom: 1.5rem; }
+  .adm-preview-label { margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-3); }
+  .adm-preview .sm { border: 1px solid var(--sm-line); border-radius: 8px; overflow: hidden; }
+  .adm-preview .sm-text .is-empty { color: var(--text-3); }
 
   /* Maintenance */
   .adm-maint { display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem; padding-top: 0.25rem; }
@@ -233,8 +275,10 @@
             </div>
 
             <div class="adm-tabs" role="tablist" aria-label="Settings sections">
-                <button type="button" role="tab" id="nav-sidebar-btn" class="adm-tab" aria-selected="true" aria-controls="tab-nav" onclick="switchTab('nav')">Navigation</button>
-                <button type="button" role="tab" id="maint-sidebar-btn" class="adm-tab" aria-selected="false" aria-controls="tab-maintenance" onclick="switchTab('maintenance')">Maintenance</button>
+                <button type="button" role="tab" id="nav-sidebar-btn" class="adm-tab" data-tab="nav" aria-selected="true" aria-controls="tab-nav" onclick="switchTab('nav')">Navigation</button>
+                <button type="button" role="tab" id="message-tab-btn" class="adm-tab" data-tab="site-message" aria-selected="false" aria-controls="tab-site-message" onclick="switchTab('site-message')">Site message</button>
+                <button type="button" role="tab" id="contact-tab-btn" class="adm-tab" data-tab="contact" aria-selected="false" aria-controls="tab-contact" onclick="switchTab('contact')">Contact</button>
+                <button type="button" role="tab" id="maint-sidebar-btn" class="adm-tab" data-tab="maintenance" aria-selected="false" aria-controls="tab-maintenance" onclick="switchTab('maintenance')">Maintenance</button>
             </div>
 
             <div class="adm-dialog-body">
@@ -279,6 +323,147 @@
                         </div>
                         <button type="submit" class="adm-btn">Add link</button>
                     </form>
+                </section>
+
+                <!-- Site message tab -->
+                <section id="tab-site-message" role="tabpanel" aria-labelledby="message-tab-btn" class="admin-tab-pane hidden">
+                    <div class="adm-pane-head">
+                        <div>
+                            <h3>Site message</h3>
+                            <p>A short banner at the top of every page, for things like "Away until 5 December".</p>
+                        </div>
+                    </div>
+
+                    <div class="adm-preview">
+                        <p class="adm-preview-label">Preview</p>
+                        <div id="sm-preview" class="sm sm-info">
+                            <div class="sm-inner" style="padding-left:1rem;padding-right:1rem">
+                                <span class="sm-mark" aria-hidden="true"></span>
+                                <p class="sm-text"><span id="sm-preview-text"></span><a id="sm-preview-link" href="#" tabindex="-1" onclick="return false"></a></p>
+                                <span id="sm-preview-close" class="sm-close" aria-hidden="true" style="pointer-events:none">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="sm-form" onsubmit="saveSiteMessage(); return false;" class="adm-stack">
+                        <label class="adm-switch">
+                            <input type="checkbox" id="sm-active" {{ 'checked' if site_msg.active else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>Show the message</strong><small>Visitors see it on every page until you switch it off.</small></span>
+                        </label>
+
+                        <div class="adm-field">
+                            <label for="sm-text">Message</label>
+                            <textarea id="sm-text" class="adm-input" rows="3" maxlength="200" oninput="updatePreview()">{{ site_msg.text }}</textarea>
+                            <p class="adm-hint"><span id="sm-count">0</span> of 200 characters</p>
+                        </div>
+
+                        <div class="adm-fields">
+                            <div class="adm-field">
+                                <label for="sm-link-label">Link text (optional)</label>
+                                <input id="sm-link-label" class="adm-input" type="text" maxlength="30" value="{{ site_msg.link_label }}" placeholder="Read more" oninput="updatePreview()">
+                            </div>
+                            <div class="adm-field">
+                                <label for="sm-link-url">Link address (optional)</label>
+                                <input id="sm-link-url" class="adm-input" type="text" value="{{ site_msg.link_url }}" placeholder="/contact or https://..." oninput="updatePreview()">
+                            </div>
+                        </div>
+
+                        <fieldset class="adm-field adm-fieldset">
+                            <legend>Style</legend>
+                            <div class="adm-chips">
+                                {% for value, label, colour in [('info', 'Info', '#9ca3af'), ('notice', 'Notice', '#d4c5a9'), ('warning', 'Warning', '#fbbf24'), ('success', 'Good news', '#34d399')] %}
+                                <label class="adm-chip"><input type="radio" name="sm-style" value="{{ value }}" {{ 'checked' if site_msg.style == value else '' }} onchange="updatePreview()"><i style="background:{{ colour }}" aria-hidden="true"></i>{{ label }}</label>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+
+                        <div class="adm-fields">
+                            <div class="adm-field">
+                                <label for="sm-until">Show until (optional)</label>
+                                <input id="sm-until" class="adm-input" type="date" value="{{ site_msg.until }}">
+                                <p class="adm-hint">It switches itself off after this day.</p>
+                            </div>
+                            <div class="adm-field">
+                                <label class="adm-check"><input type="checkbox" id="sm-dismissible" {{ 'checked' if site_msg.dismissible else '' }} onchange="updatePreview()"> Let visitors close it</label>
+                                <p class="adm-hint">Once closed it stays closed for that visitor, until you change the message.</p>
+                            </div>
+                        </div>
+
+                        <div><button type="submit" id="sm-save" class="adm-btn adm-btn-primary">Save message</button></div>
+                    </form>
+                </section>
+
+                <!-- Contact tab -->
+                <section id="tab-contact" role="tabpanel" aria-labelledby="contact-tab-btn" class="admin-tab-pane hidden">
+                    <div class="adm-pane-head">
+                        <div>
+                            <h3>Contact form</h3>
+                            <p>Controls for the form on the contact page.</p>
+                        </div>
+                    </div>
+
+                    <form id="contact-form" onsubmit="saveContactSettings(); return false;" class="adm-stack">
+                        <label class="adm-switch">
+                            <input type="checkbox" id="cs-paused" {{ 'checked' if contact.paused else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>Pause the form</strong><small>Hides the form and shows your email address instead. Handy during a spam flood.</small></span>
+                        </label>
+                        <label class="adm-switch">
+                            <input type="checkbox" id="cs-discord" {{ 'checked' if contact.discord_enabled else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>Discord alerts</strong><small>Post new messages to your private Discord channel.</small></span>
+                        </label>
+                        <div><button type="button" id="cs-test" class="adm-btn adm-btn-small" onclick="testDiscordAlert()">Send a test alert</button></div>
+
+                        <h4 class="adm-subhead">Spam limits</h4>
+                        <div class="adm-fields">
+                            <div class="adm-field">
+                                <label for="cs-ip">Messages an hour from one IP address</label>
+                                <input id="cs-ip" class="adm-input" type="number" min="1" max="50" value="{{ contact.ip_limit_per_hour }}">
+                            </div>
+                            <div class="adm-field">
+                                <label for="cs-cookie">Messages an hour from one browser</label>
+                                <input id="cs-cookie" class="adm-input" type="number" min="1" max="50" value="{{ contact.cookie_limit_per_hour }}">
+                            </div>
+                            <div class="adm-field">
+                                <label for="cs-email">Messages a day from one email address</label>
+                                <input id="cs-email" class="adm-input" type="number" min="1" max="50" value="{{ contact.email_limit_per_day }}">
+                            </div>
+                            <div class="adm-field">
+                                <label for="cs-global">Messages an hour from everyone</label>
+                                <input id="cs-global" class="adm-input" type="number" min="1" max="500" value="{{ contact.global_limit_per_hour }}">
+                                <p class="adm-hint">The form closes for the rest of the hour once this many arrive.</p>
+                            </div>
+                            <div class="adm-field">
+                                <label for="cs-fill">Seconds before a send looks human</label>
+                                <input id="cs-fill" class="adm-input" type="number" min="0" max="30" value="{{ contact.min_fill_seconds }}">
+                                <p class="adm-hint">Anything sent faster is dropped as a bot.</p>
+                            </div>
+                            <div class="adm-field">
+                                <label for="cs-spam">Spam score that blocks a message</label>
+                                <input id="cs-spam" class="adm-input" type="number" min="1" max="10" value="{{ contact.spam_threshold }}">
+                                <p class="adm-hint">Lower is stricter. Blocked messages are still saved, marked as spam.</p>
+                            </div>
+                        </div>
+                        <div><button type="submit" id="cs-save" class="adm-btn adm-btn-primary">Save contact settings</button></div>
+                    </form>
+
+                    <div class="adm-add">
+                        <h4>Delete messages</h4>
+                        <p class="adm-hint" style="margin-bottom:1rem">Remove everything one person has sent, for example when they ask you to.</p>
+                        <form onsubmit="findMessages(); return false;" class="adm-inline">
+                            <div class="adm-field" style="flex:1;min-width:14rem">
+                                <label for="del-email">Their email address</label>
+                                <input id="del-email" class="adm-input" type="email" autocomplete="off" oninput="resetDelete()">
+                            </div>
+                            <button type="submit" class="adm-btn">Find messages</button>
+                        </form>
+                        <p id="del-result" class="adm-hint" aria-live="polite" style="margin-top:0.75rem"></p>
+                        <button type="button" id="del-confirm-btn" class="adm-btn adm-btn-danger hidden" style="margin-top:0.75rem" onclick="confirmDeleteMessages()">Delete messages</button>
+                    </div>
                 </section>
 
                 <!-- Maintenance tab -->
@@ -333,8 +518,126 @@ function handleOverlayClick(e) {
 function switchTab(tab) {
     document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.add('hidden'));
     document.getElementById('tab-' + tab).classList.remove('hidden');
-    document.getElementById('nav-sidebar-btn').setAttribute('aria-selected', tab === 'nav' ? 'true' : 'false');
-    document.getElementById('maint-sidebar-btn').setAttribute('aria-selected', tab === 'maintenance' ? 'true' : 'false');
+    document.querySelectorAll('.adm-tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false'));
+}
+
+/* ── Small helpers for the settings forms ── */
+const CSRF = '{{ csrf_token() }}';
+const byId = id => document.getElementById(id);
+async function postJSON(url, body) {
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+            body: JSON.stringify(body || {})
+        });
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok && data.ok !== false, data };
+    } catch {
+        return { ok: false, data: { error: 'Network error. Try again.' } };
+    }
+}
+
+/* ── Site message ── */
+function updatePreview() {
+    const text = byId('sm-text').value.trim();
+    const style = (document.querySelector('input[name="sm-style"]:checked') || { value: 'info' }).value;
+    byId('sm-preview').className = 'sm sm-' + style;
+    const out = byId('sm-preview-text');
+    out.textContent = text || 'Your message appears here.';
+    out.className = text ? '' : 'is-empty';
+    const link = byId('sm-preview-link');
+    const url = byId('sm-link-url').value.trim();
+    link.textContent = url ? (byId('sm-link-label').value.trim() || 'Read more') : '';
+    byId('sm-preview-close').style.display = byId('sm-dismissible').checked ? '' : 'none';
+    byId('sm-count').textContent = byId('sm-text').value.length;
+}
+async function saveSiteMessage() {
+    const btn = byId('sm-save');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    const r = await postJSON('/admin/api/site-message', {
+        active: byId('sm-active').checked,
+        text: byId('sm-text').value,
+        link_label: byId('sm-link-label').value,
+        link_url: byId('sm-link-url').value,
+        style: (document.querySelector('input[name="sm-style"]:checked') || { value: 'info' }).value,
+        dismissible: byId('sm-dismissible').checked,
+        until: byId('sm-until').value
+    });
+    btn.disabled = false;
+    btn.textContent = 'Save message';
+    showToast(r.ok ? (byId('sm-active').checked ? 'Site message saved and showing' : 'Site message saved, switched off')
+                   : (r.data.error || 'Could not save the message'), r.ok ? 'success' : 'error');
+}
+document.addEventListener('DOMContentLoaded', updatePreview);
+
+/* ── Contact settings ── */
+async function saveContactSettings() {
+    const btn = byId('cs-save');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    const r = await postJSON('/admin/api/contact-settings', {
+        paused: byId('cs-paused').checked,
+        discord_enabled: byId('cs-discord').checked,
+        ip_limit_per_hour: byId('cs-ip').value,
+        cookie_limit_per_hour: byId('cs-cookie').value,
+        email_limit_per_day: byId('cs-email').value,
+        global_limit_per_hour: byId('cs-global').value,
+        min_fill_seconds: byId('cs-fill').value,
+        spam_threshold: byId('cs-spam').value
+    });
+    btn.disabled = false;
+    btn.textContent = 'Save contact settings';
+    showToast(r.ok ? 'Contact settings saved' : (r.data.error || 'Could not save the settings'), r.ok ? 'success' : 'error');
+}
+async function testDiscordAlert() {
+    const btn = byId('cs-test');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    const r = await postJSON('/admin/api/contact-test-alert');
+    btn.disabled = false;
+    btn.textContent = 'Send a test alert';
+    showToast(r.ok ? 'Test alert sent. Check Discord.' : (r.data.error || 'The test alert failed'), r.ok ? 'success' : 'error');
+}
+
+/* ── Delete messages from one address ── */
+let pendingDeleteEmail = '';
+function resetDelete() {
+    pendingDeleteEmail = '';
+    byId('del-result').textContent = '';
+    byId('del-confirm-btn').classList.add('hidden');
+}
+async function findMessages() {
+    const email = byId('del-email').value.trim();
+    resetDelete();
+    if (!email) { showToast('Enter their email address first', 'error'); return; }
+    const r = await postJSON('/admin/api/contact-delete', { email });
+    if (!r.ok) { byId('del-result').textContent = r.data.error || 'Could not look that up.'; return; }
+    const n = r.data.count;
+    byId('del-result').textContent = n ? `Found ${n} message${n === 1 ? '' : 's'} from ${email}.` : `No messages from ${email}.`;
+    if (n) {
+        pendingDeleteEmail = email;
+        const btn = byId('del-confirm-btn');
+        btn.textContent = `Delete ${n} message${n === 1 ? '' : 's'}`;
+        btn.classList.remove('hidden');
+    }
+}
+function confirmDeleteMessages() {
+    const email = pendingDeleteEmail;
+    if (!email) return;
+    showConfirm({
+        title: 'Delete these messages?',
+        desc: `Every message from ${email} will be deleted for good. This can't be undone.`,
+        btnText: 'Delete for good',
+        btnClass: 'adm-btn-danger',
+        onConfirm: async () => {
+            const r = await postJSON('/admin/api/contact-delete', { email, confirm: true });
+            resetDelete();
+            byId('del-email').value = '';
+            showToast(r.ok ? `Deleted ${r.data.deleted} message${r.data.deleted === 1 ? '' : 's'}` : (r.data.error || 'Could not delete'), r.ok ? 'success' : 'error');
+        }
+    });
 }
 
 /* ── Page filter ── */
@@ -394,13 +697,16 @@ function validateNavForm(e) {
 }
 
 /* ── Confirm dialog ── */
-function showConfirm({ title, desc, btnText, btnClass, href }) {
+function showConfirm({ title, desc, btnText, btnClass, href, onConfirm }) {
     document.getElementById('confirm-title').textContent = title;
     document.getElementById('confirm-desc').textContent  = desc;
     const btn = document.getElementById('confirm-href-btn');
     btn.textContent = btnText;
     btn.className   = `adm-btn ${btnClass}`;
-    document.getElementById('confirm-form').action = href;
+    const form = document.getElementById('confirm-form');
+    form.action = href || '';
+    // With onConfirm the button runs a function instead of sending the form.
+    form.onsubmit = onConfirm ? (e) => { e.preventDefault(); closeConfirm(); onConfirm(); } : null;
     document.getElementById('confirm-modal').showModal();
 }
 function closeConfirm() { document.getElementById('confirm-modal').close(); }
