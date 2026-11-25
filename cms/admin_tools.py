@@ -1,10 +1,12 @@
 """Admin-only settings: the contact form controls and the site message banner."""
 import os
 import re
+import warnings
 from datetime import datetime
 
 import requests
 from flask import g, jsonify, request
+from jinja2.exceptions import TemplateSyntaxError
 
 from .admin import sanitise_nav_url
 from .app import app, logger, utc_now
@@ -31,6 +33,97 @@ def _mask(email: str) -> str:
     """k***@outlook.com. The audit log needs to say whose messages went, not store the address."""
     name, _, domain = email.partition("@")
     return f"{name[:1]}***@{domain}"
+
+
+# ── Code checks for the page editor ────────────────────────
+# Nothing here runs the code. Python is only compiled and Jinja only parsed, so a page with an error
+# can be flagged before it is saved and breaks on the live site.
+def _problem(tab: str, line, col, message: str, severity: str = "error") -> dict:
+    return {"tab": tab, "line": max(int(line or 1), 1), "col": max(int(col or 1), 1),
+            "severity": severity, "message": message}
+
+
+def check_python(source: str) -> list:
+    problems = []
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        try:
+            compile(source, "<page>", "exec", dont_inherit=True)
+        except SyntaxError as e:
+            problems.append(_problem("py", e.lineno, e.offset, e.msg))
+        except ValueError as e:  # for example a null byte
+            problems.append(_problem("py", 1, 1, str(e)))
+    for w in caught:  # things like an invalid escape sequence: legal today, wrong tomorrow
+        if issubclass(w.category, (SyntaxWarning, DeprecationWarning)):
+            problems.append(_problem("py", getattr(w, "lineno", 1), 1, str(w.message), "warning"))
+    return problems
+
+
+def check_jinja(source: str) -> list:
+    try:
+        app.jinja_env.from_string(source)  # compiles the template without rendering it
+    except TemplateSyntaxError as e:
+        return [_problem("html", e.lineno, 1, e.message)]
+    return []
+
+
+def check_css(source: str) -> list:
+    """Unclosed or stray brackets, unterminated strings and comments. Not a full CSS parser."""
+    problems, stack = [], []
+    closers = {"{": "}", "(": ")", "[": "]"}
+    i, line, col, n = 0, 1, 1, len(source)
+
+    def advance(count=1):
+        nonlocal i, line, col
+        for _ in range(count):
+            if i < n and source[i] == "\n":
+                line, col = line + 1, 1
+            else:
+                col += 1
+            i += 1
+
+    while i < n:
+        ch = source[i]
+        if source.startswith("/*", i):
+            start = (line, col)
+            end = source.find("*/", i + 2)
+            if end == -1:
+                problems.append(_problem("css", *start, "Unclosed comment", "warning"))
+                break
+            advance(end + 2 - i)
+        elif ch in "\"'":
+            start, quote = (line, col), ch
+            advance()
+            while i < n and source[i] != quote and source[i] != "\n":
+                advance(2 if source[i] == "\\" and i + 1 < n else 1)
+            if i >= n or source[i] == "\n":
+                problems.append(_problem("css", *start, "Unterminated string", "warning"))
+            else:
+                advance()
+        elif ch in closers:
+            stack.append((ch, line, col))
+            advance()
+        elif ch in "})]":
+            if stack and closers[stack[-1][0]] == ch:
+                stack.pop()
+            else:
+                problems.append(_problem("css", line, col, f"Unexpected '{ch}'", "warning"))
+            advance()
+        else:
+            advance()
+    for opener, ln, cl in stack:
+        problems.append(_problem("css", ln, cl, f"Unclosed '{opener}'", "warning"))
+    return problems
+
+
+@app.route("/admin/api/check-code", methods=["POST"])
+@login_required
+def api_check_code():
+    validate_csrf()
+    data = _body()
+    problems = (check_python(str(data.get("py", ""))) + check_jinja(str(data.get("html", "")))
+                + check_css(str(data.get("css", ""))))
+    return jsonify(ok=True, problems=problems[:100])
 
 
 # ── Contact form settings ──────────────────────────────────

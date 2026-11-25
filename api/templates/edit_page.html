@@ -36,9 +36,26 @@
         <p class="text-zinc-400 text-sm mb-5 pl-11">Your changes haven't been committed. Save before exiting?</p>
         <div class="flex flex-col gap-2">
             <button onclick="saveAndExit()" class="modal-btn-primary">Save & Exit</button>
-            <button onclick="window.location.href='/admin'" class="modal-btn-secondary">Discard Changes</button>
+            <button onclick="isDirty=false;window.location.href='/admin'" class="modal-btn-secondary">Discard Changes</button>
             <button onclick="toggleExitModal()" class="modal-btn-ghost">Cancel</button>
         </div>
+    </div>
+</div>
+
+<!-- Compare with last save -->
+<div id="diff-overlay" class="modal-backdrop hidden" style="z-index:700" onclick="if(event.target===this)closeDiff()">
+    <div class="diff-box" role="dialog" aria-modal="true" aria-labelledby="diff-title">
+        <div class="diff-head">
+            <div>
+                <h3 id="diff-title">Compare with last save</h3>
+                <p id="diff-sub"></p>
+            </div>
+            <div class="diff-actions">
+                <button id="diff-revert" type="button" class="modal-btn-secondary" style="width:auto;padding:6px 12px" onclick="revertFile()">Revert file to last save</button>
+                <button type="button" class="find-icon-btn" onclick="closeDiff()" title="Close (Esc)"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div id="diff-body" class="diff-body custom-scrollbar"></div>
     </div>
 </div>
 
@@ -256,12 +273,20 @@
         </div>
 
         <!-- CODE AREA — FIX 4: editor-body uses position:relative so gutter and textarea share the same coordinate space -->
+        <div id="draft-bar" class="draft-bar hidden" role="alert">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span id="draft-text">There are unsaved changes from an earlier session.</span>
+            <button type="button" onclick="restoreDraft()">Restore them</button>
+            <button type="button" onclick="discardDraft()">Discard</button>
+        </div>
         <div class="flex-grow flex overflow-hidden" id="editor-body">
             <!-- FIX 2 & 4: gutter is a plain flex column, never scrolls horizontally, overflow:hidden -->
             <div id="line-numbers" class="line-gutter"></div>
             <div class="flex-grow relative h-full overflow-hidden">
                 <!-- FIX 4: hl-layer must have identical box model to textarea — no extra borders/offsets -->
                 <div id="highlight-layer" class="hl-layer"></div>
+                <!-- Red and yellow wavy underlines for problems: same box as the highlight layer, text invisible -->
+                <div id="squiggle-layer" class="hl-layer squiggle-layer" aria-hidden="true"></div>
                 <div class="absolute inset-0 z-10 overflow-hidden">
                     <div id="panel-py"   class="editor-panel block  h-full w-full"><textarea name="python_logic" form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.python_logic if page else '' }}</textarea></div>
                     <div id="panel-html" class="editor-panel hidden h-full w-full"><textarea name="content"       form="cms-form" class="code-textarea custom-scrollbar" spellcheck="false">{{ page.content if page else '' }}</textarea></div>
@@ -270,10 +295,19 @@
                 </div>
             </div>
         </div>
+        <div id="problems-panel" class="problems-panel hidden">
+            <div class="problems-head">
+                <span>Problems</span>
+                <span id="problems-count" class="problems-count">0</span>
+                <span id="problems-hint" class="problems-hint"></span>
+                <button type="button" class="find-icon-btn" style="margin-left:auto" onclick="toggleProblems()" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="problems-list" class="problems-list custom-scrollbar"></div>
+        </div>
         <div class="statusbar">
             <div class="flex items-center gap-0.5">
                 <span class="status-pill"><i class="fa-solid fa-code-branch" style="font-size:9px"></i> main</span>
-                <span class="status-pill"><i class="fa-solid fa-circle-check" style="font-size:9px"></i> 0</span>
+                <span id="problems-pill" class="status-pill" onclick="toggleProblems()" title="Problems (Ctrl+Shift+M)"><i id="problems-icon" class="fa-solid fa-circle-check" style="font-size:9px"></i> <span id="problems-pill-text">0</span></span>
             </div>
             <div class="flex items-center gap-0.5 ml-auto">
                 <span id="pos-indicator"  class="status-pill">Ln 1, Col 1</span>
@@ -494,6 +528,49 @@
     flex-shrink:0;
 }
 .line-number.active-line{color:#c6c6c6}
+.line-number.has-error{color:#f14c4c;font-weight:700}
+.line-number.has-warn{color:#cca700;font-weight:700}
+
+/* Checks: wavy underlines, the Problems panel and the status bar pill */
+.squiggle-layer{color:transparent!important;z-index:1}
+.squiggle-layer .sq{text-decoration-line:underline;text-decoration-style:wavy;text-decoration-thickness:1px;text-decoration-skip-ink:none}
+.squiggle-layer .sq-error{text-decoration-color:#f14c4c}
+.squiggle-layer .sq-warning{text-decoration-color:#cca700}
+.problems-panel{height:150px;background:#1e1e1e;border-top:1px solid #2d2d2d;display:flex;flex-direction:column;flex-shrink:0;z-index:20}
+.problems-panel.hidden{display:none!important}
+.problems-head{display:flex;align-items:center;gap:10px;padding:0 10px;height:30px;font-size:11px;font-weight:600;color:#cccccc;border-bottom:1px solid #2d2d2d;flex-shrink:0}
+.problems-count{background:#4d4d4d;border-radius:8px;padding:0 6px;font-size:10px;font-weight:600}
+.problems-hint{color:#febc2e;font-weight:400}
+.problems-list{overflow:auto;flex:1;font-size:12px}
+.problem-row{display:flex;align-items:baseline;gap:8px;padding:3px 12px;cursor:pointer;color:#cccccc}
+.problem-row:hover{background:#2a2d2e}
+.problem-row .p-ico.err{color:#f14c4c}
+.problem-row .p-ico.warn{color:#cca700}
+.problem-row .p-loc{margin-left:auto;padding-left:16px;color:#858585;font-family:var(--ed-font);font-size:11px;white-space:nowrap}
+.problems-empty{padding:12px;color:#858585;font-size:12px}
+.status-pill.has-errors{background:#c72e2e}
+
+/* Safety: restore bar and the compare window */
+.draft-bar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:#3a3320;border-bottom:1px solid #5a4b1c;color:#e5c07b;font-size:12px;flex-shrink:0}
+.draft-bar.hidden{display:none!important}
+.draft-bar button{background:#3c3c3c;color:#cccccc;border:0;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:12px}
+.draft-bar button:hover{background:#4a4a4a}
+.diff-box{background:#1e1e1e;border:1px solid #3a3a3a;border-radius:10px;width:min(1000px,94vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.diff-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 18px;border-bottom:1px solid #2d2d2d}
+.diff-head h3{color:#fff;font-weight:700;font-size:14px}
+.diff-head p{color:#858585;font-size:12px;margin-top:2px}
+.diff-actions{display:flex;align-items:center;gap:8px}
+.diff-body{overflow:auto;font-family:var(--ed-font);font-size:12.5px;line-height:1.55;padding:6px 0}
+.diff-line{display:flex;white-space:pre}
+.diff-line .dn{width:48px;flex:none;text-align:right;padding-right:10px;color:#5a5a5a;user-select:none}
+.diff-line .dt{width:18px;flex:none;color:#858585;user-select:none}
+.diff-line .dx{flex:1;padding-right:12px;color:#d4d4d4}
+.diff-line.add{background:rgba(46,160,67,.18)}
+.diff-line.add .dt{color:#3fb950}
+.diff-line.del{background:rgba(248,81,73,.16)}
+.diff-line.del .dt{color:#f85149}
+.diff-skip{padding:2px 18px;color:#858585;background:#252526;font-size:11px}
+.diff-empty{padding:28px;text-align:center;color:#858585}
 
 /* FIX 4: hl-layer must be pixel-identical to textarea (same padding, font, size).
    letter-spacing removed — it subtly shifts char positions vs textarea. */
@@ -928,7 +1005,7 @@ function applyEditorStyle(){
         t.style.overflowX   = wordWrap?'hidden':'auto';
     });
     const hl = document.getElementById('highlight-layer');
-    if(hl) hl.style.whiteSpace = wordWrap?'pre-wrap':'pre';
+    document.querySelectorAll('.hl-layer').forEach(l=>{ l.style.whiteSpace = wordWrap?'pre-wrap':'pre'; });
     const tog = document.getElementById('wrap-toggle');
     if(tog) tog.classList.toggle('on', wordWrap);
 
@@ -946,11 +1023,13 @@ function syncHighlight(){
         ? Prism.highlight(ta.value, grammar, LANG_MAP[currentMode])
         : ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     )+'\n';
-    syncScroll(ta); updateLineNumbers(ta); updateStats(ta);
+    syncScroll(ta); updateLineNumbers(ta); updateStats(ta); updateSquiggles();
 }
 
 function syncScroll(el){
     const hl=document.getElementById('highlight-layer'), ln=document.getElementById('line-numbers');
+    const sq=document.getElementById('squiggle-layer');
+    if(sq){sq.scrollTop=el.scrollTop; sq.scrollLeft=el.scrollLeft;}
     if(hl){hl.scrollTop=el.scrollTop; hl.scrollLeft=el.scrollLeft;}
     if(ln) ln.scrollTop=el.scrollTop;
 }
@@ -967,6 +1046,7 @@ function updateLineNumbers(ta){
     const activeLine = before.split('\n').length;
     const lines      = ta.value.split('\n');
     const container  = document.getElementById('line-numbers');
+    const marks      = lineMarks[currentMode] || new Map(); /* lines with problems, from the checker */
     if(!container) return;
 
     const lineH = fontSize * lineHeight; // px per visual row
@@ -975,7 +1055,7 @@ function updateLineNumbers(ta){
     if(!wordWrap){
         /* simple 1:1 mode */
         for(let i=0; i<lines.length; i++){
-            html += `<span class="line-number${i+1===activeLine?' active-line':''}" style="height:${lineH}px;line-height:${lineH}px">${i+1}</span>`;
+            html += `<span class="line-number${i+1===activeLine?' active-line':''}${marks.get(i+1)?' '+marks.get(i+1):''}" style="height:${lineH}px;line-height:${lineH}px">${i+1}</span>`;
         }
     } else {
         /* Word-wrap: compute how many visual rows each source line takes.
@@ -986,7 +1066,7 @@ function updateLineNumbers(ta){
         for(let i=0; i<lines.length; i++){
             const visual = Math.max(1, Math.ceil((lines[i].length||1) / colW));
             const h      = visual * lineH;
-            html += `<span class="line-number${i+1===activeLine?' active-line':''}" style="height:${h}px;line-height:${lineH}px;display:flex;align-items:flex-start;justify-content:flex-end">${i+1}</span>`;
+            html += `<span class="line-number${i+1===activeLine?' active-line':''}${marks.get(i+1)?' '+marks.get(i+1):''}" style="height:${h}px;line-height:${lineH}px;display:flex;align-items:flex-start;justify-content:flex-end">${i+1}</span>`;
         }
     }
     container.innerHTML = html;
@@ -1110,6 +1190,9 @@ const COMMANDS=[
     {l:'Increase font size', i:'fa-text-height',              k:'Ctrl++',       fn:()=>changeFontSize(1)},
     {l:'Decrease font size', i:'fa-text-height',              k:'Ctrl+-',       fn:()=>changeFontSize(-1)},
     {l:'Toggle word wrap',   i:'fa-align-left',               k:'',             fn:()=>toggleWordWrap()},
+    {l:'Compare with last save', i:'fa-code-compare',         k:'',             fn:()=>openDiff()},
+    {l:'Show problems',      i:'fa-triangle-exclamation',     k:'Ctrl+Shift+M', fn:()=>toggleProblems()},
+    {l:'Go to next problem', i:'fa-arrow-down',               k:'F8',           fn:()=>nextProblem()},
     {l:'Keyboard shortcuts', i:'fa-keyboard',                 k:'',             fn:()=>document.getElementById('shortcuts-panel').classList.toggle('hidden')},
     {l:'Delete page',        i:'fa-trash-can',                k:'',             fn:()=>confirmDeletion()},
     {l:'Exit editor',        i:'fa-arrow-right-from-bracket', k:'',             fn:()=>handleExit()},
@@ -1135,6 +1218,14 @@ function runCmd(i){ COMMANDS[i]?.fn(); closeCmdPalette(); }
 
 /* ═══════════ SAVE / EXIT ═══════════ */
 async function handleSave(){
+    /* Safety net: don't quietly save code that won't run. The second press inside 8 seconds saves anyway. */
+    const errs=problems.filter(p=>p.severity==='error').length;
+    if(errs && Date.now()>saveAnywayUntil){
+        saveAnywayUntil=Date.now()+8000;
+        toggleProblems(true);
+        showProblemsHint(`${errs} error${errs===1?'':'s'} found. Press Ctrl+S again within 8 seconds to save anyway.`);
+        return false;
+    }
     const fd=new FormData(document.getElementById('cms-form'));
     fd.set('python_logic',document.querySelector('textarea[name="python_logic"]').value);
     fd.set('content',document.querySelector('textarea[name="content"]').value);
@@ -1142,17 +1233,19 @@ async function handleSave(){
     fd.set('js_content',document.querySelector('textarea[name="js_content"]').value);
     try{
         const r=await fetch(window.location.pathname,{method:'POST',body:fd});
-        if(r.ok){ const f=document.querySelector('input[name="slug"]'); const clean=f.value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\/._-]/g,'').replace(/-{2,}/g,'-').replace(/\/{2,}/g,'/').replace(/^[\/-]+|[\/-]+$/g,''); if(clean){ f.value=clean; history.replaceState(null,'','/admin/edit/'+clean); } showToast(); isDirty=false; document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d=>d.style.display='none'); }
+        if(r.ok){ const f=document.querySelector('input[name="slug"]'); const clean=f.value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\/._-]/g,'').replace(/-{2,}/g,'-').replace(/\/{2,}/g,'/').replace(/^[\/-]+|[\/-]+$/g,''); if(clean){ f.value=clean; history.replaceState(null,'','/admin/edit/'+clean); } showToast(); isDirty=false; document.querySelectorAll('.dirty-dot,.tab-dirty').forEach(d=>d.style.display='none'); savedValues=snapshot(); draftStore.clear(); return true; }
     }catch(err){console.error('Save failed:',err);}
+    return false;
 }
 function showToast(){ const t=document.getElementById('save-toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
 function handleExit(){ if(isDirty)toggleExitModal(); else window.location.href='/admin'; }
 function toggleExitModal(){ document.getElementById('exit-modal').classList.toggle('hidden'); }
-async function saveAndExit(){ await handleSave(); window.location.href='/admin'; }
+async function saveAndExit(){ const ok=await handleSave(); if(ok){ window.location.href='/admin'; } else { toggleExitModal(); } }
 function markDirty(){
     const td=document.querySelector(`#tab-${currentMode} .tab-dirty`);
     const sd=document.querySelector(`#side-tab-${currentMode} .dirty-dot`);
     if(td)td.style.display='block'; if(sd)sd.style.display='block';
+    scheduleCheck(); scheduleDraft();
 }
 function togglePanel(n){
     if(n==='explorer'){
@@ -1349,6 +1442,8 @@ function handleEditorKeydown(e,ta){
         ta.value=ta.value.substring(0,ls)+ta.value.substring(le);ta.selectionStart=ta.selectionEnd=ls;
         syncHighlight();updateCursorMetadata(ta);return;
     }
+    if(ctrl&&shift&&key.toLowerCase()==='m'){e.preventDefault();toggleProblems();return;}
+    if(key==='F8'){e.preventDefault();nextProblem();return;}
     if(alt&&(key==='ArrowUp'||key==='ArrowDown')){
         e.preventDefault();
         const pos=ta.selectionStart,ls=ta.value.lastIndexOf('\n',pos-1)+1,le=(ta.value.indexOf('\n',pos)+1||ta.value.length+1)-1;
@@ -1367,12 +1462,256 @@ function handleEditorKeydown(e,ta){
     }
 }
 
+/* ═══════════ CHECKS: Python and Jinja errors, CSS brackets ═══════════
+   The server compiles the Python and parses the Jinja without running either, then sends back problems.
+   They show as underlines, red line numbers, a count in the status bar and a Problems panel. */
+const CSRF_TOKEN = '{{ csrf_token() }}';
+const TABS = ['py','html','css','js'];
+const TAB_FIELD = {py:'python_logic', html:'content', css:'css_content', js:'js_content'};
+let problems = [], problemCursor = -1;
+let lineMarks = {py:new Map(), html:new Map(), css:new Map(), js:new Map()};
+let checkTimer = null, checkSeq = 0, saveAnywayUntil = 0, hintTimer = null;
+const textOf = tab => document.querySelector(`textarea[name="${TAB_FIELD[tab]}"]`).value;
+const snapshot = () => Object.fromEntries(TABS.map(t => [t, textOf(t)]));
+
+function scheduleCheck(){ clearTimeout(checkTimer); checkTimer = setTimeout(runChecks, 700); }
+async function runChecks(){
+    const seq = ++checkSeq;
+    try{
+        const res = await fetch('/admin/api/check-code', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},
+            body:JSON.stringify({py:textOf('py'), html:textOf('html'), css:textOf('css'), js:textOf('js')})
+        });
+        if(!res.ok) return;
+        const data = await res.json();
+        if(seq !== checkSeq) return;      /* a newer check is on its way */
+        problems = data.problems || [];
+        renderProblems();
+    }catch(e){ /* keep the last results: the editor works fine without the checker */ }
+}
+
+function renderProblems(){
+    TABS.forEach(t => lineMarks[t] = new Map());
+    problems.forEach(p => {
+        const m = lineMarks[p.tab];
+        if(m.get(p.line) !== 'has-error') m.set(p.line, p.severity === 'error' ? 'has-error' : 'has-warn');
+    });
+    const errs = problems.filter(p => p.severity === 'error').length, warns = problems.length - errs;
+    document.getElementById('problems-pill').classList.toggle('has-errors', errs > 0);
+    document.getElementById('problems-icon').className = 'fa-solid ' + (errs ? 'fa-circle-xmark' : (warns ? 'fa-triangle-exclamation' : 'fa-circle-check'));
+    document.getElementById('problems-pill-text').textContent = warns ? `${errs}  ⚠ ${warns}` : String(errs);
+    document.getElementById('problems-count').textContent = problems.length;
+
+    const list = document.getElementById('problems-list');
+    list.textContent = '';
+    if(!problems.length){
+        const d = document.createElement('div'); d.className = 'problems-empty';
+        d.textContent = 'No problems found in the Python, the HTML (Jinja) or the CSS.';
+        list.appendChild(d);
+    }
+    problems.forEach((p, i) => {
+        const row = document.createElement('div'); row.className = 'problem-row'; row.onclick = () => gotoProblem(i);
+        const ico = document.createElement('i');
+        ico.className = 'fa-solid p-ico ' + (p.severity === 'error' ? 'fa-circle-xmark err' : 'fa-triangle-exclamation warn');
+        const msg = document.createElement('span'); msg.textContent = p.message;
+        const loc = document.createElement('span'); loc.className = 'p-loc'; loc.textContent = `${FILE_NAME[p.tab]}:${p.line}:${p.col}`;
+        row.append(ico, msg, loc); list.appendChild(row);
+    });
+    updateSquiggles();
+    const ta = activeTextarea(); if(ta) updateLineNumbers(ta);
+}
+
+function updateSquiggles(){
+    const layer = document.getElementById('squiggle-layer'), ta = activeTextarea();
+    if(!layer || !ta) return;
+    const mine = problems.filter(p => p.tab === currentMode);
+    if(!mine.length){ if(layer.innerHTML) layer.innerHTML = ''; return; }
+    const sev = new Map();
+    mine.forEach(p => { if(sev.get(p.line) !== 'error') sev.set(p.line, p.severity); });
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    layer.innerHTML = ta.value.split('\n').map((text, i) => {
+        const s = sev.get(i + 1);
+        if(!s) return esc(text);
+        const lead = text.match(/^\s*/)[0].length;
+        return esc(text.slice(0, lead)) + `<span class="sq sq-${s}">` + (esc(text.slice(lead)) || ' ') + '</span>';
+    }).join('\n') + '\n';
+    syncScroll(ta);
+}
+
+function gotoProblem(i){
+    const p = problems[i]; if(!p) return;
+    problemCursor = i;
+    switchTab(p.tab);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        const ta = activeTextarea(); if(!ta) return;
+        const lines = ta.value.split('\n'); let pos = 0;
+        for(let k = 0; k < p.line - 1 && k < lines.length; k++) pos += lines[k].length + 1;
+        ta.focus(); ta.setSelectionRange(pos, pos + (lines[p.line - 1] || '').length);
+        ta.scrollTop = Math.max(0, (p.line - 4) * fontSize * lineHeight);
+        syncScroll(ta); updateCursorMetadata(ta);
+    }));
+}
+function nextProblem(){
+    if(!problems.length){ toggleProblems(true); return; }
+    gotoProblem((problemCursor + 1) % problems.length);
+}
+function toggleProblems(force){
+    const p = document.getElementById('problems-panel');
+    p.classList.toggle('hidden', force === undefined ? !p.classList.contains('hidden') : !force);
+}
+function showProblemsHint(msg){
+    const h = document.getElementById('problems-hint'); h.textContent = msg;
+    clearTimeout(hintTimer); hintTimer = setTimeout(() => { h.textContent = ''; }, 8000);
+}
+
+/* ═══════════ SAFETY: drafts, compare with last save ═══════════
+   Every edit is copied into this browser's storage a moment later. If the tab closes before saving, the
+   next visit offers to restore it. "Compare with last save" shows what changed and can revert a file. */
+const DRAFT_KEY = 'cms-draft:{{ slug }}';
+const draftStore = {
+    get(){ try{ return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); }catch(e){ return null; } },
+    set(v){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(v)); }catch(e){} },
+    clear(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(e){} }
+};
+let savedValues = {}, draftTimer = null, draftPending = false, revertArmed = false;
+const sameValues = (a, b) => TABS.every(t => (a[t] || '') === (b[t] || ''));
+
+function scheduleDraft(){
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(() => {
+        if(draftPending) return;                  /* leave the old draft alone until you decide about it */
+        const now = snapshot();
+        if(sameValues(now, savedValues)) draftStore.clear(); else draftStore.set({t: Date.now(), v: now});
+    }, 1500);
+}
+function checkForDraft(){
+    const d = draftStore.get();
+    if(!d || !d.v || sameValues(d.v, savedValues)){ draftStore.clear(); return; }
+    draftPending = true;
+    const when = new Date(d.t).toLocaleString([], {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+    document.getElementById('draft-text').textContent = `There are unsaved changes from ${when}.`;
+    document.getElementById('draft-bar').classList.remove('hidden');
+}
+function restoreDraft(){
+    const d = draftStore.get(); if(!d || !d.v) return;
+    TABS.forEach(t => {
+        const ta = document.querySelector(`textarea[name="${TAB_FIELD[t]}"]`);
+        if((d.v[t] || '') !== ta.value){
+            ta.value = d.v[t] || '';
+            const td = document.querySelector(`#tab-${t} .tab-dirty`), sd = document.querySelector(`#side-tab-${t} .dirty-dot`);
+            if(td) td.style.display = 'block'; if(sd) sd.style.display = 'block';
+        }
+    });
+    draftPending = false; isDirty = true;
+    document.getElementById('draft-bar').classList.add('hidden');
+    syncHighlight(); runChecks(); scheduleDraft();
+}
+function discardDraft(){
+    draftPending = false; draftStore.clear();
+    document.getElementById('draft-bar').classList.add('hidden');
+}
+
+/* Line diff: trim what both sides share, then a longest-common-subsequence on the part in between. */
+function diffLines(oldText, newText){
+    const A = oldText.split('\n'), B = newText.split('\n');
+    let s = 0; while(s < A.length && s < B.length && A[s] === B[s]) s++;
+    let ea = A.length, eb = B.length; while(ea > s && eb > s && A[ea-1] === B[eb-1]){ ea--; eb--; }
+    const a = A.slice(s, ea), b = B.slice(s, eb), n = a.length, m = b.length, mid = [];
+    if(n * m > 4000000){                            /* too big to compare line by line: show it as one replaced block */
+        a.forEach(t => mid.push({t:'-', text:t})); b.forEach(t => mid.push({t:'+', text:t}));
+    } else {
+        const dp = Array.from({length:n+1}, () => new Uint32Array(m+1));
+        for(let i = n-1; i >= 0; i--) for(let j = m-1; j >= 0; j--)
+            dp[i][j] = a[i] === b[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+        let i = 0, j = 0;
+        while(i < n && j < m){
+            if(a[i] === b[j]){ mid.push({t:' ', text:a[i]}); i++; j++; }
+            else if(dp[i+1][j] >= dp[i][j+1]){ mid.push({t:'-', text:a[i++]}); }
+            else { mid.push({t:'+', text:b[j++]}); }
+        }
+        while(i < n) mid.push({t:'-', text:a[i++]});
+        while(j < m) mid.push({t:'+', text:b[j++]});
+    }
+    const rows = [...A.slice(0, s).map(text => ({t:' ', text})), ...mid, ...A.slice(ea).map(text => ({t:' ', text}))];
+    let oldNo = 1, newNo = 1;
+    rows.forEach(r => {
+        if(r.t !== '+') r.a = oldNo++;
+        if(r.t !== '-') r.b = newNo++;
+    });
+    return rows;
+}
+function renderDiff(container, rows){
+    const add = rows.filter(r => r.t === '+').length, del = rows.filter(r => r.t === '-').length;
+    const frag = document.createDocumentFragment();
+    const line = r => {
+        const d = document.createElement('div'); d.className = 'diff-line ' + (r.t === '+' ? 'add' : r.t === '-' ? 'del' : '');
+        const n = document.createElement('span'); n.className = 'dn'; n.textContent = r.t === '+' ? (r.b || '') : (r.a || '');
+        const t = document.createElement('span'); t.className = 'dt'; t.textContent = r.t === ' ' ? '' : r.t;
+        const x = document.createElement('span'); x.className = 'dx'; x.textContent = r.text;
+        d.append(n, t, x); return d;
+    };
+    const CONTEXT = 3;
+    for(let i = 0; i < rows.length;){
+        if(rows[i].t !== ' '){ frag.appendChild(line(rows[i])); i++; continue; }
+        let j = i; while(j < rows.length && rows[j].t === ' ') j++;
+        const run = rows.slice(i, j), first = i === 0, last = j === rows.length;
+        if(run.length <= CONTEXT * 2 + 2){ run.forEach(r => frag.appendChild(line(r))); }
+        else {
+            if(!first) run.slice(0, CONTEXT).forEach(r => frag.appendChild(line(r)));
+            const hidden = run.length - (first ? 0 : CONTEXT) - (last ? 0 : CONTEXT);
+            const skip = document.createElement('div'); skip.className = 'diff-skip';
+            skip.textContent = `${hidden} unchanged line${hidden === 1 ? '' : 's'}`; frag.appendChild(skip);
+            if(!last) run.slice(-CONTEXT).forEach(r => frag.appendChild(line(r)));
+        }
+        i = j;
+    }
+    container.textContent = ''; container.appendChild(frag);
+    return {add, del};
+}
+function openDiff(){
+    const tab = currentMode, saved = savedValues[tab] ?? '', now = textOf(tab);
+    const body = document.getElementById('diff-body'), revert = document.getElementById('diff-revert');
+    revertArmed = false; revert.textContent = 'Revert file to last save';
+    if(saved === now){
+        body.innerHTML = '<div class="diff-empty">No changes. This file matches the last save.</div>';
+        document.getElementById('diff-sub').textContent = `${FILE_NAME[tab]} against the last save`;
+        revert.style.display = 'none';
+    } else {
+        const {add, del} = renderDiff(body, diffLines(saved, now));
+        document.getElementById('diff-sub').textContent = `${FILE_NAME[tab]} against the last save: ${add} added, ${del} removed`;
+        revert.style.display = '';
+    }
+    document.getElementById('diff-overlay').classList.remove('hidden');
+}
+function closeDiff(){ document.getElementById('diff-overlay').classList.add('hidden'); }
+function revertFile(){
+    const btn = document.getElementById('diff-revert');
+    if(!revertArmed){
+        revertArmed = true; btn.textContent = 'Click again to revert';
+        setTimeout(() => { revertArmed = false; btn.textContent = 'Revert file to last save'; }, 4000);
+        return;
+    }
+    const tab = currentMode, ta = document.querySelector(`textarea[name="${TAB_FIELD[tab]}"]`);
+    ta.value = savedValues[tab] ?? '';
+    isDirty = !sameValues(snapshot(), savedValues);
+    TABS.forEach(t => {   /* the orange dots follow what really differs from the last save */
+        const changed = (textOf(t) || '') !== (savedValues[t] || '');
+        const td = document.querySelector(`#tab-${t} .tab-dirty`), sd = document.querySelector(`#side-tab-${t} .dirty-dot`);
+        if(td) td.style.display = changed ? 'block' : 'none'; if(sd) sd.style.display = changed ? 'block' : 'none';
+    });
+    closeDiff(); syncHighlight(); updateCursorMetadata(ta); scheduleCheck(); scheduleDraft();
+}
+document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && !document.getElementById('diff-overlay').classList.contains('hidden')){ closeDiff(); e.preventDefault(); }
+});
+
 /* ═══════════ DELETE ═══════════ */
 let delConfirm=false;
 function confirmDeletion(){
     const btn=document.getElementById('delete-btn'),txt=document.getElementById('delete-text');
     if(!delConfirm){ delConfirm=true;txt.textContent='Confirm Delete?';btn.style.cssText='background:rgba(239,68,68,.2);color:#f87171;border-color:rgba(239,68,68,.4)'; setTimeout(()=>{ delConfirm=false;txt.textContent='Delete Page';btn.style.cssText=''; },3000); }
-    else{ const f=document.createElement('form'); f.method='POST'; f.action='/admin/delete/{{ slug }}'; f.innerHTML='<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">'; document.body.appendChild(f); f.submit(); }
+    else{ isDirty=false; const f=document.createElement('form'); f.method='POST'; f.action='/admin/delete/{{ slug }}'; f.innerHTML='<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">'; document.body.appendChild(f); f.submit(); }
 }
 
 /* ═══════════ WIRE UP ═══════════ */
@@ -1388,6 +1727,8 @@ document.getElementById('find-input').addEventListener('keydown',e=>{ if(e.key==
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&previewOpen){ togglePreview(); e.preventDefault(); } });
 
 /* ═══════════ INIT ═══════════ */
-window.addEventListener('load',()=>{ loadSettings(); setTimeout(()=>{ applyEditorStyle(); switchTab('py'); },80); });
+window.addEventListener('load',()=>{ loadSettings(); setTimeout(()=>{ applyEditorStyle(); switchTab('py'); savedValues=snapshot(); checkForDraft(); runChecks(); },80); });
+/* Closing the tab or following a link with unsaved changes asks first. Save, Discard and Delete clear isDirty. */
+window.addEventListener('beforeunload',e=>{ if(isDirty){ e.preventDefault(); e.returnValue=''; } });
 </script>
 {% endblock %}
