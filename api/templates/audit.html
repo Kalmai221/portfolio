@@ -1,96 +1,101 @@
 {% extends "layout.html" %}
+{% block title %}Activity log | {{ settings.site_name_first }} {{ settings.site_name_last }}{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-6 py-10 space-y-10">
+<style>
+  .aud {
+    --border: rgba(255, 255, 255, 0.09);
+    --text-1: #f4f4f5;
+    --text-2: #b4b4bb;
+    --text-3: #8b8b94;
+    --accent: #d4c5a9;
+  }
+  .aud h1, .aud p, .aud ul { margin: 0; padding: 0; }
+  .aud ul { list-style: none; }
 
-    <!-- Header -->
-    <div class="flex flex-wrap items-end justify-between gap-6 pb-8 border-b border-zinc-800">
+  .aud-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem; padding-bottom: 2rem; }
+  .aud-head h1 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: clamp(2.25rem, 7vw, 3.5rem); line-height: 1.05; letter-spacing: -0.02em; color: var(--text-1); }
+  .aud-head p { margin-top: 0.6rem; max-width: 32rem; line-height: 1.6; color: var(--text-2); }
+  .aud-back {
+    display: inline-flex; align-items: center; min-height: 40px; padding: 0.4rem 1rem; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px;
+    color: var(--text-1); font-size: 0.9rem; text-decoration: none; transition: border-color 0.15s;
+  }
+  .aud-back:hover { border-color: rgba(255, 255, 255, 0.5); }
+  .aud-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .aud-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 0; border-top: 1px solid var(--border); }
+  .aud-count { font-size: 0.95rem; color: var(--text-2); }
+  .aud-input {
+    min-height: 40px; width: 100%; max-width: 18rem; padding: 0.45rem 0.8rem; background: #0c0c0d; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 6px;
+    color: var(--text-1); font: inherit; font-size: 0.95rem; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .aud-input::placeholder { color: var(--text-3); }
+  .aud-input:hover { border-color: rgba(255, 255, 255, 0.32); }
+  .aud-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212, 197, 169, 0.18); }
+
+  .aud-list { border-top: 1px solid var(--border); }
+  .aud-list li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.4rem; padding: 1rem 0; border-bottom: 1px solid var(--border); }
+  @media (min-width: 760px) { .aud-list li { grid-template-columns: minmax(0, 1fr) 13rem; gap: 2rem; align-items: baseline; } }
+  .aud-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.9rem; min-width: 0; }
+  .aud-tag {
+    display: inline-block; padding: 0.1rem 0.6rem; border: 1px solid var(--border); border-radius: 4px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--text-1); white-space: nowrap;
+  }
+  .aud-tag.is-warn { color: #fca5a5; border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.08); }
+  .aud-detail { min-width: 0; color: var(--text-2); line-height: 1.5; overflow-wrap: anywhere; }
+  .aud-meta { display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.85rem; color: var(--text-3); }
+  @media (min-width: 760px) { .aud-meta { text-align: right; } }
+  .aud-meta .aud-user { color: var(--text-2); }
+  .aud-meta time { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.8rem; white-space: nowrap; }
+  .aud-empty { padding: 2.5rem 0; text-align: center; color: var(--text-3); }
+</style>
+
+<div class="aud max-w-5xl mx-auto px-6 py-12">
+
+    <header class="aud-head">
         <div>
-            <div class="flex items-center gap-3 mb-1">
-                <h1 class="text-2xl font-bold tracking-tight text-zinc-100 font-mono">Activity log</h1>
-            </div>
-            <p class="text-zinc-500 text-xs font-mono">Sign-ins, page changes and other admin actions.</p>
+            <h1>Activity log</h1>
+            <p>Sign-ins, page changes and other admin actions, newest first.</p>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="/admin" 
-               class="px-4 py-2 text-xs font-semibold font-mono uppercase tracking-widest text-zinc-400 bg-zinc-900 border border-zinc-700 rounded hover:border-zinc-500 hover:text-zinc-100 transition-all">
-                ← Admin
-            </a>
+        <a href="/admin" class="aud-back">Back to admin</a>
+    </header>
+
+    <div class="aud-bar">
+        <p class="aud-count">{{ entries|length }} {{ 'event' if entries|length == 1 else 'events' }}</p>
+        <div>
+            <label for="log-filter" class="sr-only">Search the activity log</label>
+            <input id="log-filter" class="aud-input" type="search" placeholder="Search the log" oninput="filterLogs(this.value)" autocomplete="off">
         </div>
     </div>
 
-    <!-- Log Table Card -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/50 gap-4">
-            <div class="flex items-center gap-2">
-                <span class="text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-widest">Logged Events ({{ entries|length }})</span>
+    <ul class="aud-list" id="logs-tbody">
+        {% for log in entries %}
+        {% set lvl = log.level|lower if log.level else 'info' %}
+        <li class="log-row" data-search="{{ log.action|lower }} {{ (log.detail or '')|lower }} {{ (log.user or '')|lower }}">
+            <div class="aud-main">
+                <span class="aud-tag{{ ' is-warn' if lvl in ['warn', 'warning', 'error', 'critical'] else '' }}">{{ log.action }}</span>
+                <span class="aud-detail">{{ log.detail or 'No details' }}</span>
             </div>
-            <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 focus-within:border-zinc-600 transition-colors w-full sm:w-auto">
-                <svg class="w-3.5 h-3.5 text-zinc-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
-                <input type="text" placeholder="Search audit logs…" oninput="filterLogs(this.value)"
-                    class="bg-transparent outline-none text-xs font-mono text-zinc-300 placeholder-zinc-600 w-full sm:w-48">
+            <div class="aud-meta">
+                <span class="aud-user">{{ log.user or 'anonymous' }}</span>
+                <time>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp.strftime is defined else log.timestamp }}</time>
             </div>
-        </div>
-
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-zinc-950/40">
-                    <th class="px-6 py-3 text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest">Timestamp</th>
-                    <th class="px-6 py-3 text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest">User</th>
-                    <th class="px-6 py-3 text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest">Action</th>
-                    <th class="px-6 py-3 text-[10px] font-mono font-semibold text-zinc-600 uppercase tracking-widest hidden md:table-cell">Detail Payload</th>
-                </tr>
-            </thead>
-            <tbody id="logs-tbody" class="divide-y divide-zinc-800/60 font-mono text-xs">
-                {% for log in entries %}
-                <tr class="hover:bg-zinc-800/30 transition-colors log-row" data-search="{{ log.action|lower }} {{ log.detail|lower }} {{ log.user|lower }}">
-                    <td class="px-6 py-4 text-zinc-400 whitespace-nowrap">
-                        {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp.strftime is defined else log.timestamp }}
-                    </td>
-                    <td class="px-6 py-4 text-zinc-200">
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px]">
-                            <span class="w-1.5 h-1.5 rounded-full bg-brand"></span>
-                            {{ log.user or 'anonymous' }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        {% set lvl = log.level|lower if log.level else 'info' %}
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
-                            {{ 'bg-red-500/10 border border-red-500/30 text-red-400' if lvl in ['warn', 'warning', 'error', 'critical'] else 'bg-brand/10 border border-brand/20 text-brand' }}">
-                            {{ log.action }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-zinc-500 max-w-md truncate hidden md:table-cell">
-                        {{ log.detail or '—' }}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="px-6 py-12 text-center text-xs font-mono text-zinc-600">
-                        No audit events recorded yet.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div id="no-log-results" class="hidden px-6 py-12 text-center text-xs font-mono text-zinc-600">
-            No audit records match your search query.
-        </div>
-    </div>
+        </li>
+        {% else %}
+        <li><p class="aud-empty">Nothing has been logged yet.</p></li>
+        {% endfor %}
+    </ul>
+    <p id="no-log-results" class="aud-empty" style="display:none">No events match your search.</p>
 </div>
 
 <script>
 function filterLogs(query) {
-    const q = query.toLowerCase();
+    const q = query.trim().toLowerCase();
     const rows = document.querySelectorAll('.log-row');
     let count = 0;
     rows.forEach(r => {
-        const text = r.getAttribute('data-search') || '';
-        if (text.includes(q)) {
-            r.style.display = '';
-            count++;
-        } else {
-            r.style.display = 'none';
-        }
+        const match = (r.getAttribute('data-search') || '').includes(q);
+        r.style.display = match ? '' : 'none';
+        if (match) count++;
     });
     const noRes = document.getElementById('no-log-results');
     if (noRes) noRes.style.display = (count === 0 && rows.length > 0) ? 'block' : 'none';
