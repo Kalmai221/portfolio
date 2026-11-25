@@ -250,7 +250,7 @@
                         <span class="adm-page-title">{{ p.title }}</span>
                         <span class="adm-page-slug">/{{ p.slug if p.slug != 'home' else '' }}</span>
                     </td>
-                    <td class="adm-date hidden md:table-cell">{{ p.updated_at.strftime('%Y-%m-%d') if p.updated_at else '-' }}</td>
+                    <td class="adm-date hidden md:table-cell">{{ p.updated_at.strftime('%d/%m/%Y') if p.updated_at else '-' }}</td>
                     <td>
                         <span class="adm-row-actions">
                             <a class="adm-link" href="/{{ p.slug if p.slug != 'home' else '' }}" target="_blank" rel="noopener">View<span class="sr-only"> {{ p.title }} (opens in a new tab)</span></a>
