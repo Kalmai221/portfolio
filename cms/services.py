@@ -90,8 +90,6 @@ def bust_maintenance_cache():
 # ("contact_settings") on every request, so these are also its fallbacks when nothing is saved.
 CONTACT_DEFAULTS = {
     "paused": False,              # hide the form and show the email address instead
-    "discord_enabled": True,      # tell the private Discord channel when a message arrives
-    "discord_include_message": False,  # also put the sender's email and message text in that alert
     "ip_limit_per_hour": 3,
     "cookie_limit_per_hour": 3,
     "email_limit_per_day": 3,

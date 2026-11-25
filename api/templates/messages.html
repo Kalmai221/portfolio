@@ -165,6 +165,16 @@
                         {% endif %}
                     </form>
 
+                    {% if m.discord_failed and not m.locked and m.status != 'SPAM' %}
+                    <form method="POST" action="{{ url_for('admin_messages') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="id" value="{{ m.id }}">
+                        <input type="hidden" name="filter" value="{{ flt }}">
+                        <input type="hidden" name="page" value="{{ page }}">
+                        <button class="mb-btn mb-btn-small" name="action" value="resend-alert">Resend Discord alert</button>
+                    </form>
+                    {% endif %}
+
                     <button type="button" class="mb-btn mb-btn-small mb-btn-danger" onclick="ask('delete', '{{ m.id }}', 'Delete this message?', 'It will be deleted for good. This can\'t be undone.', 'Delete message')">Delete<span class="sr-only"> message from {{ m.name }}</span></button>
                 </div>
             </div>

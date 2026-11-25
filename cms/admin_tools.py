@@ -1,15 +1,14 @@
 """Admin-only settings: the contact form controls and the site message banner."""
-import os
 import re
 import warnings
 from datetime import datetime
 
-import requests
 from flask import g, jsonify, request
 from jinja2.exceptions import TemplateSyntaxError
 
+from . import discord_alerts, vault
 from .admin import sanitise_nav_url
-from .app import app, logger, utc_now
+from .app import app, utc_now
 from .security import login_required, validate_csrf
 from .services import (
     CONTACT_DEFAULTS,
@@ -17,6 +16,7 @@ from .services import (
     SITE_MESSAGE_STYLES,
     audit,
     bust_site_message_cache,
+    get_contact_settings,
 )
 
 
@@ -149,34 +149,44 @@ def api_contact_settings():
             return _error(f"{key.replace('_', ' ').capitalize()} must be between {low} and {high}.")
         clean[key] = value
 
+    was_paused = get_contact_settings()["paused"]
     g.settings_col.update_one({"name": "contact_settings"}, {"$set": {**clean, "updated_at": utc_now()}}, upsert=True)
     audit("contact_settings", ", ".join(f"{k}={v}" for k, v in clean.items()))
+    if clean["paused"] != was_paused:
+        discord_alerts.notify_form_paused(clean["paused"])
     return jsonify(ok=True)
 
 
-@app.route("/admin/api/contact-test-alert", methods=["POST"])
+# ── Discord alerts about the contact form ──────────────────
+@app.route("/admin/api/discord-settings", methods=["POST"])
 @login_required
-def api_contact_test_alert():
+def api_discord_settings():
+    if g.settings_col is None:
+        return _error("The database is unavailable.", 503)
     validate_csrf()
-    url = os.environ.get("DISCORD_WEBHOOK_URL", "")
-    if not url:
-        return _error("DISCORD_WEBHOOK_URL isn't set where this site is running, so there's nowhere to send the alert.")
-    payload = {
-        "allowed_mentions": {"parse": []},
-        "embeds": [{
-            "title": "Test alert from the admin settings",
-            "description": "If you can read this, contact form alerts reach this channel.",
-            "color": 0xD4C5A9,
-            "timestamp": utc_now().isoformat() + "Z",
-        }],
-    }
     try:
-        requests.post(url, json=payload, timeout=5).raise_for_status()
-    except Exception as e:
-        logger.warning(f"Test alert failed: {e}")
-        audit("contact_test_alert", "failed", level="warn")
+        clean = discord_alerts.clean_settings(_body())
+    except ValueError as e:
+        return _error(str(e))
+    g.settings_col.update_one({"name": "discord_settings"}, {"$set": {**clean, "updated_at": utc_now()}}, upsert=True)
+    audit("discord_settings", ", ".join(f"{k}={v}" for k, v in clean.items()))
+    return jsonify(ok=True)
+
+
+@app.route("/admin/api/discord-test", methods=["POST"])
+@login_required
+def api_discord_test():
+    """Send a clearly labelled sample of one kind of alert, ignoring the switches, to check the webhook."""
+    validate_csrf()
+    if not discord_alerts.webhook_configured():
+        return _error("DISCORD_WEBHOOK_URL isn't set where this site is running, so there's nowhere to send the alert.")
+    try:
+        ok = discord_alerts.send_test(str(_body().get("kind", "new_message")))
+    except ValueError:
+        return _error("Pick one of the alert types.")
+    audit("discord_test", f"kind={_body().get('kind')} sent={bool(ok)}", level="info" if ok else "warn")
+    if not ok:
         return _error("Discord didn't accept the alert. Check that the webhook still exists.", 502)
-    audit("contact_test_alert", "sent")
     return jsonify(ok=True)
 
 
@@ -193,6 +203,8 @@ def api_contact_delete():
         return _error("Enter the full email address.")
 
     query = {"$or": [
+        # encrypted messages can only be found by their keyed email code; older ones by the readable address
+        *([{"email_hash": vault.blind("email", email)}] if vault.ready() else []),
         {"sender_email_lc": email},
         {"sender_email": {"$regex": f"^{re.escape(email)}$", "$options": "i"}},
     ]}

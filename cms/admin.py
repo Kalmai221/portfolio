@@ -4,6 +4,7 @@ import re
 from flask import g, jsonify, redirect, render_template, request, session, url_for
 from pymongo import DESCENDING
 
+from . import discord_alerts
 from .app import admin_login_enabled, app, utc_now
 from .security import (
     check_admin_credentials,
@@ -91,6 +92,8 @@ def admin_dashboard():
         contact=get_contact_settings(),
         site_msg=get_site_message_doc(),
         unread_messages=unread_messages,
+        discord=discord_alerts.get_settings(),
+        discord_status=discord_alerts.status_summary(),
     )
 
 

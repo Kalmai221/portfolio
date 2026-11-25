@@ -10,7 +10,7 @@ from bson.errors import InvalidId
 from bson.objectid import ObjectId
 from flask import abort, g, redirect, render_template, request, url_for
 
-from . import vault
+from . import discord_alerts, vault
 from .app import app
 from .security import login_required, validate_csrf
 from .services import audit, is_maintenance_mode
@@ -33,6 +33,9 @@ NOTICES = {
     "notspam": "Moved back to your inbox.",
     "spam-cleared": "Spam deleted.",
     "bad-id": "That message no longer exists.",
+    "resent": "Discord alert sent.",
+    "resend-failed": "Discord still didn't take the alert. Check the Discord tab in Settings.",
+    "resend-off": "Alerts for new messages are switched off in the Discord settings.",
 }
 
 
@@ -95,13 +98,25 @@ def admin_messages():
             deleted = col.delete_many({"status": "SPAM"}).deleted_count
             audit("messages_spam_cleared", f"deleted={deleted}", level="warn")
             done = "spam-cleared"
-        elif action in ("delete", "read", "unread", "spam", "notspam"):
+        elif action in ("delete", "read", "unread", "spam", "notspam", "resend-alert"):
             try:
                 oid = ObjectId(request.form.get("id", ""))
             except (InvalidId, TypeError):
                 oid = None
             if oid is None or col.count_documents({"_id": oid}) == 0:
                 done = "bad-id"
+            elif action == "resend-alert":
+                doc = col.find_one({"_id": oid})
+                msg = open_message(doc)
+                if msg["locked"] or msg["status"] == "SPAM":
+                    done = "resend-failed"
+                else:
+                    sent = discord_alerts.notify_new_message(msg["name"], msg["email"], msg["text"])
+                    if sent is None:
+                        done = "resend-off"
+                    else:
+                        col.update_one({"_id": oid}, {"$set": {"discord_sent": bool(sent)}})
+                        done = "resent" if sent else "resend-failed"
             elif action == "delete":
                 col.delete_one({"_id": oid})
                 audit("message_delete", f"id={oid}", level="warn")

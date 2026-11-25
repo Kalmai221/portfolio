@@ -141,6 +141,8 @@
   .adm-subhead { margin: 0.5rem 0 0; padding-top: 1.25rem; border-top: 1px solid var(--border); font-size: 1.05rem; font-weight: 500; color: var(--text-1); }
   .adm-hint { margin-top: 0.4rem; font-size: 0.85rem; line-height: 1.5; color: var(--text-3); }
   textarea.adm-input { line-height: 1.5; resize: vertical; }
+  select.adm-input { color-scheme: dark; }
+  .adm-hint code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.85em; color: var(--text-1); }
   .adm-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
   .adm-fieldset legend { margin-bottom: 0.5rem; padding: 0; font-size: 0.9rem; color: var(--text-1); }
   .adm-check { display: flex; align-items: center; gap: 0.6rem; min-height: 40px; color: var(--text-1); font-size: 0.95rem; cursor: pointer; }
@@ -279,6 +281,7 @@
                 <button type="button" role="tab" id="nav-sidebar-btn" class="adm-tab" data-tab="nav" aria-selected="true" aria-controls="tab-nav" onclick="switchTab('nav')">Navigation</button>
                 <button type="button" role="tab" id="message-tab-btn" class="adm-tab" data-tab="site-message" aria-selected="false" aria-controls="tab-site-message" onclick="switchTab('site-message')">Site message</button>
                 <button type="button" role="tab" id="contact-tab-btn" class="adm-tab" data-tab="contact" aria-selected="false" aria-controls="tab-contact" onclick="switchTab('contact')">Contact</button>
+                <button type="button" role="tab" id="discord-tab-btn" class="adm-tab" data-tab="discord" aria-selected="false" aria-controls="tab-discord" onclick="switchTab('discord')">Discord</button>
                 <button type="button" role="tab" id="maint-sidebar-btn" class="adm-tab" data-tab="maintenance" aria-selected="false" aria-controls="tab-maintenance" onclick="switchTab('maintenance')">Maintenance</button>
             </div>
 
@@ -412,17 +415,7 @@
                             <span class="adm-switch-track" aria-hidden="true"></span>
                             <span class="adm-switch-text"><strong>Pause the form</strong><small>Hides the form and shows your email address instead. Handy during a spam flood.</small></span>
                         </label>
-                        <label class="adm-switch">
-                            <input type="checkbox" id="cs-discord" {{ 'checked' if contact.discord_enabled else '' }}>
-                            <span class="adm-switch-track" aria-hidden="true"></span>
-                            <span class="adm-switch-text"><strong>Discord alerts</strong><small>Post new messages to your private Discord channel.</small></span>
-                        </label>
-                        <label class="adm-switch">
-                            <input type="checkbox" id="cs-discord-text" {{ 'checked' if contact.discord_include_message else '' }}>
-                            <span class="adm-switch-track" aria-hidden="true"></span>
-                            <span class="adm-switch-text"><strong>Include the message in alerts</strong><small>Off by default. When off, Discord is only told the sender's name, so their email address and message stay in your encrypted database.</small></span>
-                        </label>
-                        <div><button type="button" id="cs-test" class="adm-btn adm-btn-small" onclick="testDiscordAlert()">Send a test alert</button></div>
+                        <p class="adm-hint">Alerts to Discord, and the test button, are in the Discord tab.</p>
 
                         <h4 class="adm-subhead">Spam limits</h4>
                         <div class="adm-fields">
@@ -469,6 +462,88 @@
                         </form>
                         <p id="del-result" class="adm-hint" aria-live="polite" style="margin-top:0.75rem"></p>
                         <button type="button" id="del-confirm-btn" class="adm-btn adm-btn-danger hidden" style="margin-top:0.75rem" onclick="confirmDeleteMessages()">Delete messages</button>
+                    </div>
+                </section>
+
+                <!-- Discord tab -->
+                <section id="tab-discord" role="tabpanel" aria-labelledby="discord-tab-btn" class="admin-tab-pane hidden">
+                    <div class="adm-pane-head">
+                        <div>
+                            <h3>Discord alerts</h3>
+                            <p>Get a note in your private Discord channel when something happens on the contact form.</p>
+                        </div>
+                    </div>
+
+                    <p class="adm-maint-state" style="margin-bottom:0.35rem"><span class="adm-dot {{ '' if discord_status.configured else 'is-off' }}" aria-hidden="true"></span>{{ 'Webhook connected' if discord_status.configured else 'No webhook set' }}</p>
+                    {% if not discord_status.configured %}
+                    <p class="adm-hint">Add <code>DISCORD_WEBHOOK_URL</code> in your hosting settings, then redeploy. Until then nothing can be sent.</p>
+                    {% endif %}
+                    {% if discord_status.last %}
+                    <p class="adm-hint">Last alert: {{ discord_status.last.label }}, {{ discord_status.last.when }} UK time, {{ 'sent' if discord_status.last.ok else "didn't send" }}.</p>
+                    {% endif %}
+
+                    <form id="discord-form" onsubmit="saveDiscordSettings(); return false;" class="adm-stack" style="margin-top:1rem">
+                        <label class="adm-switch">
+                            <input type="checkbox" id="dc-enabled" {{ 'checked' if discord.enabled else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>Discord alerts</strong><small>The master switch. Off means nothing is sent, whatever is chosen below.</small></span>
+                        </label>
+
+                        <h4 class="adm-subhead">Tell me when</h4>
+                        <label class="adm-switch">
+                            <input type="checkbox" id="dc-new-message" {{ 'checked' if discord.new_message else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>A message arrives</strong><small>For every message that isn't flagged as spam. It names the sender and says how many are unread.</small></span>
+                        </label>
+                        <label class="adm-switch">
+                            <input type="checkbox" id="dc-spam-flood" {{ 'checked' if discord.spam_flood else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>The form is flooded</strong><small>At most once an hour, when the hourly limit is reached and visitors are being turned away.</small></span>
+                        </label>
+                        <label class="adm-switch">
+                            <input type="checkbox" id="dc-form-paused" {{ 'checked' if discord.form_paused else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>The form is paused or switched back on</strong><small>When you change it in the Contact tab.</small></span>
+                        </label>
+                        <label class="adm-switch">
+                            <input type="checkbox" id="dc-include" {{ 'checked' if discord.include_message else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>Include the sender's email and message</strong><small>Off by default. Discord is a third party, so when this is off it is only told the sender's name and your unread count. Everything else stays in your encrypted database.</small></span>
+                        </label>
+
+                        <h4 class="adm-subhead">Quiet hours</h4>
+                        <label class="adm-switch">
+                            <input type="checkbox" id="dc-quiet" {{ 'checked' if discord.quiet_enabled else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>Send alerts silently at night</strong><small>They still arrive, but without a sound or a push notification. Times are UK time.</small></span>
+                        </label>
+                        <div class="adm-fields">
+                            <div class="adm-field">
+                                <label for="dc-quiet-start">From (hour, 0 to 23)</label>
+                                <input id="dc-quiet-start" class="adm-input" type="number" min="0" max="23" value="{{ discord.quiet_start }}">
+                            </div>
+                            <div class="adm-field">
+                                <label for="dc-quiet-end">Until (hour, 0 to 23)</label>
+                                <input id="dc-quiet-end" class="adm-input" type="number" min="0" max="23" value="{{ discord.quiet_end }}">
+                            </div>
+                        </div>
+                        <div><button type="submit" id="dc-save" class="adm-btn adm-btn-primary">Save Discord settings</button></div>
+                    </form>
+
+                    <div class="adm-add">
+                        <h4>Send a test alert</h4>
+                        <p class="adm-hint" style="margin-bottom:1rem">Posts a clearly labelled sample, even if that kind of alert is switched off, so you can check the webhook works.</p>
+                        <div class="adm-inline">
+                            <div class="adm-field" style="flex:1;min-width:14rem">
+                                <label for="dc-test-kind">Alert type</label>
+                                <select id="dc-test-kind" class="adm-input">
+                                    <option value="new_message">A message arrives</option>
+                                    <option value="spam_flood">The form is flooded</option>
+                                    <option value="form_paused">The form is paused</option>
+                                </select>
+                            </div>
+                            <button type="button" id="dc-test" class="adm-btn" onclick="testDiscordAlert()">Send test</button>
+                        </div>
                     </div>
                 </section>
 
@@ -585,8 +660,6 @@ async function saveContactSettings() {
     btn.textContent = 'Saving...';
     const r = await postJSON('/admin/api/contact-settings', {
         paused: byId('cs-paused').checked,
-        discord_enabled: byId('cs-discord').checked,
-        discord_include_message: byId('cs-discord-text').checked,
         ip_limit_per_hour: byId('cs-ip').value,
         cookie_limit_per_hour: byId('cs-cookie').value,
         email_limit_per_day: byId('cs-email').value,
@@ -598,13 +671,33 @@ async function saveContactSettings() {
     btn.textContent = 'Save contact settings';
     showToast(r.ok ? 'Contact settings saved' : (r.data.error || 'Could not save the settings'), r.ok ? 'success' : 'error');
 }
+
+/* ── Discord alerts ── */
+async function saveDiscordSettings() {
+    const btn = byId('dc-save');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    const r = await postJSON('/admin/api/discord-settings', {
+        enabled: byId('dc-enabled').checked,
+        new_message: byId('dc-new-message').checked,
+        spam_flood: byId('dc-spam-flood').checked,
+        form_paused: byId('dc-form-paused').checked,
+        include_message: byId('dc-include').checked,
+        quiet_enabled: byId('dc-quiet').checked,
+        quiet_start: byId('dc-quiet-start').value,
+        quiet_end: byId('dc-quiet-end').value
+    });
+    btn.disabled = false;
+    btn.textContent = 'Save Discord settings';
+    showToast(r.ok ? 'Discord settings saved' : (r.data.error || 'Could not save the settings'), r.ok ? 'success' : 'error');
+}
 async function testDiscordAlert() {
-    const btn = byId('cs-test');
+    const btn = byId('dc-test');
     btn.disabled = true;
     btn.textContent = 'Sending...';
-    const r = await postJSON('/admin/api/contact-test-alert');
+    const r = await postJSON('/admin/api/discord-test', { kind: byId('dc-test-kind').value });
     btn.disabled = false;
-    btn.textContent = 'Send a test alert';
+    btn.textContent = 'Send test';
     showToast(r.ok ? 'Test alert sent. Check Discord.' : (r.data.error || 'The test alert failed'), r.ok ? 'success' : 'error');
 }
 
