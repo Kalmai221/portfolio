@@ -63,6 +63,7 @@
             .nav-link[aria-current="page"] { @apply bg-zinc-900 text-zinc-100; }
             .nav-link-m { @apply flex items-center rounded-md px-3 min-h-[48px] text-lg text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-100; }
             .nav-link-m[aria-current="page"] { @apply bg-zinc-900 text-zinc-100; }
+            .foot-link { @apply inline-flex min-h-[40px] items-center text-zinc-400 transition-colors hover:text-zinc-100; }
             .reveal { @apply opacity-0 translate-y-2 transition duration-500; }
             .reveal.active { @apply opacity-100 translate-y-0; }
         }
@@ -136,26 +137,50 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="border-t border-zinc-800/80 mt-24">
-        <div class="max-w-5xl mx-auto px-6 py-10 flex flex-col md:flex-row md:items-start md:justify-between gap-8 text-sm">
-            <div class="space-y-2 max-w-xs">
-                <p class="font-serif text-lg text-zinc-200">{{ site_name }}</p>
-                <p class="text-zinc-500 leading-relaxed">Systems, databases and full-stack development. Based in the UK.</p>
+    <footer class="mt-24 border-t border-zinc-800/80">
+        <div class="max-w-5xl mx-auto px-6 py-12 grid grid-cols-2 gap-x-6 gap-y-8 text-sm lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:gap-x-10">
+            <div class="col-span-2 lg:col-span-1 max-w-xs">
+                <p class="font-serif text-xl text-zinc-100">{{ site_name }}</p>
+                <p class="mt-3 leading-relaxed text-zinc-400">IT graduate from Coventry, UK, looking for work now.</p>
+                <a href="mailto:hkurtislee@outlook.com" class="mt-4 inline-flex min-h-[44px] items-center break-all text-zinc-100 underline underline-offset-4 decoration-zinc-600 transition-colors hover:decoration-brand">hkurtislee@outlook.com</a>
             </div>
-            <ul class="flex flex-wrap gap-x-6 gap-y-2 text-zinc-400">
-                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://github.com/Kalmai221" rel="noopener noreferrer" target="_blank">GitHub</a></li>
-                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://www.linkedin.com/in/kurtishopewell/" rel="noopener noreferrer" target="_blank">LinkedIn</a></li>
-                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="mailto:hkurtislee@outlook.com">Email</a></li>
-                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="https://github.com/Kalmai221/portfolio" rel="noopener noreferrer" target="_blank">Source for this site</a></li>
-                <li><a class="inline-block py-1.5 underline underline-offset-4 decoration-zinc-700 hover:decoration-brand hover:text-zinc-100" href="/trial">Try the CMS</a></li>
-            </ul>
+
+            <nav aria-labelledby="foot-pages">
+                <h2 id="foot-pages" class="font-medium text-zinc-200">Pages</h2>
+                <ul class="mt-3">
+                    <li><a class="foot-link" href="/">Home</a></li>
+                    {% if settings and settings.nav_links %}
+                        {% for link in settings.nav_links %}
+                        <li><a class="foot-link" href="{{ link.url }}">{{ link.label }}</a></li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <nav aria-labelledby="foot-elsewhere">
+                <h2 id="foot-elsewhere" class="font-medium text-zinc-200">Elsewhere</h2>
+                <ul class="mt-3">
+                    <li><a class="foot-link" href="https://github.com/Kalmai221" rel="noopener noreferrer" target="_blank">GitHub<span class="sr-only"> (opens in a new tab)</span></a></li>
+                    <li><a class="foot-link" href="https://www.linkedin.com/in/kurtishopewell/" rel="noopener noreferrer" target="_blank">LinkedIn<span class="sr-only"> (opens in a new tab)</span></a></li>
+                    <li><a class="foot-link" href="/static/Kurtis-Lee-Hopewell-CV.pdf" rel="noopener" target="_blank">Download CV<span class="sr-only"> (opens in a new tab)</span></a></li>
+                </ul>
+            </nav>
+
+            <nav aria-labelledby="foot-site">
+                <h2 id="foot-site" class="font-medium text-zinc-200">This site</h2>
+                <ul class="mt-3">
+                    <li><a class="foot-link" href="https://github.com/Kalmai221/portfolio" rel="noopener noreferrer" target="_blank">Source code<span class="sr-only"> (opens in a new tab)</span></a></li>
+                    <li><a class="foot-link" href="/trial">Try the CMS</a></li>
+                </ul>
+            </nav>
         </div>
-        <div class="border-t border-zinc-900">
-            <div class="max-w-5xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600">
+
+        <div class="border-t border-zinc-800/60">
+            <div class="max-w-5xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-xs text-zinc-500">
                 <span>&copy; {{ now.year if now else '2026' }} {{ site_name }}</span>
-                <span class="flex gap-5">
-                    <button type="button" id="privacy-link" class="hover:text-zinc-300 underline underline-offset-4 decoration-zinc-800">Privacy</button>
-                    {% if not session.get('user') %}<a href="/login" class="hover:text-zinc-300">Admin</a>{% endif %}
+                <span class="flex items-center gap-2">
+                    <button type="button" id="privacy-link" class="inline-flex min-h-[40px] items-center px-2 transition-colors hover:text-zinc-200">Privacy</button>
+                    {% if not session.get('user') %}<a href="/login" class="inline-flex min-h-[40px] items-center px-2 transition-colors hover:text-zinc-200">Admin</a>{% endif %}
                 </span>
             </div>
         </div>
