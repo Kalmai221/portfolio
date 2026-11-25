@@ -1,0 +1,231 @@
+{% extends "layout.html" %}
+{% block title %}Messages | {{ settings.site_name_first }} {{ settings.site_name_last }}{% endblock %}
+{% block content %}
+<style>
+  .mb {
+    --border: rgba(255, 255, 255, 0.09);
+    --text-1: #f4f4f5;
+    --text-2: #b4b4bb;
+    --text-3: #8b8b94;
+    --accent: #d4c5a9;
+    --surface: #131316;
+  }
+  :where(.mb h1, .mb h2, .mb p, .mb ul) { margin: 0; padding: 0; }  /* :where() keeps this reset from outranking the rules below */
+  .mb ul { list-style: none; }
+  body:has(dialog[open]) { overflow: hidden; }
+
+  .mb-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem; padding-bottom: 1.75rem; }
+  .mb-head h1 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: clamp(2.25rem, 7vw, 3.5rem); line-height: 1.05; letter-spacing: -0.02em; color: var(--text-1); }
+  .mb-head p { margin-top: 0.6rem; max-width: 34rem; line-height: 1.6; color: var(--text-2); }
+
+  .mb-btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0.4rem 1rem; background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: var(--text-1); font: inherit; font-size: 0.9rem;
+    text-decoration: none; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .mb-btn:hover { border-color: rgba(255, 255, 255, 0.5); }
+  .mb-btn:focus-visible, .mb-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .mb-btn-small { min-height: 36px; padding: 0.25rem 0.85rem; font-size: 0.85rem; }
+  .mb-btn-danger { color: #fca5a5; border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.08); }
+  .mb-btn-danger:hover { border-color: #f87171; background: rgba(248, 113, 113, 0.16); }
+
+  .mb-alert { margin-bottom: 1rem; padding: 0.85rem 1rem; border: 1px solid var(--border); border-left: 3px solid var(--text-3); border-radius: 6px; color: var(--text-2); font-size: 0.95rem; line-height: 1.55; }
+  .mb-alert-warn { border-left-color: #fbbf24; background: rgba(251, 191, 36, 0.07); }
+  .mb-alert code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.85em; color: var(--text-1); }
+  .mb-notice { margin-bottom: 1rem; padding: 0.7rem 1rem; border: 1px solid rgba(52, 211, 153, 0.35); border-radius: 6px; background: rgba(52, 211, 153, 0.07); color: #a7f3d0; font-size: 0.95rem; }
+
+  .mb-tabs { display: flex; flex-wrap: wrap; gap: 1.5rem; border-bottom: 1px solid var(--border); }
+  .mb-tab { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--text-3); text-decoration: none; font-size: 0.95rem; transition: color 0.15s; }
+  .mb-tab:hover { color: var(--text-1); }
+  .mb-tab[aria-current="page"] { color: var(--text-1); border-bottom-color: var(--accent); }
+  .mb-tab span { padding: 0 0.5rem; border-radius: 999px; background: rgba(255, 255, 255, 0.08); font-size: 0.8rem; line-height: 1.4rem; font-variant-numeric: tabular-nums; }
+
+  .mb-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 1rem 0; }
+  .mb-input { min-height: 40px; width: 100%; max-width: 18rem; padding: 0.45rem 0.8rem; background: #0c0c0d; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 6px; color: var(--text-1); font: inherit; font-size: 0.95rem; transition: border-color 0.15s, box-shadow 0.15s; }
+  .mb-input::placeholder { color: var(--text-3); }
+  .mb-input:hover { border-color: rgba(255, 255, 255, 0.32); }
+  .mb-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212, 197, 169, 0.18); }
+
+  /* One row per message: who and when on the left, the message and what you can do with it on the right */
+  .mb-list { border-top: 1px solid var(--border); }
+  .mb-item { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 1.75rem 0; border-bottom: 1px solid var(--border); position: relative; }
+  @media (min-width: 820px) { .mb-item { grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 3rem; } }
+  .mb-item.is-new::before { content: ""; position: absolute; left: -1.1rem; top: 2.2rem; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .mb-item:not(.is-new):not(.is-spam) .mb-meta h2 { color: var(--text-2); }
+  .mb-meta h2 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.4rem; line-height: 1.2; color: var(--text-1); overflow-wrap: anywhere; }
+  .mb-meta p { margin-top: 0.3rem; font-size: 0.95rem; color: var(--text-2); overflow-wrap: anywhere; }
+  .mb-meta a { color: var(--text-1); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, 0.3); }
+  .mb-meta a:hover { text-decoration-color: var(--accent); }
+  .mb-muted { font-size: 0.85rem !important; color: var(--text-3) !important; font-variant-numeric: tabular-nums; }
+  .mb-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+  .mb-tag { display: inline-block; padding: 0.1rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; color: var(--text-2); white-space: nowrap; }
+  .mb-tag.is-new { color: #0c0c0d; background: var(--accent); border-color: var(--accent); font-weight: 500; }
+  .mb-tag.is-spam { color: #fca5a5; border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.08); }
+  .mb-tag.is-warn { color: #fcd34d; border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.07); }
+
+  .mb-text { max-width: 42rem; font-size: 1.05rem; line-height: 1.75; color: var(--text-1); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .mb-text.is-locked { color: var(--text-3); font-style: italic; }
+  .mb-why { max-width: 42rem; margin-top: 1rem; font-size: 0.9rem; line-height: 1.6; color: var(--text-3); }
+  .mb-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+  .mb-actions form { display: contents; }
+
+  .mb-empty { padding: 3rem 0; text-align: center; color: var(--text-3); line-height: 1.6; }
+  .mb-pages { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 1.5rem; color: var(--text-3); font-size: 0.9rem; }
+
+  .mb-dialog { padding: 0; width: min(26rem, calc(100vw - 2rem)); background: var(--surface); color: var(--text-2); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); }
+  .mb-dialog::backdrop { background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(3px); }
+  .mb-dialog-body { padding: 1.75rem; }
+  .mb-dialog h2 { margin-bottom: 0.6rem; font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.6rem; color: var(--text-1); }
+  .mb-dialog p { margin-bottom: 1.5rem; line-height: 1.6; }
+  .mb-dialog-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .mb-dialog-actions form { display: contents; }
+</style>
+
+<div class="mb max-w-5xl mx-auto px-6 py-12">
+
+    <header class="mb-head">
+        <div>
+            <h1>Messages</h1>
+            <p>From the contact form, newest first. Times are UK time. Messages and IP addresses are stored encrypted, and this page never shows IP addresses.</p>
+        </div>
+        <a href="/admin" class="mb-btn">Back to admin</a>
+    </header>
+
+    {% if not vault_ready %}
+    <p class="mb-alert mb-alert-warn" role="alert">No encryption key is set here, so new messages can't be stored and encrypted ones can't be opened. Set <code>MESSAGE_ENCRYPTION_KEY</code> in your hosting settings.</p>
+    {% endif %}
+    {% if locked_count %}
+    <p class="mb-alert mb-alert-warn" role="alert">{{ locked_count }} message{{ '' if locked_count == 1 else 's' }} on this page can't be opened with the current key. If you changed the key, put the old one in <code>MESSAGE_ENCRYPTION_KEY_OLD</code>.</p>
+    {% endif %}
+    {% if legacy_count %}
+    <p class="mb-alert">{{ legacy_count }} older message{{ '' if legacy_count == 1 else 's' }} {{ 'is' if legacy_count == 1 else 'are' }} still stored without encryption. Run <code>scripts/contact_vault/migrate.py</code> to encrypt {{ 'it' if legacy_count == 1 else 'them' }}.</p>
+    {% endif %}
+    {% if notice %}<p class="mb-notice" role="status">{{ notice }}</p>{% endif %}
+
+    <nav class="mb-tabs" aria-label="Filter messages">
+        {% for key, label in [('inbox', 'Inbox'), ('unread', 'Unread'), ('spam', 'Spam'), ('all', 'All')] %}
+        <a class="mb-tab" href="{{ url_for('admin_messages', filter=key) }}"{% if flt == key %} aria-current="page"{% endif %}>{{ label }} <span>{{ counts[key] }}</span></a>
+        {% endfor %}
+    </nav>
+
+    <div class="mb-bar">
+        <div>
+            <label for="mb-search" class="sr-only">Search these messages</label>
+            <input id="mb-search" class="mb-input" type="search" placeholder="Search this page" oninput="filterMessages(this.value)" autocomplete="off">
+        </div>
+        {% if flt == 'spam' and counts.spam %}
+        <button type="button" class="mb-btn mb-btn-danger mb-btn-small" onclick="ask('clear-spam', '', 'Delete all spam?', 'Every message marked as spam, {{ counts.spam }} in total, will be deleted for good. This can\'t be undone.', 'Delete all spam')">Delete all spam</button>
+        {% endif %}
+    </div>
+
+    <ul class="mb-list" id="mb-list">
+        {% for m in messages %}
+        <li class="mb-item{{ ' is-new' if m.status == 'NEW' else '' }}{{ ' is-spam' if m.status == 'SPAM' else '' }}" data-search="{{ (m.name ~ ' ' ~ m.email ~ ' ' ~ m.text)|lower }}">
+
+            <div class="mb-meta">
+                <h2>{{ m.name }}</h2>
+                {% if m.email %}<p><a href="{{ m.mailto }}">{{ m.email }}</a></p>{% endif %}
+                <p class="mb-muted">{{ m.received }}</p>
+                <div class="mb-tags">
+                    {% if m.status == 'NEW' %}<span class="mb-tag is-new">New</span>{% endif %}
+                    {% if m.status == 'SPAM' %}<span class="mb-tag is-spam">Spam</span>{% endif %}
+                    {% if m.legacy %}<span class="mb-tag is-warn">Not encrypted</span>{% endif %}
+                    {% if m.discord_failed %}<span class="mb-tag is-warn">Discord alert didn't send</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="mb-body">
+                {% if m.locked %}
+                <p class="mb-text is-locked">This message can't be opened with the current encryption key.</p>
+                {% else %}
+                <p class="mb-text">{{ m.text }}</p>
+                {% endif %}
+
+                {% if m.status == 'SPAM' and (m.reasons or m.spam_score is not none) %}
+                <p class="mb-why">Marked as spam{% if m.spam_score is not none %} with a score of {{ m.spam_score }}{% endif %}{% if m.reasons %}: {{ m.reasons|join(', ') }}{% endif %}.</p>
+                {% endif %}
+
+                <div class="mb-actions">
+                    {% if m.mailto and not m.locked %}<a class="mb-btn mb-btn-small" href="{{ m.mailto }}">Reply<span class="sr-only"> to {{ m.name }}</span></a>{% endif %}
+
+                    <form method="POST" action="{{ url_for('admin_messages') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="id" value="{{ m.id }}">
+                        <input type="hidden" name="filter" value="{{ flt }}">
+                        <input type="hidden" name="page" value="{{ page }}">
+                        {% if m.status == 'SPAM' %}
+                        <button class="mb-btn mb-btn-small" name="action" value="notspam">Not spam</button>
+                        {% else %}
+                        {% if m.status == 'READ' %}
+                        <button class="mb-btn mb-btn-small" name="action" value="unread">Mark unread</button>
+                        {% else %}
+                        <button class="mb-btn mb-btn-small" name="action" value="read">Mark read</button>
+                        {% endif %}
+                        <button class="mb-btn mb-btn-small" name="action" value="spam">Mark spam</button>
+                        {% endif %}
+                    </form>
+
+                    <button type="button" class="mb-btn mb-btn-small mb-btn-danger" onclick="ask('delete', '{{ m.id }}', 'Delete this message?', 'It will be deleted for good. This can\'t be undone.', 'Delete message')">Delete<span class="sr-only"> message from {{ m.name }}</span></button>
+                </div>
+            </div>
+
+        </li>
+        {% else %}
+        <li class="mb-empty">
+            {% if flt == 'spam' %}No spam. That's a good thing.
+            {% elif flt == 'unread' %}You're all caught up. There's nothing unread.
+            {% else %}No messages here yet. They'll appear when someone uses the contact form.{% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    <p id="mb-none" class="mb-empty" style="display:none">No messages on this page match your search.</p>
+
+    {% if page > 1 or has_next %}
+    <nav class="mb-pages" aria-label="Pages of messages">
+        {% if page > 1 %}<a class="mb-btn mb-btn-small" href="{{ url_for('admin_messages', filter=flt, page=page - 1) }}">Newer</a>{% else %}<span></span>{% endif %}
+        <span>Page {{ page }}</span>
+        {% if has_next %}<a class="mb-btn mb-btn-small" href="{{ url_for('admin_messages', filter=flt, page=page + 1) }}">Older</a>{% else %}<span></span>{% endif %}
+    </nav>
+    {% endif %}
+
+    <dialog id="mb-confirm" class="mb-dialog" aria-labelledby="mb-confirm-title" onclick="if (event.target === this) this.close()">
+        <div class="mb-dialog-body">
+            <h2 id="mb-confirm-title">Are you sure?</h2>
+            <p id="mb-confirm-text"></p>
+            <div class="mb-dialog-actions">
+                <form method="POST" action="{{ url_for('admin_messages') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" id="mb-confirm-action">
+                    <input type="hidden" name="id" id="mb-confirm-id">
+                    <input type="hidden" name="filter" value="{{ flt }}">
+                    <input type="hidden" name="page" value="{{ page }}">
+                    <button type="submit" class="mb-btn mb-btn-danger" id="mb-confirm-go">Delete</button>
+                </form>
+                <button type="button" class="mb-btn" onclick="document.getElementById('mb-confirm').close()">Cancel</button>
+            </div>
+        </div>
+    </dialog>
+</div>
+
+<script>
+function filterMessages(query) {
+    const q = query.trim().toLowerCase();
+    const rows = document.querySelectorAll('#mb-list .mb-item');
+    let shown = 0;
+    rows.forEach(r => {
+        const match = !q || (r.dataset.search || '').includes(q);
+        r.style.display = match ? '' : 'none';
+        if (match) shown++;
+    });
+    document.getElementById('mb-none').style.display = (rows.length && !shown) ? 'block' : 'none';
+}
+function ask(action, id, title, text, button) {
+    document.getElementById('mb-confirm-action').value = action;
+    document.getElementById('mb-confirm-id').value = id;
+    document.getElementById('mb-confirm-title').textContent = title;
+    document.getElementById('mb-confirm-text').textContent = text;
+    document.getElementById('mb-confirm-go').textContent = button;
+    document.getElementById('mb-confirm').showModal();
+}
+</script>
+{% endblock %}

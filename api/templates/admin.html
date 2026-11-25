@@ -12,7 +12,7 @@
     --accent: #d4c5a9;
     --surface: #131316;
   }
-  .adm h1, .adm h2, .adm h3, .adm p, .adm dl, .adm dd, .adm dt, .adm ul { margin: 0; padding: 0; }
+  :where(.adm h1, .adm h2, .adm h3, .adm p, .adm dl, .adm dd, .adm dt, .adm ul) { margin: 0; padding: 0; }
   .adm ul { list-style: none; }
   body:has(dialog[open]) { overflow: hidden; }
 
@@ -21,6 +21,7 @@
   .adm-head h1 { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: clamp(2.25rem, 7vw, 3.5rem); line-height: 1.05; letter-spacing: -0.02em; color: var(--text-1); }
   .adm-head p { margin-top: 0.6rem; max-width: 30rem; line-height: 1.6; color: var(--text-2); }
   .adm-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .adm-badge { display: inline-block; min-width: 1.35rem; margin-left: 0.5rem; padding: 0 0.4rem; border-radius: 999px; background: #d4c5a9; color: #0c0c0d; font-size: 0.8rem; font-weight: 600; line-height: 1.35rem; text-align: center; }
 
   /* Buttons */
   .adm-btn {
@@ -200,7 +201,7 @@
             <p>Manage pages, navigation and whether the site is open to visitors.</p>
         </div>
         <div class="adm-actions">
-            <a href="/admin/messages" class="adm-btn">Messages</a>
+            <a href="/admin/messages" class="adm-btn">Messages{% if unread_messages %} <span class="adm-badge" aria-label="{{ unread_messages }} unread">{{ unread_messages }}</span>{% endif %}</a>
             <a href="/admin/audit" class="adm-btn">Audit log</a>
             <button type="button" class="adm-btn" onclick="openSettings()">Settings</button>
         </div>
@@ -416,6 +417,11 @@
                             <span class="adm-switch-track" aria-hidden="true"></span>
                             <span class="adm-switch-text"><strong>Discord alerts</strong><small>Post new messages to your private Discord channel.</small></span>
                         </label>
+                        <label class="adm-switch">
+                            <input type="checkbox" id="cs-discord-text" {{ 'checked' if contact.discord_include_message else '' }}>
+                            <span class="adm-switch-track" aria-hidden="true"></span>
+                            <span class="adm-switch-text"><strong>Include the message in alerts</strong><small>Off by default. When off, Discord is only told the sender's name, so their email address and message stay in your encrypted database.</small></span>
+                        </label>
                         <div><button type="button" id="cs-test" class="adm-btn adm-btn-small" onclick="testDiscordAlert()">Send a test alert</button></div>
 
                         <h4 class="adm-subhead">Spam limits</h4>
@@ -580,6 +586,7 @@ async function saveContactSettings() {
     const r = await postJSON('/admin/api/contact-settings', {
         paused: byId('cs-paused').checked,
         discord_enabled: byId('cs-discord').checked,
+        discord_include_message: byId('cs-discord-text').checked,
         ip_limit_per_hour: byId('cs-ip').value,
         cookie_limit_per_hour: byId('cs-cookie').value,
         email_limit_per_day: byId('cs-email').value,

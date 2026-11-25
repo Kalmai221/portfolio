@@ -82,6 +82,7 @@ def logout():
 def admin_dashboard():
     all_pages = list(g.pages.find().sort("updated_at", DESCENDING)) if g.pages is not None else []
     total_hits = g.analytics_col.count_documents({"status_code": 200}) if g.analytics_col is not None else 0
+    unread_messages = g.db.inquiries.count_documents({"status": {"$nin": ["READ", "SPAM"]}}) if g.db is not None else 0
     return render_template(
         "admin.html",
         pages=all_pages,
@@ -89,6 +90,7 @@ def admin_dashboard():
         total_hits=total_hits,
         contact=get_contact_settings(),
         site_msg=get_site_message_doc(),
+        unread_messages=unread_messages,
     )
 
 
@@ -223,7 +225,7 @@ def bypass_maintenance():
 # ── Page editor ────────────────────────────────────────────
 RESERVED_SLUGS = {
     "admin", "login", "logout", "static", "_preview", "trial",
-    "sitemap.xml", "robots.txt", "og-image.png", "healthz",
+    "sitemap.xml", "robots.txt", "og-image.png", "healthz", "admin/messages",
 }
 
 

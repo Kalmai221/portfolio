@@ -9,7 +9,7 @@
     --text-3: #8b8b94;
     --accent: #d4c5a9;
   }
-  .aud h1, .aud p, .aud ul { margin: 0; padding: 0; }
+  :where(.aud h1, .aud p, .aud ul) { margin: 0; padding: 0; }
   .aud ul { list-style: none; }
 
   .aud-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem; padding-bottom: 2rem; }
@@ -77,7 +77,7 @@
             </div>
             <div class="aud-meta">
                 <span class="aud-user">{{ log.user or 'anonymous' }}</span>
-                <time>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp.strftime is defined else log.timestamp }}</time>
+                <time>{{ log.timestamp.strftime('%d/%m/%Y %H:%M:%S') if log.timestamp.strftime is defined else log.timestamp }}</time>
             </div>
         </li>
         {% else %}

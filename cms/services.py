@@ -6,6 +6,7 @@ from flask import g, request, session
 from pymongo.errors import ConnectionFailure
 from user_agents import parse
 
+from . import vault
 from .app import SITE_URL, app, logger, utc_now
 from .db import note_db_failure
 from .security import client_ip, generate_csrf_token
@@ -89,7 +90,8 @@ def bust_maintenance_cache():
 # ("contact_settings") on every request, so these are also its fallbacks when nothing is saved.
 CONTACT_DEFAULTS = {
     "paused": False,              # hide the form and show the email address instead
-    "discord_enabled": True,      # post new messages to the private Discord channel
+    "discord_enabled": True,      # tell the private Discord channel when a message arrives
+    "discord_include_message": False,  # also put the sender's email and message text in that alert
     "ip_limit_per_hour": 3,
     "cookie_limit_per_hour": 3,
     "email_limit_per_day": 3,
@@ -227,7 +229,11 @@ def generate_visitor_hash() -> str:
     """Anonymous fingerprint that rotates daily. The raw IP is never stored."""
     ua = request.headers.get("User-Agent", "unknown")
     day_salt = utc_now().strftime("%Y-%m-%d")
-    return hashlib.sha256(f"{client_ip()}{ua}{day_salt}".encode()).hexdigest()
+    raw = f"{client_ip()}{ua}{day_salt}"
+    # A keyed code can't be rebuilt by trying every IP address. Without a key, fall back to the plain hash.
+    if vault.ready():
+        return vault.blind("visitor", raw)
+    return hashlib.sha256(raw.encode()).hexdigest()
 
 
 def _referrer_label(custom_ref: str | None) -> str:

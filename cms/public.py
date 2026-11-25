@@ -24,6 +24,7 @@ from flask import (
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from werkzeug.datastructures import ImmutableMultiDict
 
+from . import vault
 from .app import SITE_URL, app, logger, utc_now
 from .db import get_mongo_client, note_db_failure
 from .security import login_required
@@ -192,7 +193,7 @@ def healthz():
             ok = True
         except ConnectionFailure:
             note_db_failure()
-    status = {"status": "ok" if ok else "degraded", "database": ok}
+    status = {"status": "ok" if ok else "degraded", "database": ok, "vault": vault.ready()}
     return jsonify(status), (200 if ok else 503), {"Cache-Control": "no-store"}
 
 
