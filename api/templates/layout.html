@@ -179,29 +179,13 @@
             <div class="max-w-5xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-xs text-zinc-500">
                 <span>&copy; {{ now.year if now else '2026' }} {{ site_name }}</span>
                 <span class="flex items-center gap-2">
-                    <button type="button" id="privacy-link" class="inline-flex min-h-[40px] items-center px-2 transition-colors hover:text-zinc-200">Privacy</button>
+                    <a href="/privacy" class="inline-flex min-h-[40px] items-center px-2 transition-colors hover:text-zinc-200">Privacy policy</a>
                     {% if not session.get('user') %}<a href="/login" class="inline-flex min-h-[40px] items-center px-2 transition-colors hover:text-zinc-200">Admin</a>{% endif %}
                 </span>
             </div>
         </div>
     </footer>
 
-    <aside id="privacy-notice" role="dialog" aria-labelledby="privacy-title" hidden class="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md z-50 max-h-[80vh] overflow-y-auto bg-zinc-900 border border-zinc-800 rounded-lg p-5 shadow-lg">
-        <h2 id="privacy-title" class="text-zinc-100 font-semibold text-sm">Privacy</h2>
-
-        <h3 class="text-zinc-200 text-sm font-medium mt-3">Visiting the site</h3>
-        <p class="text-zinc-400 text-sm leading-relaxed mt-1">
-            I count page views with my own server-side counter. Your IP address is hashed together with your browser string and the date, so it can't be traced back to you or linked across days. There are no cookies for visitors and no third-party trackers.
-        </p>
-
-        <h3 class="text-zinc-200 text-sm font-medium mt-3">Using the contact form</h3>
-        <p class="text-zinc-400 text-sm leading-relaxed mt-1">
-            I store your name, email address, message and IP address. I use them to reply and to limit spam. New messages are also posted to a private Discord channel so I get a notification. I keep messages until I delete them, and you can ask me to remove yours by
-            <a href="mailto:hkurtislee@outlook.com" class="underline underline-offset-4 decoration-zinc-600 hover:decoration-brand text-zinc-200">emailing me</a>.
-        </p>
-
-        <button type="button" id="privacy-ok" class="btn btn-primary mt-4 !py-1.5 !min-h-0 text-sm">Got it</button>
-    </aside>
 
     <script>
         (function () {
@@ -253,20 +237,32 @@
             });
             matchMedia('(min-width: 768px)').addEventListener('change', function (e) { if (e.matches) setMenu(false); });
 
-            // Privacy notice (not shown to crawlers or screenshot bots)
-            var notice = document.getElementById('privacy-notice');
+            // Privacy notice: shown once per browser (v3 because the wording changed), never to
+            // crawlers or screenshot bots. It is built here rather than written into the HTML so
+            // its text isn't part of the page for tools that read the raw source. The policy page
+            // is always linked from the footer.
             var isBot = /bot|crawler|spider|preview|lighthouse/i.test(navigator.userAgent) ||
                         new URLSearchParams(location.search).get('isBot') === 'true';
-            // The `hidden` attribute (not a Tailwind class) keeps the notice out of the page
-            // when scripts or the Tailwind CDN don't run, e.g. for crawlers and text-only tools.
-            if (!store.get('privacy-notice-v2') && !isBot) notice.hidden = false;
-            document.getElementById('privacy-ok').addEventListener('click', function () {
-                store.set('privacy-notice-v2', '1');
-                notice.hidden = true;
-            });
-            document.getElementById('privacy-link').addEventListener('click', function () {
-                notice.hidden = false;
-            });
+            if (!store.get('privacy-notice-v3') && !isBot) {
+                var notice = document.createElement('aside');
+                notice.id = 'privacy-notice';
+                notice.setAttribute('role', 'region');
+                notice.setAttribute('aria-labelledby', 'privacy-title');
+                notice.className = 'fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-sm z-50 rounded-lg border border-zinc-800 bg-zinc-900/95 p-5 shadow-2xl backdrop-blur';
+                notice.innerHTML =
+                    '<h2 id="privacy-title" class="text-sm font-semibold text-zinc-100">Your privacy</h2>' +
+                    '<p class="mt-2 text-sm leading-relaxed text-zinc-400">There are no tracking or advertising cookies on this site. ' +
+                    'Page views are counted without storing your IP address. The contact page sets one small cookie to limit spam.</p>' +
+                    '<div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">' +
+                    '<button type="button" id="privacy-ok" class="btn btn-primary text-sm">Got it</button>' +
+                    '<a href="/privacy" class="inline-flex min-h-[40px] items-center text-sm text-zinc-300 underline underline-offset-4 decoration-zinc-600 hover:decoration-brand">Read the privacy policy</a>' +
+                    '</div>';
+                document.body.appendChild(notice);
+                notice.querySelector('#privacy-ok').addEventListener('click', function () {
+                    store.set('privacy-notice-v3', '1');
+                    notice.remove();
+                });
+            }
         })();
     </script>
 </body>
